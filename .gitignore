@@ -1,0 +1,12 @@
+*.suo
+*.pdb
+*.pidb
+*.cache
+*.csproj
+*.sln
+*.meta
+obj
+cache
+Library
+Temp
+UnityChanSample.unity
