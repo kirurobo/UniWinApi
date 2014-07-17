@@ -364,4 +364,64 @@ public class WindowController {
 		string projectName = s[s.Length - 2];
 		return projectName;
 	}
+
+	#region マウス操作関連
+	/// <summary>
+	/// マウスカーソルを指定座標へ移動させる
+	/// </summary>
+	/// <param name="screenPosition">スクリーン上の絶対座標。（Unityのウィンドウが基準では無い）</param>
+	public void SetCursorPosition(Vector2 screenPosition) {
+		WinApi.SetCursorPos((int)screenPosition.x, (int)screenPosition.y);
+	}
+
+	/// <summary>
+	/// マウスカーソル座標を取得
+	/// </summary>
+	/// <returns>スクリーン上の絶対座標。（Unityのウィンドウが基準では無い）</returns>
+	public Vector2 GetCursorPosition() {
+		WinApi.POINT point;
+		WinApi.GetCursorPos(out point);
+		return new Vector2(point.x, point.y);
+	}
+
+	/// <summary>
+	/// マウスの左ボタンが離されたイベントを発生させます
+	/// </summary>
+	public void SendMouseUp() {
+		SendMouseUp(0);
+	}
+
+	/// <summary>
+	/// マウスのボタンが離されたイベントを発生させます
+	/// </summary>
+	/// <param name="button">0:左, 1:右, 2:中</param>
+	public void SendMouseUp(int button) {
+		WinApi.mouse_event(
+			button == 1 ? WinApi.MOUSEEVENTF_RIGHTUP
+			: button == 2 ? WinApi.MOUSEEVENTF_MIDDLEUP
+			: WinApi.MOUSEEVENTF_LEFTUP,
+			0, 0, 0, IntPtr.Zero
+			);
+	}
+
+	/// <summary>
+	/// マウスの左ボタンが押されたイベントを発生させます
+	/// </summary>
+	public void SendMouseDown() {
+		SendMouseDown(0);
+	}
+	
+	/// <summary>
+	/// マウスのボタンが押されたイベントを発生させます
+	/// </summary>
+	/// <param name="button">0:左, 1:右, 2:中</param>
+	public void SendMouseDown(int button) {
+		WinApi.mouse_event(
+			button == 1 ? WinApi.MOUSEEVENTF_RIGHTDOWN
+			: button == 2 ? WinApi.MOUSEEVENTF_MIDDLEDOWN
+			: WinApi.MOUSEEVENTF_LEFTDOWN,
+			0, 0, 0, IntPtr.Zero
+			);
+	}
+	#endregion
 }

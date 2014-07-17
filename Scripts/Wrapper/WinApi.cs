@@ -121,4 +121,36 @@ public class WinApi {
 	public static extern IntPtr GetAncestor (IntPtr hWnd, uint gaFlags);
 	#endregion
 
+	#region for mouse events
+	public static ulong MOUSEEVENTF_ABSOLUTE	= 0x8000;
+	public static ulong MOUSEEVENTF_LEFTDOWN	= 0x0002;
+	public static ulong MOUSEEVENTF_LEFTUP		= 0x0004;
+	public static ulong MOUSEEVENTF_MIDDLEDOWN	= 0x0020;
+	public static ulong MOUSEEVENTF_MIDDLEUP	= 0x0040;
+	public static ulong MOUSEEVENTF_MOVE		= 0x0001;
+	public static ulong MOUSEEVENTF_RIGHTDOWN	= 0x0008;
+	public static ulong MOUSEEVENTF_RIGHTUP		= 0x0010;
+	public static ulong MOUSEEVENTF_XDOWN		= 0x0080;
+	public static ulong MOUSEEVENTF_XUP			= 0x0100;
+	public static ulong MOUSEEVENTF_WHEEL		= 0x0800;
+	public static ulong MOUSEEVENTF_HWHEEL		= 0x1000;
+	public static ulong XBUTTON1	= 0x0001;
+	public static ulong XBUTTON2	= 0x0002;
+
+	[StructLayout(LayoutKind.Sequential, Pack = 2)]
+	public struct POINT
+	{
+		public int x, y;
+	}
+
+	[DllImport("user32.dll")]
+	public static extern bool GetCursorPos (out POINT point);
+
+	[DllImport("user32.dll")]
+	public static extern bool SetCursorPos (int x, int y);
+
+	[DllImport("user32.dll")]
+	public static extern uint mouse_event (ulong dwFlags, int dx, int dy, ulong dwData, IntPtr dwExtraInfo);
+	#endregion
+
 }

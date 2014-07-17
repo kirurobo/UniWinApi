@@ -5,6 +5,7 @@
 *.csproj
 *.sln
 *.meta
+*.bak
 obj
 cache
 Library

@@ -95,14 +95,14 @@ public class SampleBehaviour : MonoBehaviour {
 			windowPosition += axes * 10.0f;	// ウィンドウ位置に上下左右移動分を加える。係数10.0fは適当。
 			Window.SetPosition(windowPosition);	// ウィンドウ位置を設定
 		}
-		
+
 		// ウィンドウ枠が復活している場合があるので監視するため、呼ぶ
 		Window.Update();
 	}
 
 	// Show GUI objects.
 	void OnGUI() {
-		float buttonWidth = 100f;
+		float buttonWidth = 140f;
 		float buttonHeight = 40f;
 		float margin = 10f;
 		if (
@@ -112,7 +112,7 @@ public class SampleBehaviour : MonoBehaviour {
 					Screen.height - buttonHeight - margin,
 					buttonWidth,
 					buttonHeight),
-				"Transparent"
+				"Toggle transparency"
 				)
 			) {
 			// 透過の ON/OFF ボタン
