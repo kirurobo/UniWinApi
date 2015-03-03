@@ -50,7 +50,7 @@ public class SampleBehaviour : MonoBehaviour {
 	private string Title = "";
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		// ウィンドウ制御用のインスタンス作成
 		Window = new WindowController();
 
@@ -85,6 +85,11 @@ public class SampleBehaviour : MonoBehaviour {
 		// Home を押すと最大化切替
 		if (Input.GetKeyDown(KeyCode.Home)) {
 			ToggleMaximize();
+		}
+
+		// Insert を押すと最小化切替
+		if (Input.GetKeyDown(KeyCode.Insert)) {
+			ToggleMinimize();
 		}
 
 		// ジョイスティックまたはカーソルキーでウィンドウ移動
@@ -149,6 +154,17 @@ public class SampleBehaviour : MonoBehaviour {
 			Window.Restore();
 		} else {
 			Window.Maximize();
+		}
+	}
+	
+	/// <summary>
+	/// 最小化を切替
+	/// </summary>
+	public void ToggleMinimize() {
+		if (Window.IsMinimized) {
+			Window.Restore();
+		} else {
+			Window.Minimize();
 		}
 	}
 }

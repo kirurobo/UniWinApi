@@ -263,9 +263,11 @@ public class WindowController {
 	public void Update() {
 		if (!IsActive) return;
 		long style = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
-		if (style != this.CurrentWindowStyle) {
-			WinApi.SetWindowLong (hWnd, WinApi.GWL_STYLE, this.CurrentWindowStyle);
-			WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
+		if (!WinApi.IsIconic(hWnd) && !WinApi.IsZoomed(hWnd)) {
+			if (style != this.CurrentWindowStyle) {
+				WinApi.SetWindowLong (hWnd, WinApi.GWL_STYLE, this.CurrentWindowStyle);
+				WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
+			}
 		}
 	}
 
@@ -332,17 +334,17 @@ public class WindowController {
 	/// </summary>
 	public void Maximize() {
 		if (!IsActive) return;
-		WinApi.ShowWindow(hWnd, WinApi.SW_MAXIMIZE);
 		this.CurrentWindowStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
+		WinApi.ShowWindow(hWnd, WinApi.SW_MAXIMIZE);
 	}
 
 	/// <summary>
-	/// ウィンドウ最大化
+	/// ウィンドウ最小化
 	/// </summary>
 	public void Minimize() {
 		if (!IsActive) return;
-		WinApi.ShowWindow(hWnd, WinApi.SW_MINIMIZE);
 		this.CurrentWindowStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
+		WinApi.ShowWindow(hWnd, WinApi.SW_MINIMIZE);
 	}
 	
 	/// <summary>

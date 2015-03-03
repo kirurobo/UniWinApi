@@ -35,6 +35,9 @@ public class WinApi {
 	public static long WS_CAPTION		= 0x00C00000L;
 	public static long WS_SYSMENU		= 0x00080000L;
 	public static long WS_THICKFRAME	= 0x00040000L;
+	public static long WS_ICONIC		= 0x20000000L;
+	public static long WS_MINIMIZE		= 0x20000000L;
+	public static long WS_MAXIMIZE		= 0x01000000L;
 	public static long WS_MINIMIZEBOX	= 0x00020000L;
 	public static long WS_MAXIMIZEBOX	= 0x00010000L;
 	public static long WS_POPUP			= 0x80000000L;

@@ -1,6 +1,6 @@
 WindowController
 
-Copyright (c) 2014 Kirurobo
+Copyright (c) 2014-2015 Kirurobo
 Released under Unlicense <http://unlicense.org/>
 
 
@@ -9,7 +9,7 @@ Released under Unlicense <http://unlicense.org/>
 
 
 ■ 必要環境
-・Unity 4.3 以降（おそらく）
+・Unity 4.6 以降（おそらく）
 ・Windows Vista 以降（おそらく）
 
 
@@ -63,6 +63,7 @@ Released under Unlicense <http://unlicense.org/>
 
 
 ■ 更新履歴
+2015/03/03 最小化、最大化時はその直前の状態を保存するようにした
 2014/04/26 公開用初版
 
 
