@@ -357,7 +357,7 @@ public class WindowController {
 	}
 
 	/// <summary>
-	/// Gets the product-namel
+	/// Gets the product-name
 	/// </summary>
 	/// <description>http://gamedev.stackexchange.com/questions/68784/how-do-i-access-the-product-name-in-unity-4</description>
 	/// <returns>The project name.</returns>
