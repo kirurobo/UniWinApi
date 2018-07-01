@@ -63,6 +63,9 @@ public class SampleBehaviour : MonoBehaviour {
 
 		// 起動時からウィンドウ透過を反映
 		Window.EnableTransparency(IsTransparent);
+
+        // ファイルがドロップされた時のハンドラ
+        Window.OnFilesDropped += FileDropped;
 	}
 	
 	// Update is called once per frame
@@ -91,6 +94,10 @@ public class SampleBehaviour : MonoBehaviour {
 		if (Input.GetKeyDown(KeyCode.Insert)) {
 			ToggleMinimize();
 		}
+
+        if (Input.GetKeyDown(KeyCode.Delete)) {
+            Window.EnableBlurBehind();
+        }
 
 		// ジョイスティックまたはカーソルキーでウィンドウ移動
 		//	画面Y座標は下が大なので上下反転
@@ -167,4 +174,16 @@ public class SampleBehaviour : MonoBehaviour {
 			Window.Minimize();
 		}
 	}
+
+    /// <summary>
+    /// ファイルがドロップされたときの処理
+    /// </summary>
+    /// <param name="files"></param>
+    public void FileDropped(string[] files)
+    {
+        foreach (string path in files)
+        {
+            Debug.Log(path);
+        }
+    }
 }

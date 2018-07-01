@@ -5,6 +5,7 @@
  */
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 public class WinApi {
 	
@@ -154,6 +155,37 @@ public class WinApi {
 
 	[DllImport("user32.dll")]
 	public static extern uint mouse_event (ulong dwFlags, int dx, int dy, ulong dwData, IntPtr dwExtraInfo);
-	#endregion
 
+    public static int GWL_EXSTYLE = -20;
+    public static int GWLP_HINSTANCE = -6;
+    public static int GWLP_ID = -12;
+    public static int GWLP_STYLE = -16;
+    public static int GWLP_USERDATA = -21;
+    public static int GWLP_WNDPROC = -4;
+    
+    [DllImport("user32.dll")]
+    public static extern IntPtr DefWindowProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+    #endregion
+
+
+    #region for shell-api
+    public static int WM_NCDESTROY = 0x082;
+    public static int WM_WINDOWPOSCHANGING = 0x046;
+    public static int WM_DROPFILES = 0x233;
+
+    [DllImport("shell32.dll")]
+    public static extern void DragAcceptFiles(IntPtr hWnd, bool bAccept);
+
+    [DllImport("shell32.dll", CharSet=CharSet.Unicode)]
+    public static extern uint DragQueryFile(IntPtr hDrop, uint iFIle, [MarshalAs(UnmanagedType.LPWStr)]StringBuilder lpszFile, uint cch);
+
+    [DllImport("shell32.dll")]
+    public static extern void DragFinish(IntPtr hDrop);
+    #endregion
 }

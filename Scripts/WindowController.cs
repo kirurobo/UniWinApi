@@ -32,8 +32,10 @@
  */
 using UnityEngine;
 using System;
+using System.Runtime.InteropServices;
+using System.Text;
 
-public class WindowController {
+public class WindowController : IDisposable {
 	/// <summary>
 	/// このウィンドウのハンドル
 	/// </summary>
@@ -107,8 +109,9 @@ public class WindowController {
 	}
 
 	~WindowController() {
-		//// デスクトップコンポジションを起動時の状態に戻す
-		//DwmApi.DwmEnableComposition(IsCompositionEnabled);
+        //// デスクトップコンポジションを起動時の状態に戻す
+        //DwmApi.DwmEnableComposition(IsCompositionEnabled);
+        Dispose();
 	}
 
 	/// <summary>
@@ -228,7 +231,9 @@ public class WindowController {
 	/// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
 	public bool FindHandle()
 	{
+        RestoreWndProc();
 		hWnd = WinApi.GetActiveWindow();
+        InitWndProc();
 		MemorizeWindowState();
 		return IsActive;
 	}
@@ -240,7 +245,9 @@ public class WindowController {
 	/// <param name="title">Title.</param>
 	public bool FindHandleByTitle(string title)
 	{
+        RestoreWndProc();
 		hWnd = WinApi.FindWindow(null, title);
+        InitWndProc();
 		MemorizeWindowState();
 		return IsActive;
 	}
@@ -252,7 +259,9 @@ public class WindowController {
 	/// <param name="title">Title.</param>
 	public bool FindHandleByClass(string title)
 	{
+        RestoreWndProc();
 		hWnd = WinApi.FindWindow(title, null);
+        InitWndProc();
 		MemorizeWindowState();
 		return IsActive;
 	}
@@ -328,6 +337,20 @@ public class WindowController {
 			WinApi.SetWindowLong (hWnd, WinApi.GWL_STYLE, this.CurrentWindowStyle);
 		}
 	}
+
+    public void EnableBlurBehind() {
+        if (this.hWnd == null) return;
+
+        DwmApi.DWM_BLURBEHIND bb = new DwmApi.DWM_BLURBEHIND();
+
+        bb.dwFlags = DwmApi.DWM_BLURBEHIND.DWM_BB_ENABLE
+            & DwmApi.DWM_BLURBEHIND.DWM_BB_BLURREGION
+            & DwmApi.DWM_BLURBEHIND.DWM_BB_TRANSITIONONMAXIMIZED;
+        bb.fEnable = false;
+        bb.hRegionBlur = new DwmApi.RECT(10, 10, 100, 100);
+
+        DwmApi.DwmEnableBlurBehindWindow(this.hWnd, bb);
+    }
 
 	/// <summary>
 	/// ウィンドウ最大化
@@ -425,5 +448,106 @@ public class WindowController {
 			0, 0, 0, IntPtr.Zero
 			);
 	}
-	#endregion
+    #endregion
+
+    #region ファイルドロップ関連
+
+    /// <summary>
+    /// 現在のウィンドウがファイルのドラッグアンドドロップを受け入れるかどうかを設定します
+    /// </summary>
+    /// <param name="accept"></param>
+    public void SetDragAcceptFiles(bool accept)
+    {
+        if (this.IsActive)
+        {
+            WinApi.DragAcceptFiles(this.hWnd, true);
+        }
+    }
+
+    public delegate void FilesDropped(string[] files);
+    public event FilesDropped OnFilesDropped;
+
+    private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+    private IntPtr newWndProcPtr = IntPtr.Zero;
+    private IntPtr oldWndProcPtr = IntPtr.Zero;
+    private WndProcDelegate newWndProc = null;
+
+    // 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
+    private IntPtr wndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    {
+        if (msg == WinApi.WM_DROPFILES)
+        {
+            IntPtr hDrop = wParam;
+            uint num = WinApi.DragQueryFile(hDrop, 0xFFFFFFFF, null, 0);
+            string[] files = new string[num];
+
+            uint bufferSize = 1024;
+            StringBuilder path = new StringBuilder((int)bufferSize);
+            for (uint i = 0; i < num; i++)
+            {
+                uint size = WinApi.DragQueryFile(hDrop, i, path, bufferSize);
+                files[i] = path.ToString();
+                path.Length = 0;
+            }
+
+            WinApi.DragFinish(hDrop);
+
+            if (OnFilesDropped != null)
+            {
+                OnFilesDropped(files);
+            }
+        }
+
+        //try {
+        //    return WinApi.CallWindowProc(oldWndProcPtr, hWnd, msg, wParam, lParam);
+        //} catch
+        //{
+        //    //return WinApi.DefWindowProc(hWnd, msg, wParam, lParam);
+        //    return IntPtr.Zero;
+        //}
+
+        return WinApi.CallWindowProc(oldWndProcPtr, hWnd, msg, wParam, lParam);
+    }
+
+    /// <summary>
+    /// ウィンドウプロシージャをフック
+    /// </summary>
+    private void InitWndProc()
+    {
+        if (this.IsActive)
+        {
+            newWndProc = new WndProcDelegate(wndProc);
+            newWndProcPtr = Marshal.GetFunctionPointerForDelegate(newWndProc);
+            oldWndProcPtr = WinApi.SetWindowLongPtr(this.hWnd, WinApi.GWLP_WNDPROC, newWndProcPtr);
+
+            WinApi.DragAcceptFiles(this.hWnd, true);
+        }
+    }
+
+    /// <summary>
+    /// ウィンドウプロシージャを戻す
+    /// </summary>
+    private void RestoreWndProc()
+    {
+        if (newWndProc != null && oldWndProcPtr != IntPtr.Zero)
+        {
+            WinApi.SetWindowLongPtr(this.hWnd, WinApi.GWLP_WNDPROC, oldWndProcPtr);
+            oldWndProcPtr = IntPtr.Zero;
+            newWndProcPtr = IntPtr.Zero;
+            newWndProc = null;
+
+            // Unityだと通常はドラッグ不可
+            //SetDragAcceptFiles(false);
+        }
+    }
+
+    /// <summary>
+    /// 破棄時にはウィンドウプロシージャを戻す必要がある
+    /// </summary>
+    public void Dispose()
+    {
+        RestoreWndProc();
+    }
+
+    #endregion
 }

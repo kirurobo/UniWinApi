@@ -32,7 +32,7 @@ class DwmApi
 		[MarshalAs(UnmanagedType.Bool)]
 		public bool
 			fEnable;
-		public IntPtr hRegionBlur;
+		public RECT? hRegionBlur;
 		[MarshalAs(UnmanagedType.Bool)]
 		public bool
 			fTransitionOnMaximized;
