@@ -30,6 +30,7 @@
  * 
  * For more information, please refer to <http://unlicense.org/>
  */
+
 using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
@@ -64,10 +65,15 @@ public class WindowController : IDisposable {
 	/// </summary>
 	public bool TopmostWhenTransparent = false;
 
-	/// <summary>
-	/// ウィンドウ位置
-	/// </summary>
-	public Vector2 NormalWindowPosition;
+    /// <summary>
+    /// ウィンドウ透過時に操作も下のウィンドウへ透過するかどうか
+    /// </summary>
+    public bool UnfocusableWhenTransparent = false;
+
+    /// <summary>
+    /// ウィンドウ位置
+    /// </summary>
+    public Vector2 NormalWindowPosition;
 
 	/// <summary>
 	/// 標準ウィンドウサイズの指定
@@ -89,10 +95,20 @@ public class WindowController : IDisposable {
 	/// </summary>
 	private long CurrentWindowStyle;
 
-	/// <summary>
-	/// 起動時のデスクトップコンポジション状態を記憶。終了時に戻すため
-	/// </summary>
-	private bool IsCompositionEnabled;
+    /// <summary>
+    /// Original extended window style
+    /// </summary>
+    private long NormalWindowExStyle;
+
+    /// <summary>
+    /// Current extended window style
+    /// </summary>
+    private long CurrentWindowExStyle;
+
+    /// <summary>
+    /// 起動時のデスクトップコンポジション状態を記憶。終了時に戻すため
+    /// </summary>
+    private bool IsCompositionEnabled;
 
 
 	/// <summary>
@@ -134,7 +150,8 @@ public class WindowController : IDisposable {
 			this.NormalClientSize = new Vector2(clientRect.right, clientRect.bottom);
 
 			// ウィンドウスタイルを記憶
-			this.NormalWindowStyle = WinApi.GetWindowLong (hWnd, WinApi.GWL_STYLE);
+			this.NormalWindowStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
+            this.NormalWindowExStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_EXSTYLE);
 		}
 	}
 
@@ -155,12 +172,12 @@ public class WindowController : IDisposable {
 			);
 	}
 
-	/// <summary>
-	/// Sets the window size.
-	/// </summary>
-	/// <param name="isTop">If set to <c>true</c> is top.</param>
-	/// <param name="size">Size.</param>
-	public void SetSize(Vector2 size)
+    /// <summary>
+    /// Sets the window size.
+    /// </summary>
+    /// <param name="isTop">If set to <c>true</c> is top.</param>
+    /// <param name="size">Size.</param>
+    public void SetSize(Vector2 size)
 	{
 		if (!IsActive) return;
 		WinApi.SetWindowPos (
@@ -223,13 +240,14 @@ public class WindowController : IDisposable {
 	{
 		StoreWindowSize();
 		this.CurrentWindowStyle = this.NormalWindowStyle;
-	}
+        this.CurrentWindowExStyle = this.NormalWindowExStyle;
+    }
 
-	/// <summary>
-	/// アクティブウィンドウのハンドルを取得
-	/// </summary>
-	/// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
-	public bool FindHandle()
+    /// <summary>
+    /// アクティブウィンドウのハンドルを取得
+    /// </summary>
+    /// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
+    public bool FindHandle()
 	{
         RestoreWndProc();
 		hWnd = WinApi.GetActiveWindow();
@@ -272,13 +290,19 @@ public class WindowController : IDisposable {
 	public void Update() {
 		if (!IsActive) return;
 		long style = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
-		if (!WinApi.IsIconic(hWnd) && !WinApi.IsZoomed(hWnd)) {
+        long exstyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_EXSTYLE);
+        if (!WinApi.IsIconic(hWnd) && !WinApi.IsZoomed(hWnd)) {
 			if (style != this.CurrentWindowStyle) {
 				WinApi.SetWindowLong (hWnd, WinApi.GWL_STYLE, this.CurrentWindowStyle);
 				WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
 			}
-		}
-	}
+            if (exstyle != this.CurrentWindowExStyle)
+            {
+                WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
+                WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
+            }
+        }
+    }
 
 	/// <summary>
 	/// ウィンドウ透過をON/OFF
@@ -290,26 +314,41 @@ public class WindowController : IDisposable {
 			// 現在のウィンドウ情報を記憶
 			StoreWindowSize();
 
-			// ウィンドウサイズ変更
-			EnableTopmost(this.TopmostWhenTransparent);
+            // ウィンドウサイズ変更
+            if (this.TopmostWhenTransparent)
+            {
+                EnableTopmost(true);
+            }
 			SetSize(this.NormalClientSize);
 
 			// 全面をGlassにする
 			DwmApi.DwmExtendIntoClientAll (hWnd);
 
-			// 枠無しウィンドウにする
-			EnableBorderless(true);
+            // 操作を受け付けなくさせる
+            if (this.UnfocusableWhenTransparent)
+            {
+                EnableUnfocusable(true);
+            }
+
+            // 枠無しウィンドウにする
+            EnableBorderless(true);
 		} else {
 			// ウィンドウスタイルを戻す
 			EnableBorderless(false);
 
-			// 枠のみGlassにする
-			//	※ 本来のウィンドウが枠のみで無かった場合は残念ながら表示が戻りません
-			DwmApi.MARGINS margins = new DwmApi.MARGINS (0, 0, 0, 0);
+            // 操作の透過をやめる
+            EnableUnfocusable(false);
+
+            // 枠のみGlassにする
+            //	※ 本来のウィンドウが枠のみで無かった場合は残念ながら表示が戻りません
+            DwmApi.MARGINS margins = new DwmApi.MARGINS (0, 0, 0, 0);
 			DwmApi.DwmExtendFrameIntoClientArea (hWnd, margins);
-			
+
 			// ウィンドウサイズ変更
-			EnableTopmost(false);
+            if (this.TopmostWhenTransparent)
+            {
+			    EnableTopmost(false);
+            }
 			SetSize(this.NormalWindowSize);
 		}
 	
@@ -338,18 +377,27 @@ public class WindowController : IDisposable {
 		}
 	}
 
-    public void EnableBlurBehind() {
-        if (this.hWnd == null) return;
+    /// <summary>
+    /// Extended window style で操作の透過/戻す
+    /// </summary>
+    /// <param name="isUnfocusable">If set to <c>true</c> is top.</param>
+    public void EnableUnfocusable(bool isUnfocusable)
+    {
+        if (!IsActive) return;
 
-        DwmApi.DWM_BLURBEHIND bb = new DwmApi.DWM_BLURBEHIND();
-
-        bb.dwFlags = DwmApi.DWM_BLURBEHIND.DWM_BB_ENABLE
-            & DwmApi.DWM_BLURBEHIND.DWM_BB_BLURREGION
-            & DwmApi.DWM_BLURBEHIND.DWM_BB_TRANSITIONONMAXIMIZED;
-        bb.fEnable = false;
-        bb.hRegionBlur = new DwmApi.RECT(10, 10, 100, 100);
-
-        DwmApi.DwmEnableBlurBehindWindow(this.hWnd, bb);
+        if (isUnfocusable)
+        {
+            long exstyle = this.NormalWindowExStyle;
+            exstyle |= WinApi.WS_EX_TRANSPARENT;
+            exstyle |= WinApi.WS_EX_LAYERED;
+            this.CurrentWindowExStyle = exstyle;
+            WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
+        }
+        else
+        {
+            this.CurrentWindowExStyle = this.NormalWindowExStyle;
+            WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
+        }
     }
 
 	/// <summary>

@@ -10,54 +10,59 @@ using System.Text;
 public class WinApi {
 	
 	#region Windows API
-	public static int GWL_STYLE = -16;
+	public static readonly int GWL_STYLE = -16;
 
-	public static int SW_HIDE		= 0;
-	public static int SW_MAXIMIZE	= 3;
-	public static int SW_MINIMIZE	= 6;
-	public static int SW_RESTORE	= 9;
-	public static int SW_SHOW		= 5;
+	public static readonly int SW_HIDE		= 0;
+	public static readonly int SW_MAXIMIZE	= 3;
+	public static readonly int SW_MINIMIZE	= 6;
+	public static readonly int SW_RESTORE	= 9;
+	public static readonly int SW_SHOW		= 5;
 
-	public static uint SWP_Refresh_ = 0x237;
-	public static uint SWP_NOSIZE	= 0x1;
-	public static uint SWP_NOMOVE	= 0x2;
-	public static uint SWP_NOZORDER	= 0x4;
-	public static uint SWP_NOACTIVATE	= 0x10;
-	public static uint SWP_FRAMECHANGED	= 0x20;
-	public static uint SWP_SHOWWINDOW	= 0x40;
-	public static uint SWP_NOOWNERZORDER	= 0x200;
-	public static uint SWP_NOREPOSITION		= 0x200;
-	public static uint SWP_NOSENDCHANGING	= 0x400;
-	public static uint SWP_ASYNCWINDOWPOS	= 0x4000;
+	public static readonly uint SWP_Refresh_        = 0x237;
+	public static readonly uint SWP_NOSIZE	        = 0x1;
+	public static readonly uint SWP_NOMOVE	        = 0x2;
+	public static readonly uint SWP_NOZORDER	    = 0x4;
+	public static readonly uint SWP_NOACTIVATE	    = 0x10;
+	public static readonly uint SWP_FRAMECHANGED	= 0x20;
+	public static readonly uint SWP_SHOWWINDOW	    = 0x40;
+	public static readonly uint SWP_NOOWNERZORDER	= 0x200;
+	public static readonly uint SWP_NOREPOSITION	= 0x200;
+	public static readonly uint SWP_NOSENDCHANGING	= 0x400;
+	public static readonly uint SWP_ASYNCWINDOWPOS	= 0x4000;
 
-	public static long WS_BORDER		= 0x00800000L;
-	public static long WS_VISIBLE		= 0x10000000L;
-	public static long WS_OVERLAPPED	= 0x00000000L;
-	public static long WS_CAPTION		= 0x00C00000L;
-	public static long WS_SYSMENU		= 0x00080000L;
-	public static long WS_THICKFRAME	= 0x00040000L;
-	public static long WS_ICONIC		= 0x20000000L;
-	public static long WS_MINIMIZE		= 0x20000000L;
-	public static long WS_MAXIMIZE		= 0x01000000L;
-	public static long WS_MINIMIZEBOX	= 0x00020000L;
-	public static long WS_MAXIMIZEBOX	= 0x00010000L;
-	public static long WS_POPUP			= 0x80000000L;
-	public static long WS_OVERLAPPEDWINDOW = 0x00CF0000L;
+	public static readonly long WS_BORDER		= 0x00800000L;
+	public static readonly long WS_VISIBLE		= 0x10000000L;
+	public static readonly long WS_OVERLAPPED	= 0x00000000L;
+	public static readonly long WS_CAPTION		= 0x00C00000L;
+	public static readonly long WS_SYSMENU		= 0x00080000L;
+	public static readonly long WS_THICKFRAME	= 0x00040000L;
+	public static readonly long WS_ICONIC		= 0x20000000L;
+	public static readonly long WS_MINIMIZE		= 0x20000000L;
+	public static readonly long WS_MAXIMIZE		= 0x01000000L;
+	public static readonly long WS_MINIMIZEBOX	= 0x00020000L;
+	public static readonly long WS_MAXIMIZEBOX	= 0x00010000L;
+	public static readonly long WS_POPUP			= 0x80000000L;
+	public static readonly long WS_OVERLAPPEDWINDOW = 0x00CF0000L;
 
-	public static IntPtr HWND_TOP		= new IntPtr((int)0);
-	public static IntPtr HWND_BOTTOM	= new IntPtr((int)1);
-	public static IntPtr HWND_TOPMOST 	= new IntPtr((int)-1);
-	public static IntPtr HWND_NOTOPMOST = new IntPtr((int)-2);
+    public static readonly long WS_EX_TRANSPARENT        = 0x00000020L;
+    public static readonly long WS_EX_LAYERED            = 0x00080000L;
+    public static readonly long WS_EX_TOPMOST            = 0x00000008L;
+    public static readonly long WS_EX_OVERLAPPEDWINDOW   = 0x00000300L;
 
-	public static uint GA_PARENT	= 1;
-	public static uint GA_ROOT		= 2;
-	public static uint GA_ROOTOWNER = 3;
-	public static uint GW_HWNDFIRST	= 0;
-	public static uint GW_HWNDLAST	= 1;
-	public static uint GW_HWNDNEXT	= 2;
-	public static uint GW_HWNDPREV	= 3;
-	public static uint GW_OWNER		= 4;
-	public static uint GW_CHILD		= 5;
+    public static readonly IntPtr HWND_TOP		= new IntPtr((int)0);
+	public static readonly IntPtr HWND_BOTTOM	= new IntPtr((int)1);
+	public static readonly IntPtr HWND_TOPMOST 	= new IntPtr((int)-1);
+	public static readonly IntPtr HWND_NOTOPMOST = new IntPtr((int)-2);
+
+	public static readonly uint GA_PARENT	= 1;
+	public static readonly uint GA_ROOT		= 2;
+	public static readonly uint GA_ROOTOWNER = 3;
+	public static readonly uint GW_HWNDFIRST	= 0;
+	public static readonly uint GW_HWNDLAST	= 1;
+	public static readonly uint GW_HWNDNEXT	= 2;
+	public static readonly uint GW_HWNDPREV	= 3;
+	public static readonly uint GW_OWNER		= 4;
+	public static readonly uint GW_CHILD		= 5;
 	
 	public delegate int EnumWindowsDelegate (IntPtr hWnd, long lParam);
 
@@ -126,20 +131,20 @@ public class WinApi {
 	#endregion
 
 	#region for mouse events
-	public static ulong MOUSEEVENTF_ABSOLUTE	= 0x8000;
-	public static ulong MOUSEEVENTF_LEFTDOWN	= 0x0002;
-	public static ulong MOUSEEVENTF_LEFTUP		= 0x0004;
-	public static ulong MOUSEEVENTF_MIDDLEDOWN	= 0x0020;
-	public static ulong MOUSEEVENTF_MIDDLEUP	= 0x0040;
-	public static ulong MOUSEEVENTF_MOVE		= 0x0001;
-	public static ulong MOUSEEVENTF_RIGHTDOWN	= 0x0008;
-	public static ulong MOUSEEVENTF_RIGHTUP		= 0x0010;
-	public static ulong MOUSEEVENTF_XDOWN		= 0x0080;
-	public static ulong MOUSEEVENTF_XUP			= 0x0100;
-	public static ulong MOUSEEVENTF_WHEEL		= 0x0800;
-	public static ulong MOUSEEVENTF_HWHEEL		= 0x1000;
-	public static ulong XBUTTON1	= 0x0001;
-	public static ulong XBUTTON2	= 0x0002;
+	public static readonly ulong MOUSEEVENTF_ABSOLUTE	= 0x8000;
+	public static readonly ulong MOUSEEVENTF_LEFTDOWN	= 0x0002;
+	public static readonly ulong MOUSEEVENTF_LEFTUP		= 0x0004;
+	public static readonly ulong MOUSEEVENTF_MIDDLEDOWN	= 0x0020;
+	public static readonly ulong MOUSEEVENTF_MIDDLEUP	= 0x0040;
+	public static readonly ulong MOUSEEVENTF_MOVE		= 0x0001;
+	public static readonly ulong MOUSEEVENTF_RIGHTDOWN	= 0x0008;
+	public static readonly ulong MOUSEEVENTF_RIGHTUP	= 0x0010;
+	public static readonly ulong MOUSEEVENTF_XDOWN		= 0x0080;
+	public static readonly ulong MOUSEEVENTF_XUP		= 0x0100;
+	public static readonly ulong MOUSEEVENTF_WHEEL		= 0x0800;
+	public static readonly ulong MOUSEEVENTF_HWHEEL		= 0x1000;
+	public static readonly ulong XBUTTON1	= 0x0001;
+	public static readonly ulong XBUTTON2	= 0x0002;
 
 	[StructLayout(LayoutKind.Sequential, Pack = 2)]
 	public struct POINT
@@ -156,12 +161,12 @@ public class WinApi {
 	[DllImport("user32.dll")]
 	public static extern uint mouse_event (ulong dwFlags, int dx, int dy, ulong dwData, IntPtr dwExtraInfo);
 
-    public static int GWL_EXSTYLE = -20;
-    public static int GWLP_HINSTANCE = -6;
-    public static int GWLP_ID = -12;
-    public static int GWLP_STYLE = -16;
-    public static int GWLP_USERDATA = -21;
-    public static int GWLP_WNDPROC = -4;
+    public static readonly int GWL_EXSTYLE = -20;
+    public static readonly int GWLP_HINSTANCE = -6;
+    public static readonly int GWLP_ID = -12;
+    public static readonly int GWLP_STYLE = -16;
+    public static readonly int GWLP_USERDATA = -21;
+    public static readonly int GWLP_WNDPROC = -4;
     
     [DllImport("user32.dll")]
     public static extern IntPtr DefWindowProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
@@ -175,9 +180,9 @@ public class WinApi {
 
 
     #region for shell-api
-    public static int WM_NCDESTROY = 0x082;
-    public static int WM_WINDOWPOSCHANGING = 0x046;
-    public static int WM_DROPFILES = 0x233;
+    public static readonly int WM_NCDESTROY = 0x082;
+    public static readonly int WM_WINDOWPOSCHANGING = 0x046;
+    public static readonly int WM_DROPFILES = 0x233;
 
     [DllImport("shell32.dll")]
     public static extern void DragAcceptFiles(IntPtr hWnd, bool bAccept);

@@ -49,6 +49,11 @@ public class SampleBehaviour : MonoBehaviour {
 	/// </summary>
 	private string Title = "";
 
+    /// <summary>
+    /// 操作を受け付ける状態か
+    /// </summary>
+    private bool IsFocusable = true;
+
 	// Use this for initialization
 	void Awake () {
 		// ウィンドウ制御用のインスタンス作成
@@ -60,6 +65,9 @@ public class SampleBehaviour : MonoBehaviour {
 
 		// 透過時に常に最前面にする
 		Window.TopmostWhenTransparent = true;
+
+        // 透過時に、キーやマウス操作も受け付けなくするか
+        Window.UnfocusableWhenTransparent = false;
 
 		// 起動時からウィンドウ透過を反映
 		Window.EnableTransparency(IsTransparent);
@@ -95,9 +103,7 @@ public class SampleBehaviour : MonoBehaviour {
 			ToggleMinimize();
 		}
 
-        if (Input.GetKeyDown(KeyCode.Delete)) {
-            Window.EnableBlurBehind();
-        }
+        ToggleFocusableOnRay();
 
 		// ジョイスティックまたはカーソルキーでウィンドウ移動
 		//	画面Y座標は下が大なので上下反転
@@ -111,6 +117,29 @@ public class SampleBehaviour : MonoBehaviour {
 		// ウィンドウ枠が復活している場合があるので監視するため、呼ぶ
 		Window.Update();
 	}
+
+    void ToggleFocusableOnRay()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray))
+        {
+            if (!this.IsFocusable)
+            {
+                Window.EnableUnfocusable(false);
+                this.IsFocusable = true;
+                Debug.Log(this.IsFocusable);
+            }
+        }
+        else
+        {
+            if (this.IsFocusable && this.IsTransparent)
+            {
+                Window.EnableUnfocusable(true);
+                this.IsFocusable = false;
+                Debug.Log(this.IsFocusable);
+            }
+        }
+    }
 
 	// Show GUI objects.
 	void OnGUI() {
