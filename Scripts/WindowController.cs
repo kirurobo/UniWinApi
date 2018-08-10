@@ -66,11 +66,6 @@ public class WindowController : IDisposable {
 	public bool TopmostWhenTransparent = false;
 
     /// <summary>
-    /// ウィンドウ透過時に操作も下のウィンドウへ透過するかどうか
-    /// </summary>
-    public bool UnfocusableWhenTransparent = false;
-
-    /// <summary>
     /// ウィンドウ位置
     /// </summary>
     public Vector2 NormalWindowPosition;
@@ -324,12 +319,6 @@ public class WindowController : IDisposable {
 			// 全面をGlassにする
 			DwmApi.DwmExtendIntoClientAll (hWnd);
 
-            // 操作を受け付けなくさせる
-            if (this.UnfocusableWhenTransparent)
-            {
-                EnableUnfocusable(true);
-            }
-
             // 枠無しウィンドウにする
             EnableBorderless(true);
 		} else {
@@ -387,7 +376,7 @@ public class WindowController : IDisposable {
 
         if (isUnfocusable)
         {
-            long exstyle = this.NormalWindowExStyle;
+            long exstyle = this.CurrentWindowExStyle;
             exstyle |= WinApi.WS_EX_TRANSPARENT;
             exstyle |= WinApi.WS_EX_LAYERED;
             this.CurrentWindowExStyle = exstyle;
