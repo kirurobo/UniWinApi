@@ -131,6 +131,13 @@ public class SampleBehaviour : MonoBehaviour {
 			ToggleMinimize();
 		}
 
+        // Insert を押すと最小化切替
+        if (Input.GetKeyDown(KeyCode.Insert))
+        {
+            ToggleMinimize();
+        }
+
+        // マウスドラッグでウィンドウ移動
         if (Input.GetMouseButtonDown(0))
         {
             this.lastMousePosition = window.GetCursorPosition();
@@ -166,27 +173,6 @@ public class SampleBehaviour : MonoBehaviour {
 		window.Update();
 	}
 
-    void ToggleFocusableOnRay()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray))
-        {
-            if (!this.isFocusable)
-            {
-                window.EnableUnfocusable(false);
-                this.isFocusable = true;
-            }
-        }
-        else
-        {
-            if (this.isFocusable && this.isTransparent)
-            {
-                window.EnableUnfocusable(true);
-                this.isFocusable = false;
-            }
-        }
-    }
-
     /// <summary>
     /// 画素の色を基に操作受付を切り替える
     /// </summary>
@@ -203,7 +189,7 @@ public class SampleBehaviour : MonoBehaviour {
         }
         else
         {
-            if (this.isTransparent && !this.onOpaquePixel)
+            if (this.isTransparent && !this.onOpaquePixel && !this.isDragging)
             {
                 window.EnableUnfocusable(true);
                 this.isFocusable = false;

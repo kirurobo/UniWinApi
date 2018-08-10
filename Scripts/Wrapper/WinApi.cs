@@ -63,7 +63,10 @@ public class WinApi {
 	public static readonly uint GW_HWNDPREV	= 3;
 	public static readonly uint GW_OWNER		= 4;
 	public static readonly uint GW_CHILD		= 5;
-	
+
+    public static readonly uint WM_IME_CHAR = 0x0286;
+    public static readonly uint WM_SETTEXT = 0x000C;
+
 	public delegate int EnumWindowsDelegate (IntPtr hWnd, long lParam);
 
 
@@ -128,10 +131,14 @@ public class WinApi {
 	
 	[DllImport("user32.dll")]
 	public static extern IntPtr GetAncestor (IntPtr hWnd, uint gaFlags);
-	#endregion
 
-	#region for mouse events
-	public static readonly ulong MOUSEEVENTF_ABSOLUTE	= 0x8000;
+    [DllImport("user32.dll")]
+    public static extern bool PostMessage(IntPtr hWnd, uint msg, long wParam, IntPtr lParam);
+
+    #endregion
+
+    #region for mouse events
+    public static readonly ulong MOUSEEVENTF_ABSOLUTE	= 0x8000;
 	public static readonly ulong MOUSEEVENTF_LEFTDOWN	= 0x0002;
 	public static readonly ulong MOUSEEVENTF_LEFTUP		= 0x0004;
 	public static readonly ulong MOUSEEVENTF_MIDDLEDOWN	= 0x0020;

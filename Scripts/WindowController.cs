@@ -487,6 +487,16 @@ public class WindowController : IDisposable {
 	}
     #endregion
 
+    #region キー操作関連
+    /// <summary>
+    /// キーコードを送ります
+    /// </summary>
+    public void SendKey(KeyCode code)
+    {
+        WinApi.PostMessage(this.hWnd, WinApi.WM_IME_CHAR, (long)code, IntPtr.Zero);
+    }
+    #endregion
+
     #region ファイルドロップ関連
 
     /// <summary>
