@@ -15,8 +15,11 @@ Released under CC0 <http://creativecommons.org/publicdomain/zero/1.0/deed.ja>
 
 
 ■ 内容物
-・Assets/UniWinApi …このフォルダ以下が本体
-・Assets/UniVRM    …これは DWANGO Co., Ltd. による UniVRM （MIT License）
+リポジトリにある一式をUnityで開くと、VRMビューアを含むプロジェクトとなっています。
+
+そのうち重要なのは下記フォルダです。
+・Assets/UniWinApi …このフォルダ以下が本体です。
+・Assets/UniVRM    …これは DWANGO Co., Ltd. による UniVRM （MIT License）です。
 
 
 ■ 注意点
@@ -29,10 +32,16 @@ Released under CC0 <http://creativecommons.org/publicdomain/zero/1.0/deed.ja>
 
 ■ ライセンス
 ・UniVRM は MIT License となっています。
+  https://github.com/dwango/UniVRM/ をご覧ください。
 
 ・Kiruroboが作成したファイルは、CC0（パブリックドメイン）としています。
 　著作権表示なしで修正、複製、再配布も可能です。
 　好きに使っていただけますがもちろん無保証です。
+
+・Assets/StreamingAssets/default_vrm.vrm のVRMモデルは @cubic9com さん作の
+  VRChat用超シンプル素体 を調整してVRMにしたものです。
+  こちらも CC0 ですが、元モデルのサイトもご覧ください。
+  https://cubic9.com/Devel/OculusRift/VRChat/
 
 
 ■ 更新履歴
