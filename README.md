@@ -19,7 +19,8 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 [![VRM viewer sample](http://img.youtube.com/vi/EETQxzzv4uY/0.jpg)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
 
 ビルド済みのVRMビューア―例（Windows 64ビット用）はこちら。  
-https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip
+* [Ver.0.2.1 シェーダー修正後](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.1/UniWinApiVrmViewer_x64_v0.2.1.zip)
+* [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
 
 
 ## License
