@@ -9,7 +9,7 @@ SubShader {
 	LOD 100
 	
 	ZWrite On
-	Blend SrcAlpha OneMinusSrcAlpha 
+	Blend SrcAlpha OneMinusSrcAlpha, SrcAlpha One
 	
 	Pass {  
 		CGPROGRAM
