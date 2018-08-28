@@ -19,7 +19,16 @@ public class CameraController : MonoBehaviour {
         PitchAndYaw = 3
     }
 
+	[Flags]
+	public enum WheelMode
+	{
+		None = 0,
+		Dolly = 1,	// Dolly in/out
+		//Zoom = 2,		// Not implemented
+	}
+
     public RotationAxes axes = RotationAxes.PitchAndYaw;
+	public WheelMode wheelMode = WheelMode.Dolly;
     public float sensitivityX = 15f;
     public float sensitivityY = 15f;
     public float dragSensitivity = 1f;
@@ -117,13 +126,22 @@ public class CameraController : MonoBehaviour {
         else
         {
 			// ホイールで接近・離脱
-			wheel += Input.GetAxis("Mouse ScrollWheel") * wheelSensitivity;
-			if (wheel > 5f) wheel = 5f;     // 上限
-			if (wheel < -2f) wheel = -2f;   // 下限
+			float wheelDelta = Input.GetAxis("Mouse ScrollWheel") * wheelSensitivity;
 
-			distance = originalDistance * Mathf.Pow(10f, -wheel);
+			if (wheelDelta != 0f)
+			{
+				if (wheelMode == WheelMode.Dolly)
+				{
+					// ドリーの場合。カメラを近づけたり遠ざけたり。
+					wheel += wheelDelta;
+					if (wheel > 5f) wheel = 5f;     // 上限
+					if (wheel < -2f) wheel = -2f;   // 下限
 
-			UpdateTransform();
+					distance = originalDistance * Mathf.Pow(10f, -wheel);
+
+					UpdateTransform();
+				}
+			}
 		}
     }
 

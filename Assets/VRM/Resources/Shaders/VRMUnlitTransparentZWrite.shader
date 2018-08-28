@@ -9,8 +9,9 @@ SubShader {
 	LOD 100
 	
 	ZWrite On
-	Blend SrcAlpha OneMinusSrcAlpha, SrcAlpha One
-	
+	Blend SrcAlpha OneMinusSrcAlpha 
+	BlendOp Add, Max
+
 	Pass {  
 		CGPROGRAM
 			#pragma vertex vert

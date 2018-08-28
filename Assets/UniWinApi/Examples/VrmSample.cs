@@ -21,7 +21,11 @@ public class VrmSample : MonoBehaviour {
     private VRMMetaObject meta;
 
     public VrmUiController uiController;
+	public CameraController cameraController;
     public Transform cameraTransform;
+
+	private CameraController.WheelMode originalWheelMode;
+
 
  	// Use this for initialization
 	void Start () {
@@ -30,8 +34,17 @@ public class VrmSample : MonoBehaviour {
             uiController = FindObjectOfType<VrmUiController>();
         }
 
-        // Load the initial motion.
-        LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
+		if (!cameraController)
+		{
+			cameraController = FindObjectOfType<CameraController>();
+			if (cameraController)
+			{
+				originalWheelMode = cameraController.wheelMode;
+			}
+		}
+
+		// Load the initial motion.
+		LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
 
         // Load the initial model.
         string[] cmdArgs = System.Environment.GetCommandLineArgs();
@@ -52,11 +65,28 @@ public class VrmSample : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// A handler for file dropping.
-    /// </summary>
-    /// <param name="files"></param>
-    private void Window_OnFilesDropped(string[] files)
+	void Update()
+	{
+		// ホイール操作は不透明なところでのみ受け付けさせる
+		if (windowController && cameraController)
+		{
+			Vector2 pos = Input.mousePosition;
+			bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
+			if (windowController.isFocusable && inScreen)
+			{
+				cameraController.wheelMode = originalWheelMode;
+			} else
+			{
+				cameraController.wheelMode = CameraController.WheelMode.None;
+			}
+		}
+	}
+
+	/// <summary>
+	/// A handler for file dropping.
+	/// </summary>
+	/// <param name="files"></param>
+	private void Window_OnFilesDropped(string[] files)
     {
         foreach (string path in files)
         {

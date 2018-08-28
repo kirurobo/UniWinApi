@@ -30,7 +30,7 @@ public class VrmUiController : MonoBehaviour {
 	void Start () {
 
 		windowController = FindObjectOfType<WindowController>();
-		windowController.OnStateChanged += windowController_OnStateChanged;
+		windowController.OnStateChange += windowController_OnStateChanged;
 
         if (!panel)
         {

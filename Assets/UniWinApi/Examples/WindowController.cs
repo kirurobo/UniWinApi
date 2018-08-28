@@ -27,7 +27,11 @@ public class WindowController : MonoBehaviour {
     /// <summary>
     /// 操作を受け付ける状態か
     /// </summary>
-    private bool isFocusable = true;
+	public bool isFocusable
+	{
+		get { return _isFocusable; }
+	}
+    private bool _isFocusable = true;
 
 	/// <summary>
 	/// Is this window minimized?
@@ -66,9 +70,11 @@ public class WindowController : MonoBehaviour {
 		remove { this.uniWin.OnFilesDropped -= value; }
 	}
 
-	public delegate void StateChanged();
-	public event StateChanged OnStateChanged;
-
+	/// <summary>
+	/// ウィンドウ状態が変化したときに発生するイベント
+	/// </summary>
+	public event OnStateChangeDelegate OnStateChange;
+	public delegate void OnStateChangeDelegate();
 
 	/// <summary>
 	/// 表示されたテクスチャ
@@ -159,9 +165,9 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	private void StateChangedEvent()
 	{
-		if (OnStateChanged != null)
+		if (OnStateChange != null)
 		{
-			OnStateChanged();
+			OnStateChange();
 		}
 	}
 
@@ -204,12 +210,12 @@ public class WindowController : MonoBehaviour {
     /// </summary>
     void UpdateFocusable()
     {
-        if (!this.isFocusable)
+        if (!this._isFocusable)
         {
             if (this.onOpaquePixel)
             {
                 uniWin.EnableUnfocusable(false);
-                this.isFocusable = true;
+                this._isFocusable = true;
             }
         }
         else
@@ -217,7 +223,7 @@ public class WindowController : MonoBehaviour {
             if (this.isTransparent && !this.onOpaquePixel && !this.isDragging)
             {
                 uniWin.EnableUnfocusable(true);
-                this.isFocusable = false;
+                this._isFocusable = false;
 			}
 		}
     }
