@@ -1,8 +1,9 @@
 /**
  * UniWinApi
  * 
- * Author: Kirurobo http://twitter.com/kirurobo
- * License: CC0 https://creativecommons.org/publicdomain/zero/1.0/
+ * License: CC0, https://creativecommons.org/publicdomain/zero/1.0/
+ * 
+ * Author: Kirurobo, http://twitter.com/kirurobo
  */
 
 using UnityEngine;
@@ -86,14 +87,20 @@ public class UniWinApi : IDisposable {
     /// </summary>
     private bool IsWndProcSet = false;
 
+    /// <summary>
+    /// ファイルドロップを受け付ける場合はtrueにしておく。
+    /// ウィンドウ取得時のみ有効で、その後は変更できません。
+    /// </summary>
+    public bool enableFileDrop = true;
+
 
     /// <summary>
     /// ウィンドウ制御のコンストラクタ
     /// </summary>
     public UniWinApi() {
-	}
+    }
 
-	~UniWinApi() {
+    ~UniWinApi() {
         Dispose();
 	}
 
@@ -224,16 +231,29 @@ public class UniWinApi : IDisposable {
     }
 
     /// <summary>
+    /// ウィンドウハンドルを指定してウィンドウを選択
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <returns></returns>
+    public void SetWindowHandle(IntPtr hWnd)
+    {
+        RestoreWndProc();
+        this.hWnd = hWnd;
+        if (enableFileDrop) InitWndProc();
+        MemorizeWindowState();
+    }
+
+    /// <summary>
     /// アクティブウィンドウのハンドルを取得
     /// </summary>
     /// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
     public bool FindHandle()
 	{
-        RestoreWndProc();
-		hWnd = WinApi.GetActiveWindow();
-        InitWndProc();
-		MemorizeWindowState();
-		return IsActive;
+        IntPtr hwnd = WinApi.GetActiveWindow();
+        if (hwnd == IntPtr.Zero) return false;
+
+        SetWindowHandle(hwnd);
+        return IsActive;
 	}
 
 	/// <summary>
@@ -243,25 +263,25 @@ public class UniWinApi : IDisposable {
 	/// <param name="title">Title.</param>
 	public bool FindHandleByTitle(string title)
 	{
-        RestoreWndProc();
-		hWnd = WinApi.FindWindow(null, title);
-        InitWndProc();
-		MemorizeWindowState();
-		return IsActive;
-	}
-	
-	/// <summary>
-	/// ウィンドウクラスを元にハンドルを取得
-	/// </summary>
-	/// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
-	/// <param name="classname">Title.</param>
-	public bool FindHandleByClass(string classname)
+		IntPtr hwnd = WinApi.FindWindow(null, title);
+        if (hwnd == IntPtr.Zero) return false;
+
+        SetWindowHandle(hwnd);
+        return IsActive;
+    }
+
+    /// <summary>
+    /// ウィンドウクラスを元にハンドルを取得
+    /// </summary>
+    /// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
+    /// <param name="classname">Title.</param>
+    public bool FindHandleByClass(string classname)
 	{
-        RestoreWndProc();
-		hWnd = WinApi.FindWindow(classname, null);
-        InitWndProc();
-		MemorizeWindowState();
-		return IsActive;
+		IntPtr hwnd = WinApi.FindWindow(classname, null);
+        if (hwnd == IntPtr.Zero) return false;
+
+        SetWindowHandle(hwnd);
+        return IsActive;
 	}
 
 	/// <summary>
@@ -502,13 +522,14 @@ public class UniWinApi : IDisposable {
     public delegate void FilesDropped(string[] files);
     public event FilesDropped OnFilesDropped;
 
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
     private IntPtr newWndProcPtr = IntPtr.Zero;
     private IntPtr oldWndProcPtr = IntPtr.Zero;
     private WndProcDelegate newWndProc = null;
 
     // 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
-    private IntPtr wndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    private IntPtr UniWinApiWindowProcedure(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
     {
         if (msg == WinApi.WM_DROPFILES)
         {
@@ -548,6 +569,7 @@ public class UniWinApi : IDisposable {
 
     /// <summary>
     /// ウィンドウプロシージャを置き換える
+    /// 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
     /// </summary>
     private void InitWndProc()
     {
@@ -555,9 +577,9 @@ public class UniWinApi : IDisposable {
 
         if (this.IsActive)
         {
-            newWndProc = new WndProcDelegate(wndProc);
+            newWndProc = new WndProcDelegate(UniWinApiWindowProcedure);
             newWndProcPtr = Marshal.GetFunctionPointerForDelegate(newWndProc);
-            oldWndProcPtr = WinApi.SetWindowLongPtr(this.hWnd, WinApi.GWLP_WNDPROC, newWndProcPtr);
+            oldWndProcPtr = WinApi.SetWindowProcedure(this.hWnd, newWndProcPtr);
 
             WinApi.DragAcceptFiles(this.hWnd, true);
 
@@ -574,12 +596,12 @@ public class UniWinApi : IDisposable {
 
         if (newWndProc != null && oldWndProcPtr != IntPtr.Zero)
         {
-            WinApi.SetWindowLongPtr(this.hWnd, WinApi.GWLP_WNDPROC, oldWndProcPtr);
+            WinApi.SetWindowProcedure(this.hWnd, oldWndProcPtr);
             oldWndProcPtr = IntPtr.Zero;
             newWndProcPtr = IntPtr.Zero;
             newWndProc = null;
 
-            // Unityだと通常はドラッグ不可
+            // Unityだと通常はドラッグ不可のはずなので戻しても良いのかも
             //SetDragAcceptFiles(false);
         }
 
@@ -592,9 +614,12 @@ public class UniWinApi : IDisposable {
     public void Dispose()
     {
 		RestoreWndProc();
-		EnableTopmost(false);
+#if UNITY_EDITOR
+        EnableTransparent(false);
+        EnableTopmost(false);
         RestoreWindowState();
-		hWnd = IntPtr.Zero;
+#endif
+        hWnd = IntPtr.Zero;
     }
 
 #endregion

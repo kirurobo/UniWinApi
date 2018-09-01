@@ -18,11 +18,21 @@ public class WindowController : MonoBehaviour {
 	/// Window controller
 	/// </summary>
 	public UniWinApi uniWin;
-	
-	/// <summary>
-	/// 最初からウィンドウ透過するならtrueにしておく
-	/// </summary>
-	public bool isTransparent = false;
+
+    /// <summary>
+    /// 最初からウィンドウ透過するならtrueにしておく
+    /// </summary>
+    public bool autoTransparent = false;
+
+    /// <summary>
+    /// 最初から最前面表示にするならtrueにしておく
+    /// </summary>
+    public bool autoTopmost = false;
+
+    /// <summary>
+    /// ファイルドロップを有効にするならば最初からtrueにしておく
+    /// </summary>
+    public bool enableFileDrop = false;
 
     /// <summary>
     /// 操作を受け付ける状態か
@@ -32,6 +42,15 @@ public class WindowController : MonoBehaviour {
 		get { return _isFocusable; }
 	}
     private bool _isFocusable = true;
+
+    /// <summary>
+    /// Is this window transparent?
+    /// </summary>
+    public bool isTransparent
+    {
+        get { return _isTransparent; }
+    }
+    private bool _isTransparent = false;
 
 	/// <summary>
 	/// Is this window minimized?
@@ -48,10 +67,10 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public bool isMinimized { get { return ((uniWin != null) && uniWin.IsMinimized); } }
 
-	/// <summary>
-	/// Is the mouse pointer on not transparent pixel?
-	/// </summary>
-	private bool onOpaquePixel = true;
+    /// <summary>
+    /// Is the mouse pointer on not transparent pixel?
+    /// </summary>
+    private bool onOpaquePixel = true;
 
 	// カメラの背景をアルファゼロの黒に置き換えるため、本来の背景を保存
     private CameraClearFlags originalCameraClearFlags;
@@ -66,8 +85,8 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public event UniWinApi.FilesDropped OnFilesDropped
 	{
-		add { this.uniWin.OnFilesDropped += value; }
-		remove { this.uniWin.OnFilesDropped -= value; }
+		add { uniWin.OnFilesDropped += value; }
+		remove { uniWin.OnFilesDropped -= value; }
 	}
 
 	/// <summary>
@@ -85,14 +104,16 @@ public class WindowController : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 		// カメラの元の背景を記憶
-		this.originalCameraClearFlags = Camera.main.clearFlags;
-		this.originalCameraBackground = Camera.main.backgroundColor;
+		originalCameraClearFlags = Camera.main.clearFlags;
+		originalCameraBackground = Camera.main.backgroundColor;
 
 		// 描画色抽出用テクスチャ
-		this.colorPickerTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+		colorPickerTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
 
 		// ウィンドウ制御用のインスタンス作成
 		uniWin = new UniWinApi();
+
+        uniWin.enableFileDrop = enableFileDrop;
 
 		// 名前からウィンドウを取得
 		FindMyWindow();
@@ -100,13 +121,13 @@ public class WindowController : MonoBehaviour {
 
     void Start()
     {
-		// 設定により起動時からウィンドウ透過を反映
-		SetTransparent(isTransparent);
+		// 起動時からウィンドウ透過させる場合
+		if (autoTransparent) SetTransparent(autoTransparent);
 
-		// 最前面はデフォルトで有効
-		SetTopmost(true);
+		// 起動時から最前面に表示させる場合
+		if (autoTopmost) SetTopmost(autoTopmost);
 
-		// マウスカーソル下の色を取得させるコルーチン
+		// マウスカーソル下の色を取得させるコルーチンを開始
 		StartCoroutine(PickColorCoroutine());
 	}
 
@@ -153,6 +174,11 @@ public class WindowController : MonoBehaviour {
 			StateChangedEvent();
 		}
 
+        if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            uniWin.BeginFileDrop();
+        }
+
         // マウスドラッグでウィンドウ移動
         DragMove();
 
@@ -179,25 +205,25 @@ public class WindowController : MonoBehaviour {
         // 最大化時はウィンドウドラッグは行わない
         if (uniWin.IsMaximized)
         {
-            this.isDragging = false;
+            isDragging = false;
             return;
         }
 
         // マウスドラッグでウィンドウ移動
         if (Input.GetMouseButtonDown(0))
         {
-            this.lastMousePosition = uniWin.GetCursorPosition();
-            this.isDragging = true;
+            lastMousePosition = uniWin.GetCursorPosition();
+            isDragging = true;
         }
         if (!Input.GetMouseButton(0))
         {
-            this.isDragging = false;
+            isDragging = false;
         }
         if (isDragging)
         {
             Vector2 mousePos = uniWin.GetCursorPosition();
-            Vector2 delta = mousePos - this.lastMousePosition;
-            this.lastMousePosition = mousePos;
+            Vector2 delta = mousePos - lastMousePosition;
+            lastMousePosition = mousePos;
 
             Vector2 windowPosition = uniWin.GetPosition();  // 現在のウィンドウ位置を取得
             windowPosition += delta; // ウィンドウ位置に上下左右移動分を加える
@@ -210,20 +236,20 @@ public class WindowController : MonoBehaviour {
     /// </summary>
     void UpdateFocusable()
     {
-        if (!this._isFocusable)
+        if (!_isFocusable)
         {
-            if (this.onOpaquePixel)
+            if (onOpaquePixel)
             {
                 uniWin.EnableUnfocusable(false);
-                this._isFocusable = true;
+                _isFocusable = true;
             }
         }
         else
         {
-            if (this.isTransparent && !this.onOpaquePixel && !this.isDragging)
+            if (isTransparent && !onOpaquePixel && !isDragging)
             {
                 uniWin.EnableUnfocusable(true);
-                this._isFocusable = false;
+                _isFocusable = false;
 			}
 		}
     }
@@ -261,17 +287,17 @@ public class WindowController : MonoBehaviour {
 				// Reference http://tsubakit1.hateblo.jp/entry/20131203/1386000440
 				colorPickerTexture.ReadPixels(new Rect(mousePos, Vector2.one), 0, 0);
 				Color color = colorPickerTexture.GetPixel(0, 0);
-				this.pickedColor = color;
-				this.onOpaquePixel = (color.a > 0.1f);  // αが0.1より大きければ不透過とする
+				pickedColor = color;
+				onOpaquePixel = (color.a > 0.1f);  // αが0.1より大きければ不透過とする
 			} catch (System.Exception ex)
 			{
 				// 稀に範囲外になってしまうよう
 				Debug.LogError(ex.Message);
-				this.onOpaquePixel = false;
+				onOpaquePixel = false;
 			}
         } else
         {
-            this.onOpaquePixel = false;
+            onOpaquePixel = false;
         }
     }
 
@@ -303,14 +329,14 @@ public class WindowController : MonoBehaviour {
         }
         else
         {
-            Camera.main.clearFlags = this.originalCameraClearFlags;
-            Camera.main.backgroundColor = this.originalCameraBackground;
+            Camera.main.clearFlags = originalCameraClearFlags;
+            Camera.main.backgroundColor = originalCameraBackground;
         }
     }
 
 	public void SetTransparent(bool transparent)
 	{
-		this.isTransparent = transparent;
+		_isTransparent = transparent;
 		SetCameraBackground(transparent);
 		uniWin.EnableTransparent(transparent);
 		
@@ -355,8 +381,8 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	private void ToggleTransparent()
 	{
-		isTransparent = !isTransparent;
-		SetTransparent(isTransparent);
+		_isTransparent = !_isTransparent;
+		SetTransparent(_isTransparent);
 	}
 
 	/// <summary>

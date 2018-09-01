@@ -1,6 +1,9 @@
-﻿/**
+/**
  * Windows API wrapper
  * 
+ * License: CC0, https://creativecommons.org/publicdomain/zero/1.0/
+ * 
+ * Author: Kirurobo, http://twitter.com/kirurobo
  * Author: Ru--en, http://twitter.com/ru__en
  */
 using System;
@@ -49,10 +52,10 @@ public class WinApi {
     public static readonly long WS_EX_TOPMOST            = 0x00000008L;
     public static readonly long WS_EX_OVERLAPPEDWINDOW   = 0x00000300L;
 
-    public static readonly IntPtr HWND_TOP		= new IntPtr((int)0);
-	public static readonly IntPtr HWND_BOTTOM	= new IntPtr((int)1);
-	public static readonly IntPtr HWND_TOPMOST 	= new IntPtr((int)-1);
-	public static readonly IntPtr HWND_NOTOPMOST = new IntPtr((int)-2);
+    public static readonly IntPtr HWND_TOP		= new IntPtr(0);
+	public static readonly IntPtr HWND_BOTTOM	= new IntPtr(1);
+	public static readonly IntPtr HWND_TOPMOST 	= new IntPtr(-1);
+	public static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 
 	public static readonly uint GA_PARENT	= 1;
 	public static readonly uint GA_ROOT		= 2;
@@ -98,11 +101,8 @@ public class WinApi {
 	
 	[DllImport("user32.dll")]
 	public static extern IntPtr FindWindow (string lpszClass, string lpszTitle);
-	
-	[DllImport("user32.dll")]
-	public static extern long GetWindowLong (IntPtr hWnd, int nIndex);
-	
-	[DllImport("user32.dll")]
+
+    [DllImport("user32.dll")]
 	public static extern long GetWindowRect (IntPtr hWnd, out RECT rect);
 
 	[DllImport("user32.dll")]
@@ -122,8 +122,17 @@ public class WinApi {
 	
 	[DllImport("user32.dll")]
 	public static extern long SetWindowLong (IntPtr hWnd, int nIndex, long value);
+
+    [DllImport("user32.dll")]
+    public static extern long GetWindowLong(IntPtr hWnd, int nIndex);
 	
-	[DllImport("user32.dll")]
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
+    public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
+    public static extern int SetWindowLongPtr32(IntPtr hWnd, int nIndex, int dwNewPtr);
+
+    [DllImport("user32.dll")]
 	public static extern bool SetWindowPos (IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
 	
 	[DllImport("user32.dll")]
@@ -135,9 +144,9 @@ public class WinApi {
     [DllImport("user32.dll")]
     public static extern bool PostMessage(IntPtr hWnd, uint msg, long wParam, IntPtr lParam);
 
-    #endregion
+#endregion
 
-    #region for mouse events
+#region for mouse events
     public static readonly ulong MOUSEEVENTF_ABSOLUTE	= 0x8000;
 	public static readonly ulong MOUSEEVENTF_LEFTDOWN	= 0x0002;
 	public static readonly ulong MOUSEEVENTF_LEFTUP		= 0x0004;
@@ -181,12 +190,10 @@ public class WinApi {
     [DllImport("user32.dll")]
     public static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
-    [DllImport("user32.dll")]
-    public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-    #endregion
+#endregion
 
 
-    #region for shell-api
+#region for shell functions
     public static readonly int WM_NCDESTROY = 0x082;
     public static readonly int WM_WINDOWPOSCHANGING = 0x046;
     public static readonly int WM_DROPFILES = 0x233;
@@ -199,5 +206,27 @@ public class WinApi {
 
     [DllImport("shell32.dll")]
     public static extern void DragFinish(IntPtr hDrop);
-    #endregion
+
+    /// <summary>
+    /// Set window procedure.
+    /// This method is not implemented in user32.dll
+    /// </summary>
+    /// <returns>Previous window procedure</returns>
+    public static IntPtr SetWindowProcedure(IntPtr hWnd, IntPtr wndProcPtr)
+    {
+		// Reference https://qiita.com/DandyMania/items/d1404c313f67576d395f
+
+		if (IntPtr.Size == 8)
+        {
+            // 64bit
+            return SetWindowLongPtr(hWnd, GWLP_WNDPROC, wndProcPtr);
+        }
+        else
+        {
+            // 32bit
+            return new IntPtr(SetWindowLongPtr32(hWnd, GWLP_WNDPROC, wndProcPtr.ToInt32()));
+        }
+    }
+
+#endregion
 }
