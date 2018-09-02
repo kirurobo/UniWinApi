@@ -183,6 +183,13 @@ namespace UniJSON
         public void ToJson(JsonFormatter f)
         {
             f.Key("type"); f.Value("string");
+            f.Key("enum");
+            f.BeginList();
+            foreach(var x in Values)
+            {
+                f.Value(x);
+            }
+            f.EndList();
         }
     }
 

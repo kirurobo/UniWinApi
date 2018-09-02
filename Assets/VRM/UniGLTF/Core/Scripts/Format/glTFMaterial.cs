@@ -112,7 +112,7 @@ namespace UniGLTF
 
         public bool doubleSided;
 
-        // empty schemas
+        [JsonSchema(SkipSchemaComparison = true)]
         public glTFMaterial_extensions extensions;
         public object extras;
 
@@ -144,6 +144,16 @@ namespace UniGLTF
             }
 
             f.KeyValue(() => doubleSided);
+
+            if (!string.IsNullOrEmpty(alphaMode))
+            {
+                f.KeyValue(() => alphaMode);
+            }
+
+            if (extensions != null)
+            {
+                f.KeyValue(() => extensions);
+            }
         }
     }
 }

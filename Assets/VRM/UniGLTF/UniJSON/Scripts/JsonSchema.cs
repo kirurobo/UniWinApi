@@ -10,9 +10,45 @@ namespace UniJSON
         public string Schema; // http://json-schema.org/draft-04/schema
 
         #region Annotations
-        public string Title { get; private set; }
-        public string Description { get; private set; }
-        public object Default { get; private set; }
+        string m_title;
+        public string Title
+        {
+            get { return m_title; }
+            private set
+            {
+                if (value == null)
+                {
+                    m_title = "";
+                }
+                else
+                {
+                    m_title = value.Trim();
+                }
+            }
+        }
+
+        string m_desc;
+        public string Description
+        {
+            get { return m_desc; }
+            private set
+            {
+                if (value == null)
+                {
+                    m_desc = "";
+                }
+                else
+                {
+                    m_desc = value.Trim();
+                }
+            }
+        }
+
+        public object Default
+        {
+            get;
+            private set;
+        }
         #endregion
 
         public IJsonSchemaValidator Validator { get; set; }
@@ -79,22 +115,30 @@ namespace UniJSON
         }
 
         public static JsonSchema FromType(Type t,
-            JsonSchemaAttribute a=null, // field attribute
-            ItemJsonSchemaAttribute ia=null
+            BaseJsonSchemaAttribute a = null, // field attribute
+            ItemJsonSchemaAttribute ia = null
             )
         {
-            if (a == null)
+            // class attribute
+            var aa = t.GetCustomAttributes(typeof(JsonSchemaAttribute), true)
+                .FirstOrDefault() as JsonSchemaAttribute;
+            if (a != null)
             {
-                // get class attribute
-                a = t.GetCustomAttributes(typeof(JsonSchemaAttribute), true)
-                    .FirstOrDefault() as JsonSchemaAttribute;
+                a.Merge(aa);
             }
-            if (a == null)
+            else
             {
-                a = new JsonSchemaAttribute();
+                if (aa == null)
+                {
+                    a = new JsonSchemaAttribute();
+                }
+                else
+                {
+                    a = aa;
+                }
             }
 
-            if(ia == null)
+            if (ia == null)
             {
                 ia = t.GetCustomAttributes(typeof(ItemJsonSchemaAttribute), true)
                     .FirstOrDefault() as ItemJsonSchemaAttribute;
@@ -334,7 +378,7 @@ namespace UniJSON
             var c = new JsonSchemaValidationContext(o);
 
             var ex = Validator.Validate(c, o);
-            if (ex!=null)
+            if (ex != null)
             {
                 throw ex;
             }
@@ -347,10 +391,8 @@ namespace UniJSON
         public void ToJson(JsonFormatter f)
         {
             f.BeginMap();
-            if (!string.IsNullOrEmpty(Title))
-            {
-                f.Key("title"); f.Value(Title);
-            }
+            if (!string.IsNullOrEmpty(Title)) { f.Key("title"); f.Value(Title); }
+            if (!string.IsNullOrEmpty(Description)) { f.Key("description"); f.Value(Description); }
             Validator.ToJson(f);
             f.EndMap();
         }

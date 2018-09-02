@@ -39,7 +39,11 @@ namespace UniJSON
                 // for array item
                 var ia = fi.GetCustomAttributes(typeof(ItemJsonSchemaAttribute), true).FirstOrDefault() as ItemJsonSchemaAttribute;
 
-                if (a != null)
+                if (a == null)
+                {
+                    int x = 0;
+                }
+                else
                 {
                     yield return new JsonSchemaItem
                     {
@@ -72,9 +76,9 @@ namespace UniJSON
             }
         }
 
-        public static IJsonSchemaValidator Create(JsonValueType valueType, 
-            Type t = null, 
-            BaseJsonSchemaAttribute a = null, 
+        public static IJsonSchemaValidator Create(JsonValueType valueType,
+            Type t = null,
+            BaseJsonSchemaAttribute a = null,
             ItemJsonSchemaAttribute ia = null)
         {
             switch (valueType)
@@ -174,22 +178,26 @@ namespace UniJSON
                                     ia = new ItemJsonSchemaAttribute();
                                 }
 
+                                Type elementType = null;
                                 if (t.IsArray)
                                 {
-                                    var sub = new JsonSchema
-                                    {
-                                        SkipComparison = ia.SkipSchemaComparison,
-                                        Validator = Create(t.GetElementType(), ia, null)
-                                    };
-                                    v.Items = sub;
+                                    elementType = t.GetElementType();
                                 }
                                 else if (t.GetIsGenericList())
                                 {
+                                    elementType = t.GetGenericArguments().First();
+                                }
+
+                                if (elementType != null)
+                                {
+                                    /*
                                     var sub = new JsonSchema
                                     {
                                         SkipComparison = ia.SkipSchemaComparison,
-                                        Validator = Create(t.GetGenericArguments().First(), ia, null)
+                                        Validator = Create(elementType, ia, null)
                                     };
+                                    */
+                                    var sub = JsonSchema.FromType(elementType, ia, null);
                                     v.Items = sub;
                                 }
                             }

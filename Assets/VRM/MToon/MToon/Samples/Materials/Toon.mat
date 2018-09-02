@@ -8,13 +8,14 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: Toon
   m_Shader: {fileID: 4800000, guid: 1a97144e4ad27a04aafd70f7b915cedb, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: MTOON_DEBUG_NORMAL MTOON_OUTLINE_COLOR_MIXED MTOON_OUTLINE_WIDTH_SCREEN
+    _ALPHABLEND_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap:
-    RenderType: Opaque
+    RenderType: Transparent
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
@@ -85,13 +86,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _Alpha: 1
-    - _BlendMode: 0
+    - _BlendMode: 2
     - _BumpScale: 1
-    - _CullMode: 2
+    - _CullMode: 0
     - _Cutoff: 0.611
-    - _DebugMode: 0
+    - _DebugMode: 1
     - _DetailNormalMapScale: 1
-    - _DstBlend: 0
+    - _DstBlend: 10
     - _GlossMapScale: 1
     - _Glossiness: 0
     - _GlossyReflections: 1
@@ -102,26 +103,27 @@ Material:
     - _NormalCylinderizeRate: 0
     - _NormalFromVColorRate: 0
     - _OcclusionStrength: 1
-    - _OutlineColorMode: 0
+    - _OutlineColorMode: 1
+    - _OutlineCullMode: 1
     - _OutlineLightingMix: 1
     - _OutlineMode: 0
     - _OutlineScaledMaxDistance: 1
     - _OutlineWidth: 1
-    - _OutlineWidthMode: 0
+    - _OutlineWidthMode: 2
     - _Parallax: 0.02
-    - _ReceiveShadowRate: 1
+    - _ReceiveShadowRate: 0
     - _ShadeShift: 0.5
-    - _ShadeToony: 0.5
+    - _ShadeToony: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _SrcBlend: 1
+    - _SrcBlend: 5
     - _UVSec: 0
-    - _ZWrite: 1
+    - _ZWrite: 0
     m_Colors:
-    - _Color: {r: 1, g: 0.93995947, b: 0.45588237, a: 1}
-    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 0.8627451}
+    - _EmissionColor: {r: 0.6102941, g: 0.6102941, b: 0.6102941, a: 1}
     - _LitColor: {r: 1, g: 1, b: 1, a: 1}
     - _NormalCylinderizeAxis: {r: 0, g: 1, b: 0, a: 0}
     - _NormalCylinderizePos: {r: 0, g: 0, b: 0, a: 0}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 1, g: 0.5147059, b: 0.80588233, a: 1}
+    - _ShadeColor: {r: 1, g: 1, b: 1, a: 1}

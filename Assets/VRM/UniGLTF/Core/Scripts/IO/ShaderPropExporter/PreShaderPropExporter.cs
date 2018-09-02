@@ -32,11 +32,17 @@ namespace UniGLTF.ShaderPropExporter
     {
         const string TARGET_FOLDER = "UniGLTF/Core/Scripts";
 
+#pragma warning disable 414
         [PreExportShaders]
         static SupportedShader[] SupportedShaders = new SupportedShader[]
         {
-            new SupportedShader(TARGET_FOLDER, "Standard","_BumpMap"),
+            new SupportedShader(TARGET_FOLDER, "Standard", "_BumpMap"),
+            new SupportedShader(TARGET_FOLDER, "Unlit/Color"),
+            new SupportedShader(TARGET_FOLDER, "Unlit/Texture"),
+            new SupportedShader(TARGET_FOLDER, "Unlit/Transparent"),
+            new SupportedShader(TARGET_FOLDER, "Unlit/Transparent Cutout"),
         };
+#pragma warning restore 414
 
 #if UNITY_EDITOR
         [MenuItem(UniGLTFVersion.UNIGLTF_VERSION + "/PreExport ShaderProps")]
@@ -116,7 +122,7 @@ namespace UniGLTF.ShaderPropExporter
 
 #if UNITY_EDITOR
             // fallback
-            Debug.LogWarningFormat("Unsupported shader: {0}", shaderName);
+            Debug.LogWarningFormat("{0} is not predefined shader. Use ShaderUtil", shaderName);
             var shader = Shader.Find(shaderName);
             return ShaderProps.FromShader(shader);
 #else

@@ -39,7 +39,7 @@ namespace UniJSON
 
         public void ToJson(JsonFormatter f)
         {
-            f.Key("type"); f.Value("bool");
+            f.Key("type"); f.Value("boolean");
         }
     }
 }
