@@ -125,7 +125,18 @@ namespace UniGLTF
             var hoge = UnityPath.FromUnityPath("Assets/Hoge");
             Assert.AreEqual(assetsChild, hoge);
 
-            var children = root.TravserseDir().ToArray();
+            //var children = root.TravserseDir().ToArray();
+        }
+
+        [Test]
+        public void VersionChecker()
+        {
+            Assert.False(ImporterContext.IsGeneratedUniGLTFAndOlderThan("hoge", 1, 16));
+            Assert.False(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF-1.16", 1, 16));
+            Assert.True(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF-1.15", 1, 16));
+            Assert.False(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF-11.16", 1, 16));
+            Assert.True(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF-0.16", 1, 16));
+            Assert.True(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF", 1, 16));
         }
     }
 }

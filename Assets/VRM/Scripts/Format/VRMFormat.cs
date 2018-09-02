@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UniGLTF;
-
+using UniJSON;
 
 namespace UniGLTF
 {
@@ -33,8 +33,12 @@ namespace UniGLTF
 namespace VRM
 {
     [Serializable]
+    [JsonSchema(Title = "vrm", Description = @"
+VRM extension is for 3d humanoid avatars (and models) in VR applications.
+")]
     public class glTF_VRM_extensions : JsonSerializableBase
     {
+        [JsonSchema(Description = @"Version of exporter that vrm created. " + VRMVersion.VRM_VERSION)]
         public string exporterVersion = "UniVRM-" + VRMVersion.VERSION;
 
         public glTF_VRM_Meta meta = new glTF_VRM_Meta();

@@ -572,6 +572,16 @@ namespace UniJSON
             });
         }
 
+        public void SetValue(string jsonPointer, float value)
+        {
+            SetValue(new JsonPointer(jsonPointer), parentIndex => new JsonValue
+            {
+                ParentIndex = parentIndex,
+                Segment = new StringSegment(value.ToString()),
+                ValueType = JsonValueType.Integer
+            });
+        }
+
         public void SetValue(string jsonPointer, bool value)
         {
             SetValue(new JsonPointer(jsonPointer), parentIndex => new JsonValue

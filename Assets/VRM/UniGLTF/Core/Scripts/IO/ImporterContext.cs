@@ -52,7 +52,7 @@ namespace UniGLTF
 
             var sb = new StringBuilder();
             sb.AppendLine("【SpeedLog】");
-            foreach(var kv in m_speedReports)
+            foreach (var kv in m_speedReports)
             {
                 sb.AppendLine(string.Format("{0}: {1}ms", kv.Key, (int)kv.Elapsed.TotalMilliseconds));
                 total += kv.Elapsed;
@@ -83,6 +83,48 @@ namespace UniGLTF
         /// GLTF parsed from JSON
         /// </summary>
         public glTF GLTF; // parsed
+
+        public static bool IsGeneratedUniGLTFAndOlderThan(string generatorVersion, int major, int minor)
+        {
+            if (string.IsNullOrEmpty(generatorVersion)) return false;
+            if (generatorVersion == "UniGLTF") return true;
+            if (!generatorVersion.StartsWith("UniGLTF-")) return false;
+
+            try
+            {
+                var index = generatorVersion.IndexOf('.');
+                var generatorMajor = int.Parse(generatorVersion.Substring(8, index - 8));
+                var generatorMinor = int.Parse(generatorVersion.Substring(index + 1));
+
+                if (generatorMajor < major)
+                {
+                    return true;
+                }
+                else
+                {
+                    if (generatorMinor >= minor)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarningFormat("{0}: {1}", generatorVersion, ex);
+                return false;
+            }
+        }
+
+        public bool IsGeneratedUniGLTFAndOlder(int major, int minor)
+        {
+            if (GLTF == null) return false;
+            if (GLTF.asset == null) return false;
+            return IsGeneratedUniGLTFAndOlderThan(GLTF.asset.generator, major, minor);
+        }
 
         /// <summary>
         /// URI access
@@ -267,6 +309,12 @@ namespace UniGLTF
         {
             return m_materials;
         }
+        public Material GetMaterial(int index)
+        {
+            if (index < 0) return null;
+            if (index >= m_materials.Count) return null;
+            return m_materials[index];
+        }
 
         public List<MeshWithMaterials> Meshes = new List<MeshWithMaterials>();
         public void ShowMeshes()
@@ -315,6 +363,32 @@ namespace UniGLTF
 
         public bool MeshAsSubAsset = false;
 
+        protected virtual UnityPath GetAssetPath(UnityPath prefabPath, UnityEngine.Object o)
+        {
+            if (o is Material)
+            {
+                var materialDir = prefabPath.GetAssetFolder(".Materials");
+                var materialPath = materialDir.Child(o.name.EscapeFilePath() + ".asset");
+                return materialPath;
+            }
+            else if (o is Texture2D)
+            {
+                var textureDir = prefabPath.GetAssetFolder(".Textures");
+                var texturePath = textureDir.Child(o.name.EscapeFilePath() + ".asset");
+                return texturePath;
+            }
+            else if (o is Mesh && !MeshAsSubAsset)
+            {
+                var meshDir = prefabPath.GetAssetFolder(".Meshes");
+                var meshPath = meshDir.Child(o.name.EscapeFilePath() + ".asset");
+                return meshPath;
+            }
+            else
+            {
+                return default(UnityPath);
+            }
+        }
+
         public void SaveAsAsset(UnityPath prefabPath)
         {
             ShowMeshes();
@@ -329,39 +403,20 @@ namespace UniGLTF
                 }
             }
 
-            // Add SubAsset
-            var materialDir = prefabPath.GetAssetFolder(".Materials");
-            materialDir.EnsureFolder();
-            var textureDir = prefabPath.GetAssetFolder(".Textures");
-            textureDir.EnsureFolder();
-            var meshDir = prefabPath.GetAssetFolder(".Meshes");
-            if (!MeshAsSubAsset)
-            {
-                meshDir.EnsureFolder();
-            }
-
+            //
+            // save sub assets
+            //
             var paths = new List<UnityPath>(){
                 prefabPath
             };
             foreach (var o in ObjectsForSubAsset())
             {
-                if (o is Material)
+                var assetPath = GetAssetPath(prefabPath, o);
+                if (!assetPath.IsNull)
                 {
-                    var materialPath = materialDir.Child(o.name.EscapeFilePath() + ".asset");
-                    materialPath.CreateAsset(o);
-                    paths.Add(materialPath);
-                }
-                else if (o is Texture2D)
-                {
-                    var texturePath = textureDir.Child(o.name.EscapeFilePath() + ".asset");
-                    texturePath.CreateAsset(o);
-                    paths.Add(texturePath);
-                }
-                else if (o is Mesh && !MeshAsSubAsset)
-                {
-                    var meshPath = meshDir.Child(o.name.EscapeFilePath() + ".asset");
-                    meshPath.CreateAsset(o);
-                    paths.Add(meshPath);
+                    assetPath.Parent.EnsureFolder();
+                    assetPath.CreateAsset(o);
+                    paths.Add(assetPath);
                 }
                 else
                 {

@@ -1,0 +1,18 @@
+{
+    "title": "vrm.secondaryanimation",
+    "type": "object",
+    "properties": {
+        "boneGroups": {
+            "type": "array",
+            "items": {
+                "$ref": "vrm.secondaryanimation.spring.schema.json"
+            }
+        },
+        "colliderGroups": {
+            "type": "array",
+            "items": {
+                "$ref": "vrm.secondaryanimation.collidergroup.schema.json"
+            }
+        }
+    }
+}

@@ -145,6 +145,12 @@ namespace UniJSON
         public void ToJson(JsonFormatter f)
         {
             f.Key("type"); f.Value("array");
+
+            if (Items != null)
+            {
+                f.Key("items");
+                Items.ToJson(f);
+            }
         }
     }
 }
