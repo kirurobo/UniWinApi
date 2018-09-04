@@ -239,7 +239,7 @@ public class UniWinApi : IDisposable {
     {
         RestoreWndProc();
         this.hWnd = hWnd;
-        if (enableFileDrop) InitWndProc();
+        if (enableFileDrop) BeginFileDrop();
         MemorizeWindowState();
     }
 
@@ -528,6 +528,9 @@ public class UniWinApi : IDisposable {
     private IntPtr oldWndProcPtr = IntPtr.Zero;
     private WndProcDelegate newWndProc = null;
 
+    private WinApi.HookProc myHookCallback;
+    private IntPtr myHook = IntPtr.Zero;
+
     // 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
     private IntPtr UniWinApiWindowProcedure(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
     {
@@ -557,14 +560,80 @@ public class UniWinApi : IDisposable {
         return WinApi.CallWindowProc(oldWndProcPtr, hWnd, msg, wParam, lParam);
     }
 
+    private IntPtr MessageCallback(int nCode, IntPtr wParam, ref WinApi.MSG lParam)
+    {
+        if (nCode == 0 && lParam.message == WinApi.WM_DROPFILES)
+        {
+            IntPtr hDrop = lParam.wParam;
+            uint num = WinApi.DragQueryFile(hDrop, 0xFFFFFFFF, null, 0);
+            string[] files = new string[num];
+
+            uint bufferSize = 1024;
+            StringBuilder path = new StringBuilder((int)bufferSize);
+            for (uint i = 0; i < num; i++)
+            {
+                //uint size = WinApi.DragQueryFile(hDrop, i, path, bufferSize);
+                WinApi.DragQueryFile(hDrop, i, path, bufferSize);
+                files[i] = path.ToString();
+                path.Length = 0;
+            }
+
+            WinApi.DragFinish(hDrop);
+
+            if (OnFilesDropped != null)
+            {
+                OnFilesDropped(files);
+            }
+        }
+        return WinApi.CallNextHookEx(myHook, nCode, wParam, ref lParam);
+    }
+
     public void BeginFileDrop()
     {
-        InitWndProc();
+        //InitWndProc();
+        BeginHook();
     }
 
     public void EndFileDrop()
     {
-        RestoreWndProc();
+        //RestoreWndProc();
+        EndHook();
+    }
+
+    private void BeginHook()
+    {
+        if (IsWndProcSet) return;
+        if (!IsActive)
+        {
+            IsWndProcSet = false;
+            return;
+        }
+
+        uint threadId = WinApi.GetCurrentThreadId();
+        IntPtr module = WinApi.GetModuleHandle(null);
+        Debug.Log("Module:" + module);
+        myHookCallback = new WinApi.HookProc(MessageCallback);
+        myHook = WinApi.SetWindowsHookEx(WinApi.WH_GETMESSAGE, myHookCallback, module, threadId);
+        Debug.Log("HHook:" + myHook);
+
+        if (myHook == null)
+        {
+            Debug.Log("Error:" + WinApi.GetLastError());
+        }
+
+        WinApi.DragAcceptFiles(hWnd, true);
+
+        IsWndProcSet = true;
+    }
+
+    private void EndHook()
+    {
+        if (myHook != IntPtr.Zero)
+        {
+            WinApi.UnhookWindowsHookEx(myHook);
+            myHook = IntPtr.Zero;
+        }
+        IsWndProcSet = false;
     }
 
     /// <summary>
@@ -613,7 +682,7 @@ public class UniWinApi : IDisposable {
     /// </summary>
     public void Dispose()
     {
-		RestoreWndProc();
+		EndFileDrop();
 #if UNITY_EDITOR
         EnableTransparent(false);
         EnableTopmost(false);
