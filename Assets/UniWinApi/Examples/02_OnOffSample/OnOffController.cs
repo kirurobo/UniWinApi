@@ -28,43 +28,14 @@ public class OnOffController : MonoBehaviour {
 			}
 		};
 
-		if (transparentToggle) transparentToggle.isOn = windowController.isTransparent;
-		if (topmostToggle) topmostToggle.isOn = windowController.isTopmost;
-		if (maximizedToggle) maximizedToggle.isOn = windowController.isMaximized;
-		if (minimizedToggle) minimizedToggle.isOn = windowController.isMinimized;
-		if (enableFileDropToggle) enableFileDropToggle.isOn = windowController.enableFileDrop;
+		//if (transparentToggle) transparentToggle.isOn = windowController.isTransparent;
+		//if (topmostToggle) topmostToggle.isOn = windowController.isTopmost;
+		//if (maximizedToggle) maximizedToggle.isOn = windowController.isMaximized;
+		//if (minimizedToggle) minimizedToggle.isOn = windowController.isMinimized;
+		//if (enableFileDropToggle) enableFileDropToggle.isOn = windowController.enableFileDrop;
 	}
 
 	// Update is called once per frame
 	void Update () {
-
-		// End を押すとウィンドウ透過切替
-		if (Input.GetKeyDown(KeyCode.End))
-		{
-			windowController.SetTransparent(!windowController.isTransparent);
-		}
-
-		// Home を押すと最前面切替
-		if (Input.GetKeyDown(KeyCode.Home))
-		{
-			windowController.SetTopmost(!windowController.isTopmost);
-		}
-		// F11 を押すと最大化切替
-		if (Input.GetKeyDown(KeyCode.F11))
-		{
-			windowController.SetMaximized(!windowController.isMaximized);
-		}
-
-		// Insert を押すと最小化切替
-		if (Input.GetKeyDown(KeyCode.Insert))
-		{
-			windowController.SetMinimized(!windowController.isMinimized);
-		}
-
-		// ファイルドロップ受け付け状態を切り替え
-		if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
-		{
-			windowController.enableFileDrop = !windowController.enableFileDrop;
-		}
 	}
 }

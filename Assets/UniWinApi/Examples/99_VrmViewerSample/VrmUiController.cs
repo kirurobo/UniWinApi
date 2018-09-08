@@ -47,8 +47,8 @@ public class VrmUiController : MonoBehaviour {
 		// Set event listeners.
 		if (closeButton) { closeButton.onClick.AddListener(Close); }
 		if (quitButton) { quitButton.onClick.AddListener(Quit); }
-		if (transparentToggle) { transparentToggle.onValueChanged.AddListener((value) => windowController.SetTransparent(value)); }
-		if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener((value) => windowController.SetMaximized(value)); }
+		if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
+		if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
 		if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
 
 		// Show menu on startup.
@@ -68,7 +68,7 @@ public class VrmUiController : MonoBehaviour {
 		if (!windowController) return;
 
 		if (transparentToggle) { transparentToggle.isOn = windowController.isTransparent; }
-		if (maximizeToggle) { maximizeToggle.isOn = windowController.isMinimized; }
+		if (maximizeToggle) { maximizeToggle.isOn = windowController.isMaximized; }
 		if (topmostToggle) { topmostToggle.isOn = windowController.isTopmost; }
 	}
 

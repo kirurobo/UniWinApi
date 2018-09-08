@@ -654,59 +654,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f985bf036f5416a45b9dd4e31bc85075, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &503448511
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 503448513}
-  - component: {fileID: 503448512}
-  m_Layer: 0
-  m_Name: Help GUI Text
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!132 &503448512
-GUIText:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 503448511}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Text: "Push to toggle\n[End] Transparent\n\r[F11] Maximize\r\n[Insert] Minimize\n[Home]
-    Topmost\n[Enter] Enable file-drop"
-  m_Anchor: 7
-  m_Alignment: 0
-  m_PixelOffset: {x: 0, y: 20}
-  m_LineSpacing: 1
-  m_TabSize: 4
-  m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Material: {fileID: 0}
-  m_FontSize: 0
-  m_FontStyle: 0
-  m_Color:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_PixelCorrect: 1
-  m_RichText: 1
---- !u!4 &503448513
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 503448511}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &511564869
 GameObject:
   m_ObjectHideFlags: 0
@@ -1571,7 +1518,7 @@ GameObject:
   - component: {fileID: 1570950904}
   - component: {fileID: 1570950903}
   m_Layer: 5
-  m_Name: DroppedFilesText
+  m_Name: MessageText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1627,7 +1574,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Dropped files
+  m_Text: 
 --- !u!222 &1570950904
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2109,11 +2056,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13bcdf69fdb73ac4388722569c356a3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isTransparent: 1
-  _isTopmost: 0
-  _isMaximized: 0
-  _isMinimized: 0
-  _enableFileDrop: 0
   enableDragMove: 1
   pickedColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!4 &1853111555
@@ -2127,7 +2069,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1853111556
 MonoBehaviour:
@@ -2219,7 +2161,7 @@ GameObject:
   - component: {fileID: 2020665905}
   - component: {fileID: 2020665904}
   m_Layer: 5
-  m_Name: DroppedFilesPanel
+  m_Name: MessagePanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

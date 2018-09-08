@@ -149,6 +149,15 @@ public class UniWinApi : IDisposable {
 	public UniWinApi() {
 	}
 
+	/// <summary>
+	/// 指定されたウィンドウに関連付けたコンストラクタ
+	/// </summary>
+	/// <param name="window"></param>
+	public UniWinApi(WindowHandle window)
+	{
+		SetWindow(window);
+	}
+
 	~UniWinApi() {
 		Dispose();
 	}
@@ -180,25 +189,24 @@ public class UniWinApi : IDisposable {
 	/// <summary>
 	/// Sets the window z-order (Topmost or not).
 	/// </summary>
-	/// <param name="isTop">If set to <c>true</c> is top.</param>
-	public void EnableTopmost(bool isTop)
+	/// <param name="isTopmost">If set to <c>true</c> is top.</param>
+	public void EnableTopmost(bool isTopmost)
 	{
 		if (!IsActive) return;
 		WinApi.SetWindowPos (
 			hWnd,
-			(isTop ? WinApi.HWND_TOPMOST : WinApi.HWND_NOTOPMOST),
+			(isTopmost ? WinApi.HWND_TOPMOST : WinApi.HWND_NOTOPMOST),
 			0, 0, 0, 0,
 			WinApi.SWP_NOSIZE | WinApi.SWP_NOMOVE
 			| WinApi.SWP_FRAMECHANGED | WinApi.SWP_NOOWNERZORDER
 			| WinApi.SWP_NOACTIVATE | WinApi.SWP_ASYNCWINDOWPOS
 			);
-		this._isTopmost = isTop;
+		this._isTopmost = isTopmost;
 	}
 
 	/// <summary>
 	/// Sets the window size.
 	/// </summary>
-	/// <param name="isTop">If set to <c>true</c> is top.</param>
 	/// <param name="size">Size.</param>
 	public void SetSize(Vector2 size)
 	{
@@ -216,9 +224,7 @@ public class UniWinApi : IDisposable {
 	/// <summary>
 	/// Sets the window position.
 	/// </summary>
-	/// <param name="isTop">If set to <c>true</c> is top.</param>
 	/// <param name="position">Position.</param>
-	/// <param name="size">Size.</param>
 	public void SetPosition(Vector2 position)
 	{
 		if (!IsActive) return;
@@ -301,7 +307,7 @@ public class UniWinApi : IDisposable {
 	/// アクティブウィンドウのハンドルを取得
 	/// </summary>
 	/// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
-	public WindowHandle FindWindow()
+	static public WindowHandle FindWindow()
 	{
 		IntPtr hwnd = WinApi.GetActiveWindow();
 		if (hwnd == IntPtr.Zero) return null;
@@ -314,7 +320,7 @@ public class UniWinApi : IDisposable {
 	/// ウィンドウタイトルを元にハンドルを取得
 	/// </summary>
 	/// <param name="title">Title.</param>
-	public WindowHandle FindWindowByTitle(string title)
+	static public WindowHandle FindWindowByTitle(string title)
 	{
 		IntPtr hwnd = WinApi.FindWindow(null, title);
 		if (hwnd == IntPtr.Zero) return null;
@@ -328,7 +334,7 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	/// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
 	/// <param name="classname">Title.</param>
-	public WindowHandle FindWindowByClass(string classname)
+	static public WindowHandle FindWindowByClass(string classname)
 	{
 		IntPtr hwnd = WinApi.FindWindow(classname, null);
 		if (hwnd == IntPtr.Zero) return null;
@@ -342,7 +348,7 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	/// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
 	/// <param name="title">Title.</param>
-	public WindowHandle[] FindWindows()
+	static public WindowHandle[] FindWindows()
 	{
 		List<WindowHandle> windowList = new List<WindowHandle>();
 
@@ -508,7 +514,7 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// Gets the product-name
+	/// Gets the Unity product-name
 	/// </summary>
 	/// <description>http://gamedev.stackexchange.com/questions/68784/how-do-i-access-the-product-name-in-unity-4</description>
 	/// <returns>The project name.</returns>

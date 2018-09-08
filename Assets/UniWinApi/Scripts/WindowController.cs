@@ -10,8 +10,6 @@ using UnityEngine;
 
 /// <summary>
 /// デスクトップマスコット風の利用法を想定した UniWinApi サンプル。
-/// これを空のオブジェクトにアタッチすれば、[End][Home]等のキーでウィンドウを操作できます。
-/// このスクリプトはアプリケーションに合わせて改造してください。
 /// </summary>
 public class WindowController : MonoBehaviour {
 	/// <summary>
@@ -36,7 +34,6 @@ public class WindowController : MonoBehaviour {
 		get { return _isTransparent; }
 		set { SetTransparent(value); }
 	}
-	[SerializeField, Tooltip("Check to set transparent on startup")]
 	private bool _isTransparent = false;
 
 	/// <summary>
@@ -46,7 +43,6 @@ public class WindowController : MonoBehaviour {
 		get { return ((uniWin != null) ? _isTopmost : _isTopmost = uniWin.IsTopmost); }
 		set { SetTopmost(value); }
 	}
-	[SerializeField, Tooltip("Check to set topmost on startup")]
 	private bool _isTopmost = false;
 
 	/// <summary>
@@ -56,7 +52,6 @@ public class WindowController : MonoBehaviour {
 		get { return ((uniWin != null) ? _isMaximized : _isMaximized = uniWin.IsMaximized); }
 		set { SetMaximized(value); }
 	}
-	[SerializeField, Tooltip("Check to set maximized on startup")]
 	private bool _isMaximized = false;
 
 	/// <summary>
@@ -66,7 +61,6 @@ public class WindowController : MonoBehaviour {
 		get { return ((uniWin != null) ? _isMinimized : _isMinimized = uniWin.IsMinimized); }
 		set { SetMinimized(value); }
 	}
-	[SerializeField, Tooltip("Check to set minimized on startup")]
 	private bool _isMinimized = false;
 
 	/// <summary>
@@ -79,7 +73,6 @@ public class WindowController : MonoBehaviour {
 			else { EndFileDrop(); }
 		}
 	}
-	[SerializeField, Tooltip("Check to enable file-drop on startup")]
 	private bool _enableFileDrop = false;
 
 	/// <summary>
@@ -144,12 +137,6 @@ public class WindowController : MonoBehaviour {
 
 		// ウィンドウ制御用のインスタンス作成
 		uniWin = new UniWinApi();
-
-		//var windows = uniWin.FindWindows();
-		//foreach (var window in windows)
-		//{
-		//	Debug.Log(window);
-		//}
 
 		// 自分のウィンドウを取得
 		FindMyWindow();
@@ -255,7 +242,7 @@ public class WindowController : MonoBehaviour {
 		{
 			if (onOpaquePixel)
 			{
-				uniWin.EnableClickThrough(false);
+				if (uniWin != null) uniWin.EnableClickThrough(false);
 				_isClickThrough = false;
 			}
 		}
@@ -263,7 +250,7 @@ public class WindowController : MonoBehaviour {
 		{
 			if (isTransparent && !onOpaquePixel && !isDragging)
 			{
-				uniWin.EnableClickThrough(true);
+				if (uniWin != null) uniWin.EnableClickThrough(true);
 				_isClickThrough = true;
 			}
 		}
@@ -292,7 +279,7 @@ public class WindowController : MonoBehaviour {
 		Vector2 mousePos = Input.mousePosition;
 		Rect camRect = cam.pixelRect;
 
-		// コルーチン & WaitForEndOfFrame ではなく、OnPostRenderで呼ぶならば、MSAAによって上下反転しないといけない？
+		//// コルーチン & WaitForEndOfFrame ではなく、OnPostRenderで呼ぶならば、MSAAによって上下反転しないといけない？
 		//if (QualitySettings.antiAliasing > 1) mousePos.y = camRect.height - mousePos.y;
 
 		if (camRect.Contains(mousePos))
@@ -322,7 +309,7 @@ public class WindowController : MonoBehaviour {
 	private void FindMyWindow()
 	{
 		// 今アクティブなウィンドウを取得
-		var window = uniWin.FindWindow();
+		var window = UniWinApi.FindWindow();
 		if (window == null) return;
 
 		// 見つかったウィンドウを利用開始
@@ -353,12 +340,15 @@ public class WindowController : MonoBehaviour {
 	/// <param name="transparent"></param>
 	public void SetTransparent(bool transparent)
 	{
+		if (_isTransparent == transparent) return;
+
 		_isTransparent = transparent;
-		if (uniWin == null) return;
-		
 		SetCameraBackground(transparent);
-		uniWin.EnableTransparent(transparent);
-		
+
+		if (uniWin != null)
+		{
+			uniWin.EnableTransparent(transparent);
+		}
 		UpdateClickThrough();
 		StateChangedEvent();
 	}
@@ -368,15 +358,22 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public void SetMaximized(bool maximized)
 	{
-		if (uniWin == null) return;
-		if (isMaximized == maximized) return;
+		if (_isMaximized == maximized) return;
+		if (uniWin == null)
+		{
+			_isMaximized = maximized;
+		} else
+		{
 
-		if (maximized)
-		{
-			uniWin.Maximize();
-		} else if (uniWin.IsMaximized)
-		{
-			uniWin.Restore();
+			if (maximized)
+			{
+				uniWin.Maximize();
+			}
+			else if (uniWin.IsMaximized)
+			{
+				uniWin.Restore();
+			}
+			_isMaximized = uniWin.IsMaximized;
 		}
 		StateChangedEvent();
 	}
@@ -386,16 +383,21 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public void SetMinimized(bool minimized)
 	{
-		if (uniWin == null) return;
-		if (isMinimized == minimized) return;
-
-		if (minimized)
+		if (_isMinimized == minimized) return;
+		if (uniWin == null)
 		{
-			uniWin.Minimize();
-		}
-		else if (uniWin.IsMinimized)
+			_isMinimized = minimized;
+		} else
 		{
-			uniWin.Restore();
+			if (minimized)
+			{
+				uniWin.Minimize();
+			}
+			else if (uniWin.IsMinimized)
+			{
+				uniWin.Restore();
+			}
+			_isMinimized = uniWin.IsMinimized;
 		}
 		StateChangedEvent();
 	}
@@ -407,9 +409,10 @@ public class WindowController : MonoBehaviour {
 	public void SetTopmost(bool topmost)
 	{
 		if (uniWin == null) return;
-		if (isTopmost == topmost) return;
+		if (_isTopmost == topmost) return;
 
 		uniWin.EnableTopmost(topmost);
+		_isTopmost = uniWin.IsTopmost;
 		StateChangedEvent();
 	}
 

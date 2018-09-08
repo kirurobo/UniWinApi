@@ -358,10 +358,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13bcdf69fdb73ac4388722569c356a3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isTransparent: 0
-  _isTopmost: 0
+  _isTransparent: 1
+  _isTopmost: 1
   _isMaximized: 0
   _isMinimized: 0
   _enableFileDrop: 0
-  onOpaquePixel: 1
+  enableDragMove: 1
   pickedColor: {r: 0, g: 0, b: 0, a: 0}
