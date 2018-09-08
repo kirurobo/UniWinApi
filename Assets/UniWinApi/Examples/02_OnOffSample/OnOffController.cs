@@ -28,11 +28,11 @@ public class OnOffController : MonoBehaviour {
 			}
 		};
 
-		//if (transparentToggle) transparentToggle.isOn = windowController.isTransparent;
-		//if (topmostToggle) topmostToggle.isOn = windowController.isTopmost;
-		//if (maximizedToggle) maximizedToggle.isOn = windowController.isMaximized;
-		//if (minimizedToggle) minimizedToggle.isOn = windowController.isMinimized;
-		//if (enableFileDropToggle) enableFileDropToggle.isOn = windowController.enableFileDrop;
+		if (transparentToggle) transparentToggle.isOn = windowController.isTransparent;
+		if (topmostToggle) topmostToggle.isOn = windowController.isTopmost;
+		if (maximizedToggle) maximizedToggle.isOn = windowController.isMaximized;
+		if (minimizedToggle) minimizedToggle.isOn = windowController.isMinimized;
+		if (enableFileDropToggle) enableFileDropToggle.isOn = windowController.enableFileDrop;
 	}
 
 	// Update is called once per frame

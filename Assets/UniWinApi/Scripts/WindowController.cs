@@ -9,9 +9,18 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
+/// Set to readonly during playing
+/// </summary>
+[System.AttributeUsage(System.AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+public class BoolPropertyAttribute : PropertyAttribute
+{
+}
+
+/// <summary>
 /// デスクトップマスコット風の利用法を想定した UniWinApi サンプル。
 /// </summary>
 public class WindowController : MonoBehaviour {
+
 	/// <summary>
 	/// Window controller
 	/// </summary>
@@ -34,6 +43,7 @@ public class WindowController : MonoBehaviour {
 		get { return _isTransparent; }
 		set { SetTransparent(value); }
 	}
+	[SerializeField, BoolProperty, Tooltip("Check to set transparent on startup")]
 	private bool _isTransparent = false;
 
 	/// <summary>
@@ -43,6 +53,7 @@ public class WindowController : MonoBehaviour {
 		get { return ((uniWin != null) ? _isTopmost : _isTopmost = uniWin.IsTopmost); }
 		set { SetTopmost(value); }
 	}
+	[SerializeField, BoolProperty, Tooltip("Check to set topmost on startup")]
 	private bool _isTopmost = false;
 
 	/// <summary>
@@ -52,6 +63,7 @@ public class WindowController : MonoBehaviour {
 		get { return ((uniWin != null) ? _isMaximized : _isMaximized = uniWin.IsMaximized); }
 		set { SetMaximized(value); }
 	}
+	[SerializeField, BoolProperty, Tooltip("Check to set maximized on startup")]
 	private bool _isMaximized = false;
 
 	/// <summary>
@@ -61,6 +73,7 @@ public class WindowController : MonoBehaviour {
 		get { return ((uniWin != null) ? _isMinimized : _isMinimized = uniWin.IsMinimized); }
 		set { SetMinimized(value); }
 	}
+	[SerializeField, BoolProperty, Tooltip("Check to set minimized on startup")]
 	private bool _isMinimized = false;
 
 	/// <summary>
@@ -73,6 +86,7 @@ public class WindowController : MonoBehaviour {
 			else { EndFileDrop(); }
 		}
 	}
+	[SerializeField, BoolProperty, Tooltip("Check to set enable file-drop on startup")]
 	private bool _enableFileDrop = false;
 
 	/// <summary>
@@ -144,13 +158,6 @@ public class WindowController : MonoBehaviour {
 
 	void Start()
 	{
-		// 初期状態を反映
-		SetTopmost(_isTopmost);
-		SetMaximized(_isMaximized);
-		SetMinimized(_isMinimized);
-		SetTransparent(_isTransparent);
-		if (_enableFileDrop) BeginFileDrop();
-
 		// マウスカーソル下の色を取得させるコルーチンを開始
 		StartCoroutine(PickColorCoroutine());
 	}
@@ -214,7 +221,7 @@ public class WindowController : MonoBehaviour {
 		// マウスドラッグでウィンドウ移動
 		if (Input.GetMouseButtonDown(0))
 		{
-			lastMousePosition = uniWin.GetCursorPosition();
+			lastMousePosition = UniWinApi.GetCursorPosition();
 			isDragging = true;
 		}
 		if (!Input.GetMouseButton(0))
@@ -223,7 +230,7 @@ public class WindowController : MonoBehaviour {
 		}
 		if (isDragging)
 		{
-			Vector2 mousePos = uniWin.GetCursorPosition();
+			Vector2 mousePos = UniWinApi.GetCursorPosition();
 			Vector2 delta = mousePos - lastMousePosition;
 			lastMousePosition = mousePos;
 
@@ -314,6 +321,13 @@ public class WindowController : MonoBehaviour {
 
 		// 見つかったウィンドウを利用開始
 		uniWin.SetWindow(window);
+
+		// 初期状態を反映
+		SetTopmost(_isTopmost);
+		SetMaximized(_isMaximized);
+		SetMinimized(_isMinimized);
+		SetTransparent(_isTransparent);
+		if (_enableFileDrop) BeginFileDrop();
 	}
 
 	/// <summary>
@@ -340,7 +354,7 @@ public class WindowController : MonoBehaviour {
 	/// <param name="transparent"></param>
 	public void SetTransparent(bool transparent)
 	{
-		if (_isTransparent == transparent) return;
+		//if (_isTransparent == transparent) return;
 
 		_isTransparent = transparent;
 		SetCameraBackground(transparent);
@@ -358,7 +372,7 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public void SetMaximized(bool maximized)
 	{
-		if (_isMaximized == maximized) return;
+		//if (_isMaximized == maximized) return;
 		if (uniWin == null)
 		{
 			_isMaximized = maximized;
@@ -383,7 +397,7 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public void SetMinimized(bool minimized)
 	{
-		if (_isMinimized == minimized) return;
+		//if (_isMinimized == minimized) return;
 		if (uniWin == null)
 		{
 			_isMinimized = minimized;
@@ -408,8 +422,8 @@ public class WindowController : MonoBehaviour {
 	/// <param name="topmost"></param>
 	public void SetTopmost(bool topmost)
 	{
+		//if (_isTopmost == topmost) return;
 		if (uniWin == null) return;
-		if (_isTopmost == topmost) return;
 
 		uniWin.EnableTopmost(topmost);
 		_isTopmost = uniWin.IsTopmost;
@@ -424,8 +438,8 @@ public class WindowController : MonoBehaviour {
 		if (uniWin != null)
 		{
 			uniWin.BeginFileDrop();
-			_enableFileDrop = true;
 		}
+		_enableFileDrop = true;
 	}
 
 	/// <summary>
@@ -433,7 +447,10 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	public void EndFileDrop()
 	{
-		if (uniWin != null) uniWin.EndFileDrop();
+		if (uniWin != null)
+		{
+			uniWin.EndFileDrop();
+		}
 		_enableFileDrop = false;
 	}
 

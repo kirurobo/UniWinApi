@@ -111,10 +111,10 @@ public class WinApi {
 	public static extern IntPtr FindWindow (string lpszClass, string lpszTitle);
 
 	[DllImport("user32.dll")]
-	public static extern int GetClassName(IntPtr hWnd, out string lpClassName, out int nMaxCount);
+	public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, out int nMaxCount);
 
 	[DllImport("user32.dll")]
-	public static extern int GetWindowText(IntPtr hWnd, out string lpClassName, out int nMaxCount);
+	public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpTitle, out int nMaxCount);
 
 	[DllImport("user32.dll")]
 	public static extern long GetWindowRect (IntPtr hWnd, out RECT rect);

@@ -206,6 +206,7 @@ public class VrmSample : MonoBehaviour {
 
 			model.gameObject.AddComponent<CharacterBehaviour>();
 
+
 			if (uiController)
 			{
 				uiController.Show(meta);

@@ -8,7 +8,6 @@
 
 using UnityEngine;
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
 using AOT;
 using System.Collections.Generic;
@@ -16,7 +15,7 @@ using System.Collections.Generic;
 public class UniWinApi : IDisposable {
 
 	/// <summary>
-	/// ウィンドウハンドル隠蔽
+	/// ウィンドウハンドルのカプセル化
 	/// </summary>
 	public class WindowHandle
 	{
@@ -38,22 +37,26 @@ public class UniWinApi : IDisposable {
 			hWnd = hwnd;
 			if (hWnd == IntPtr.Zero) return;
 
-			//int len;
-			//string text;
-			//if (WinApi.GetClassName(hWnd, out text, out len) > 0)
-			//{
-			//	ClassName = text;
-			//}
+			int len;
+			StringBuilder sb = new StringBuilder(1024);
 
-			//if (WinApi.GetWindowText(hWnd, out text, out len) > 0)
-			//{
-			//	Title = text;
-			//}
+			// クラス名を取得
+			if (WinApi.GetClassName(hWnd, sb, out len) > 0)
+			{
+				ClassName = sb.ToString();
+			}
 
-			//long pid;
-			//WinApi.GetWindowThreadProcessId(hWnd, out pid);
-			//System.Diagnostics.Process p = System.Diagnostics.Process.GetProcessById((int)pid);
-			//ProcessName = p.ProcessName;
+			// ウィンドウタイトルを取得
+			if (WinApi.GetWindowText(hWnd, sb, out len) > 0)
+			{
+				Title = sb.ToString();
+			}
+
+			// プロセス名を取得
+			long pid;
+			WinApi.GetWindowThreadProcessId(hWnd, out pid);
+			System.Diagnostics.Process p = System.Diagnostics.Process.GetProcessById((int)pid);
+			ProcessName = p.ProcessName;
 		}
 
 		public override string ToString()
@@ -94,33 +97,28 @@ public class UniWinApi : IDisposable {
 	/// <summary>
 	/// ウィンドウ位置
 	/// </summary>
-	public Vector2 NormalWindowPosition;
+	public Vector2 OriginalWindowPosition;
 
 	/// <summary>
 	/// 標準ウィンドウサイズの指定
 	/// </summary>
-	public Vector2 NormalWindowSize; 
-
-	/// <summary>
-	/// 標準ウィンドウクライアント領域のみのサイズ指定
-	/// </summary>
-	private Vector2 NormalClientSize;
+	public Vector2 OriginalWindowSize; 
 
 	/// <summary>
 	/// 元のウィンドウスタイル
 	/// </summary>
-	private long NormalWindowStyle;
+	private long OriginalWindowStyle;
+
+	/// <summary>
+	/// Original extended window style
+	/// </summary>
+	private long OriginalWindowExStyle;
+
 
 	/// <summary>
 	/// 現在のウィンドウスタイル
 	/// </summary>
 	private long CurrentWindowStyle;
-
-	/// <summary>
-	/// Original extended window style
-	/// </summary>
-	private long NormalWindowExStyle;
-
 	/// <summary>
 	/// Current extended window style
 	/// </summary>
@@ -139,8 +137,9 @@ public class UniWinApi : IDisposable {
 
 	/// <summary>
 	/// ファイルドロップのフックからイベントを呼び出すためインスタンス一覧
+	///		hWndをキーとしたDictionaryでは複数に対応できないため、単純なListにして毎回検索
 	/// </summary>
-	private static Dictionary<IntPtr, UniWinApi> instances = new Dictionary<IntPtr, UniWinApi>();
+	private static List<UniWinApi> instances = new List<UniWinApi>();
 
 
 	/// <summary>
@@ -158,6 +157,9 @@ public class UniWinApi : IDisposable {
 		SetWindow(window);
 	}
 
+	/// <summary>
+	/// デストラクタ
+	/// </summary>
 	~UniWinApi() {
 		Dispose();
 	}
@@ -168,26 +170,17 @@ public class UniWinApi : IDisposable {
 	private void StoreWindowSize() {
 		// 今の状態を記憶
 		if (IsActive && !WinApi.IsZoomed(hWnd) && !WinApi.IsIconic(hWnd)) {
-			// 
 			WinApi.RECT rect = new WinApi.RECT();
-			WinApi.RECT clientRect = new WinApi.RECT();
 			
 			// ウィンドウ位置とサイズ
 			WinApi.GetWindowRect(hWnd, out rect);
-			this.NormalWindowPosition = new Vector2(rect.left, rect.top);
-			this.NormalWindowSize = new Vector2(rect.right - rect.left, rect.bottom - rect.top);
-			
-			// クライアント領域のサイズ
-			WinApi.GetClientRect(hWnd, out clientRect);
-			this.NormalClientSize = new Vector2(clientRect.right, clientRect.bottom);
-
-			//// ウィンドウスタイルを記憶
-			//this.NormalWindowStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
+			this.OriginalWindowPosition = new Vector2(rect.left, rect.top);
+			this.OriginalWindowSize = new Vector2(rect.right - rect.left, rect.bottom - rect.top);
 		}
 	}
 
 	/// <summary>
-	/// Sets the window z-order (Topmost or not).
+	/// Set the window z-order (Topmost or not).
 	/// </summary>
 	/// <param name="isTopmost">If set to <c>true</c> is top.</param>
 	public void EnableTopmost(bool isTopmost)
@@ -205,7 +198,7 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// Sets the window size.
+	/// Set the window size.
 	/// </summary>
 	/// <param name="size">Size.</param>
 	public void SetSize(Vector2 size)
@@ -222,7 +215,7 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// Sets the window position.
+	/// Set the window position.
 	/// </summary>
 	/// <param name="position">Position.</param>
 	public void SetPosition(Vector2 position)
@@ -239,7 +232,7 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// Gets the window size.
+	/// Get the window size.
 	/// </summary>
 	/// <returns>The size.</returns>
 	public Vector2 GetSize()
@@ -251,7 +244,7 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// Gets the window position.
+	/// Get the window position.
 	/// </summary>
 	/// <returns>The position.</returns>
 	public Vector2 GetPosition()
@@ -268,11 +261,11 @@ public class UniWinApi : IDisposable {
 	private void MemorizeWindowState()
 	{
 		StoreWindowSize();
-		this.NormalWindowStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
-		this.NormalWindowExStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_EXSTYLE);
+		this.OriginalWindowStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_STYLE);
+		this.OriginalWindowExStyle = WinApi.GetWindowLong(hWnd, WinApi.GWL_EXSTYLE);
 
-		this.CurrentWindowStyle = this.NormalWindowStyle;
-		this.CurrentWindowExStyle = this.NormalWindowExStyle;
+		this.CurrentWindowStyle = this.OriginalWindowStyle;
+		this.CurrentWindowExStyle = this.OriginalWindowExStyle;
 	}
 
 	/// <summary>
@@ -280,8 +273,8 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	private void RestoreWindowState()
 	{
-		WinApi.SetWindowLong(hWnd, WinApi.GWL_STYLE, this.NormalWindowStyle);
-		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.NormalWindowExStyle);
+		WinApi.SetWindowLong(hWnd, WinApi.GWL_STYLE, this.OriginalWindowStyle);
+		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.OriginalWindowExStyle);
 		WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
 	}
 
@@ -292,7 +285,7 @@ public class UniWinApi : IDisposable {
 	/// <returns></returns>
 	public void SetWindow(WindowHandle window)
 	{
-		RestoreWndProc();
+		Dispose();
 
 		if (window == null) {
 			hWnd = IntPtr.Zero;
@@ -403,9 +396,6 @@ public class UniWinApi : IDisposable {
 			// 枠無しウィンドウにする
 			EnableBorderless(true);
 
-			// ウィンドウサイズ変更
-			//SetSize(this.NormalClientSize);
-
 			// ウィンドウ再描画
 			WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
 			SetSize(GetSize());
@@ -446,12 +436,12 @@ public class UniWinApi : IDisposable {
 			// 枠無しウィンドウにする
 			//long val = WinApi.GetWindowLong (hWnd, WinApi.GWL_STYLE) & ~WinApi.WS_OVERLAPPEDWINDOW;
 			long val = WinApi.WS_VISIBLE | WinApi.WS_POPUP;
-			//this.CurrentWindowStyle = this.NormalWindowStyle & ~WinApi.WS_OVERLAPPEDWINDOW;
+			//this.CurrentWindowStyle = this.OriginalWindowStyle & ~WinApi.WS_OVERLAPPEDWINDOW;
 			this.CurrentWindowStyle = val;
 			WinApi.SetWindowLong (hWnd, WinApi.GWL_STYLE, this.CurrentWindowStyle);
 		} else {
 			// ウィンドウスタイルを戻す
-			this.CurrentWindowStyle = this.NormalWindowStyle;
+			this.CurrentWindowStyle = this.OriginalWindowStyle;
 			WinApi.SetWindowLong (hWnd, WinApi.GWL_STYLE, this.CurrentWindowStyle);
 		}
 #endif
@@ -479,7 +469,7 @@ public class UniWinApi : IDisposable {
 		}
 		else
 		{
-			this.CurrentWindowExStyle = this.NormalWindowExStyle;
+			this.CurrentWindowExStyle = this.OriginalWindowExStyle;
 			if (enableFileDrop) this.CurrentWindowExStyle |= WinApi.WS_EX_ACCEPTFILES;
 			WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
 		}
@@ -529,7 +519,7 @@ public class UniWinApi : IDisposable {
 	/// マウスカーソルを指定座標へ移動させる
 	/// </summary>
 	/// <param name="screenPosition">スクリーン上の絶対座標。（Unityのウィンドウが基準では無い）</param>
-	public void SetCursorPosition(Vector2 screenPosition) {
+	static public void SetCursorPosition(Vector2 screenPosition) {
 		WinApi.SetCursorPos((int)screenPosition.x, (int)screenPosition.y);
 	}
 
@@ -537,7 +527,7 @@ public class UniWinApi : IDisposable {
 	/// マウスカーソル座標を取得
 	/// </summary>
 	/// <returns>スクリーン上の絶対座標。（Unityのウィンドウが基準では無い）</returns>
-	public Vector2 GetCursorPosition() {
+	static public Vector2 GetCursorPosition() {
 		WinApi.POINT point;
 		WinApi.GetCursorPos(out point);
 		return new Vector2(point.x, point.y);
@@ -546,7 +536,7 @@ public class UniWinApi : IDisposable {
 	/// <summary>
 	/// マウスの左ボタンが離されたイベントを発生させます
 	/// </summary>
-	public void SendMouseUp() {
+	static public void SendMouseUp() {
 		SendMouseUp(0);
 	}
 
@@ -554,7 +544,7 @@ public class UniWinApi : IDisposable {
 	/// マウスのボタンが離されたイベントを発生させます
 	/// </summary>
 	/// <param name="button">0:左, 1:右, 2:中</param>
-	public void SendMouseUp(int button) {
+	static public void SendMouseUp(int button) {
 		WinApi.mouse_event(
 			button == 1 ? WinApi.MOUSEEVENTF_RIGHTUP
 			: button == 2 ? WinApi.MOUSEEVENTF_MIDDLEUP
@@ -566,7 +556,7 @@ public class UniWinApi : IDisposable {
 	/// <summary>
 	/// マウスの左ボタンが押されたイベントを発生させます
 	/// </summary>
-	public void SendMouseDown() {
+	static public void SendMouseDown() {
 		SendMouseDown(0);
 	}
 	
@@ -574,7 +564,7 @@ public class UniWinApi : IDisposable {
 	/// マウスのボタンが押されたイベントを発生させます
 	/// </summary>
 	/// <param name="button">0:左, 1:右, 2:中</param>
-	public void SendMouseDown(int button) {
+	static public void SendMouseDown(int button) {
 		WinApi.mouse_event(
 			button == 1 ? WinApi.MOUSEEVENTF_RIGHTDOWN
 			: button == 2 ? WinApi.MOUSEEVENTF_MIDDLEDOWN
@@ -595,49 +585,22 @@ public class UniWinApi : IDisposable {
 #endregion
 
 #region ファイルドロップ関連
-
-	public delegate void FilesDropped(string[] files);
+	/// <summary>
+	/// ファイルドロップ時に発生するイベント
+	/// </summary>
 	public event FilesDropped OnFilesDropped;
-
-	[UnmanagedFunctionPointer(CallingConvention.Winapi)]
-	private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-	private IntPtr newWndProcPtr = IntPtr.Zero;
-	private IntPtr oldWndProcPtr = IntPtr.Zero;
-	private WndProcDelegate newWndProc = null;
+	public delegate void FilesDropped(string[] files);
 
 	private WinApi.HookProc myHookCallback;
 	private IntPtr myHook = IntPtr.Zero;
 
-	// 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
-	[MonoPInvokeCallback(typeof(WndProcDelegate))]
-	private IntPtr UniWinApiWindowProcedure(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
-	{
-		if (msg == WinApi.WM_DROPFILES)
-		{
-			IntPtr hDrop = wParam;
-			uint num = WinApi.DragQueryFile(hDrop, 0xFFFFFFFF, null, 0);
-			string[] files = new string[num];
-
-			uint bufferSize = 1024;
-			StringBuilder path = new StringBuilder((int)bufferSize);
-			for (uint i = 0; i < num; i++)
-			{
-				//uint size = WinApi.DragQueryFile(hDrop, i, path, bufferSize);
-				WinApi.DragQueryFile(hDrop, i, path, bufferSize);
-				files[i] = path.ToString();
-				path.Length = 0;
-			}
-
-			WinApi.DragFinish(hDrop);
-
-			if (OnFilesDropped != null)
-			{
-				OnFilesDropped(files);
-			}
-		}
-		return WinApi.CallWindowProc(oldWndProcPtr, hWnd, msg, wParam, lParam);
-	}
-
+	/// <summary>
+	/// メッセージのコールバック
+	/// </summary>
+	/// <param name="nCode"></param>
+	/// <param name="wParam"></param>
+	/// <param name="lParam"></param>
+	/// <returns></returns>
 	[MonoPInvokeCallback(typeof(WinApi.HookProc))]
 	private static IntPtr MessageCallback(int nCode, IntPtr wParam, ref WinApi.MSG lParam)
 	{
@@ -655,17 +618,25 @@ public class UniWinApi : IDisposable {
 				WinApi.DragQueryFile(hDrop, i, path, bufferSize);
 				files[i] = path.ToString();
 				path.Length = 0;
-				Debug.Log("Dropped:" + files[i]);
 			}
 
 			WinApi.DragFinish(hDrop);
 
-			if (instances.ContainsKey(lParam.hwnd))
+			IntPtr hwnd = lParam.hwnd;
+			if (hwnd != IntPtr.Zero)
 			{
-				UniWinApi uniwin = instances[lParam.hwnd];
-				if (uniwin.OnFilesDropped != null)
+				// 存在するインスタンス内を検索
+				foreach (UniWinApi uniwin in instances)
 				{
-					uniwin.OnFilesDropped(files);
+					// 該当するウィンドウであった場合
+					if (uniwin.hWnd == hwnd)
+					{
+						// ファイルドロップ時のイベントを実行
+						if (uniwin.OnFilesDropped != null)
+						{
+							uniwin.OnFilesDropped(files);
+						}
+					}
 				}
 			}
 		}
@@ -677,16 +648,16 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	public void BeginFileDrop()
 	{
-		instances[hWnd] = this;
-		//InitWndProc();
+		if (!instances.Contains(this)) {
+			instances.Add(this);
+		}
 		BeginHook();
 
+		// ドロップを受け付ける状態にする
 		long exstyle = this.CurrentWindowExStyle;
 		exstyle |= WinApi.WS_EX_ACCEPTFILES;
 		this.CurrentWindowExStyle = exstyle;
 		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
-
-		//WinApi.DragAcceptFiles(hWnd, true);
 	}
 
 	/// <summary>
@@ -694,13 +665,12 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	public void EndFileDrop()
 	{
-		//RestoreWndProc();
 		EndHook();
-		instances.Remove(hWnd);
+		instances.Remove(this);
 
 		long exstyle = this.CurrentWindowExStyle;
 		exstyle &= ~WinApi.WS_EX_ACCEPTFILES;	// ドロップ受付をやめる
-		exstyle |= (WinApi.WS_EX_ACCEPTFILES & this.NormalWindowExStyle);	// 元からドロップ許可ならやはり受付
+		exstyle |= (WinApi.WS_EX_ACCEPTFILES & this.OriginalWindowExStyle);	// 元からドロップ許可ならやはり受付
 		this.CurrentWindowExStyle = exstyle;
 		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
 
@@ -756,57 +726,21 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// ウィンドウプロシージャを置き換える
-	/// 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
-	/// </summary>
-	private void InitWndProc()
-	{
-		if (IsHookSet) return;
-
-		if (this.IsActive)
-		{
-			newWndProc = new WndProcDelegate(UniWinApiWindowProcedure);
-			newWndProcPtr = Marshal.GetFunctionPointerForDelegate(newWndProc);
-			oldWndProcPtr = WinApi.SetWindowProcedure(this.hWnd, newWndProcPtr);
-
-			WinApi.DragAcceptFiles(this.hWnd, true);
-
-			IsHookSet = true;
-		}
-	}
-
-	/// <summary>
-	/// ウィンドウプロシージャを戻す
-	/// </summary>
-	private void RestoreWndProc()
-	{
-		if (!IsHookSet) return;
-
-		if (newWndProc != null && oldWndProcPtr != IntPtr.Zero)
-		{
-			WinApi.SetWindowProcedure(this.hWnd, oldWndProcPtr);
-			oldWndProcPtr = IntPtr.Zero;
-			newWndProcPtr = IntPtr.Zero;
-			newWndProc = null;
-
-			// Unityだと通常はドラッグ不可のはずなので戻しても良いのかも
-			//SetDragAcceptFiles(false);
-		}
-
-		IsHookSet = false;
-	}
-
-	/// <summary>
 	/// 破棄時の処理
 	/// </summary>
 	public void Dispose()
 	{
-		EndFileDrop();
+		if (hWnd != IntPtr.Zero && WinApi.IsWindow(hWnd))
+		{
+			EndFileDrop();
 #if UNITY_EDITOR
-		EnableTransparent(false);
-		EnableTopmost(false);
-		RestoreWindowState();
+			EnableTransparent(false);
+			EnableTopmost(false);
+			Restore();
+			RestoreWindowState();
 #endif
+		}
+
 		hWnd = IntPtr.Zero;
 	}
 
