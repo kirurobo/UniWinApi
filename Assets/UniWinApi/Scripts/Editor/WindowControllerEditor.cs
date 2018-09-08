@@ -9,6 +9,7 @@ public class WindowControllerEditor : Editor {
 	{
 		base.OnInspectorGUI();
 
+		// 自動調整ボタンを表示させるならtrueとなる
 		bool showButton = false;
 
 		if (!PlayerSettings.runInBackground)

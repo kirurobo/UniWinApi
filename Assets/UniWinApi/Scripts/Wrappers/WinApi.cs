@@ -52,6 +52,7 @@ public class WinApi {
 	public static readonly long WS_EX_LAYERED            = 0x00080000L;
 	public static readonly long WS_EX_TOPMOST            = 0x00000008L;
 	public static readonly long WS_EX_OVERLAPPEDWINDOW   = 0x00000300L;
+	public static readonly long WS_EX_ACCEPTFILES        = 0x00000010L;
 
 	public static readonly IntPtr HWND_TOP		= new IntPtr(0);
 	public static readonly IntPtr HWND_BOTTOM	= new IntPtr(1);
@@ -108,6 +109,12 @@ public class WinApi {
 	
 	[DllImport("user32.dll")]
 	public static extern IntPtr FindWindow (string lpszClass, string lpszTitle);
+
+	[DllImport("user32.dll")]
+	public static extern int GetClassName(IntPtr hWnd, out string lpClassName, out int nMaxCount);
+
+	[DllImport("user32.dll")]
+	public static extern int GetWindowText(IntPtr hWnd, out string lpClassName, out int nMaxCount);
 
 	[DllImport("user32.dll")]
 	public static extern long GetWindowRect (IntPtr hWnd, out RECT rect);

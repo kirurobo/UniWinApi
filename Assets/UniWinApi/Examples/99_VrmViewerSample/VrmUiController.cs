@@ -7,9 +7,9 @@ public class VrmUiController : MonoBehaviour {
 
 	public WindowController windowController;
 
-    public RectTransform panel;
-    public Text informationText;
-    public Text warningText;
+	public RectTransform panel;
+	public Text informationText;
+	public Text warningText;
 	public Button closeButton;
 	public Toggle transparentToggle;
 	public Toggle topmostToggle;
@@ -25,21 +25,21 @@ public class VrmUiController : MonoBehaviour {
 
 
 	/// <summary>
-    /// Use this for initialization
-    /// </summary>
+	/// Use this for initialization
+	/// </summary>
 	void Start () {
 
 		windowController = FindObjectOfType<WindowController>();
 		windowController.OnStateChange += windowController_OnStateChanged;
 
-        if (!panel)
-        {
-            panel = GetComponentInChildren<RectTransform>();
-        }
-        if (!informationText)
-        {
-            informationText = GetComponentInChildren<Text>();
-        }
+		if (!panel)
+		{
+			panel = GetComponentInChildren<RectTransform>();
+		}
+		if (!informationText)
+		{
+			informationText = GetComponentInChildren<Text>();
+		}
 
 		// Initialize toggles.
 		UpdateUI();
@@ -47,10 +47,11 @@ public class VrmUiController : MonoBehaviour {
 		// Set event listeners.
 		if (closeButton) { closeButton.onClick.AddListener(Close); }
 		if (quitButton) { quitButton.onClick.AddListener(Quit); }
-		if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
-		if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
+		if (transparentToggle) { transparentToggle.onValueChanged.AddListener((value) => windowController.SetTransparent(value)); }
+		if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener((value) => windowController.SetMaximized(value)); }
 		if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
 
+		// Show menu on startup.
 		Show(null);
 	}
 
@@ -72,11 +73,17 @@ public class VrmUiController : MonoBehaviour {
 	}
 
 
+	/// <summary>
+	/// メニューを閉じる
+	/// </summary>
 	private void Close()
 	{
 		panel.gameObject.SetActive(false);
 	}
 
+	/// <summary>
+	/// 終了ボタンが押された時の処理。エディタ上であれば再生停止とする。
+	/// </summary>
 	private void Quit()
 	{
 #if UNITY_EDITOR
@@ -91,7 +98,7 @@ public class VrmUiController : MonoBehaviour {
 	/// </summary>
 	void Update () {
 		// マウス右ボタンクリックでメニューを表示させる。閾値以下の移動ならクリックとみなす。
-        if (Input.GetMouseButtonDown(1))
+		if (Input.GetMouseButtonDown(1))
 		{
 			lastMousePosition = Input.mousePosition;
 		}
@@ -123,6 +130,10 @@ public class VrmUiController : MonoBehaviour {
 		}
 	}
 
+	/// <summary>
+	/// フォーカスが外れたときの処理
+	/// </summary>
+	/// <param name="focus"></param>
 	private void OnApplicationFocus(bool focus)
 	{
 		// フォーカスが外れたらメニューを閉じる
@@ -132,6 +143,9 @@ public class VrmUiController : MonoBehaviour {
 		}
 	}
 
+	/// <summary>
+	/// メニューを表示する
+	/// </summary>
 	public void Show()
 	{
 		if (panel)
@@ -155,42 +169,42 @@ public class VrmUiController : MonoBehaviour {
 	/// </summary>
 	/// <param name="meta"></param>
 	public void Show(VRM.VRMMetaObject meta)
-    {
-        if (meta)
-        {
-            if (informationText)
-            {
-                string text = string.Format(
-                    "Title:{0}\nVer.:{1}\nAuthor:{2}\nAllowedUser:{3}\nLicense:{4} {5}\n",
-                    meta.Title,
-                    meta.Version,
-                    meta.Author,
-                    meta.AllowedUser,
-                    meta.LicenseType,
-                    meta.OtherLicenseUrl
-                    );
-                informationText.text = text;
-            }
-            else
-            {
-                informationText.text = "Drop a VRM file here!";
-            }
+	{
+		if (meta)
+		{
+			if (informationText)
+			{
+				string text = string.Format(
+					"Title:{0}\nVer.:{1}\nAuthor:{2}\nAllowedUser:{3}\nLicense:{4} {5}\n",
+					meta.Title,
+					meta.Version,
+					meta.Author,
+					meta.AllowedUser,
+					meta.LicenseType,
+					meta.OtherLicenseUrl
+					);
+				informationText.text = text;
+			}
+			else
+			{
+				informationText.text = "Drop a VRM file here!";
+			}
 
-            if (warningText)
-            {
-                if (meta.AllowedUser == VRM.AllowedUser.Everyone)
-                {
-                    warningText.text = "";
-                } else if (meta.AllowedUser == VRM.AllowedUser.OnlyAuthor)
-                {
-                    warningText.text = "Only the author is permitted to perform.";
-                } else
-                {
-                    warningText.text = "Only the explicitly licensed person is permitted to perform.";
-                }
-            }
-        }
+			if (warningText)
+			{
+				if (meta.AllowedUser == VRM.AllowedUser.Everyone)
+				{
+					warningText.text = "";
+				} else if (meta.AllowedUser == VRM.AllowedUser.OnlyAuthor)
+				{
+					warningText.text = "Only the author is permitted to perform.";
+				} else
+				{
+					warningText.text = "Only the explicitly licensed person is permitted to perform.";
+				}
+			}
+		}
 
 		Show();
-    }
+	}
 }

@@ -14,6 +14,54 @@ using AOT;
 using System.Collections.Generic;
 
 public class UniWinApi : IDisposable {
+
+	/// <summary>
+	/// ウィンドウハンドル隠蔽
+	/// </summary>
+	public class WindowHandle
+	{
+		public IntPtr hWnd;
+		public string Title = "";
+		public string ClassName = "";
+		public string ProcessName = "";
+
+		public WindowHandle()
+		{
+			hWnd = IntPtr.Zero;
+			Title = "";
+			ClassName = "";
+			ProcessName = "";
+		}
+
+		public WindowHandle(IntPtr hwnd)
+		{
+			hWnd = hwnd;
+			if (hWnd == IntPtr.Zero) return;
+
+			//int len;
+			//string text;
+			//if (WinApi.GetClassName(hWnd, out text, out len) > 0)
+			//{
+			//	ClassName = text;
+			//}
+
+			//if (WinApi.GetWindowText(hWnd, out text, out len) > 0)
+			//{
+			//	Title = text;
+			//}
+
+			//long pid;
+			//WinApi.GetWindowThreadProcessId(hWnd, out pid);
+			//System.Diagnostics.Process p = System.Diagnostics.Process.GetProcessById((int)pid);
+			//ProcessName = p.ProcessName;
+		}
+
+		public override string ToString()
+		{
+			return string.Format("HWND:{0} {1} - {2}", hWnd, ProcessName, Title);
+		}
+	}
+
 	/// <summary>
 	/// このウィンドウのハンドル
 	/// </summary>
@@ -78,22 +126,16 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	private long CurrentWindowExStyle;
 
-	/// <summary>
-	/// 起動時のデスクトップコンポジション状態を記憶。終了時に戻すため
-	/// </summary>
-	private bool IsCompositionEnabled;
-
 
 	/// <summary>
 	/// ウィンドウプロシージャを変更済みか否か
 	/// </summary>
-	private bool IsWndProcSet = false;
+	private bool IsHookSet = false;
 
 	/// <summary>
-	/// ファイルドロップを受け付ける場合はtrueにしておく。
-	/// ウィンドウ取得時のみ有効で、その後は変更できません。
+	/// ファイルドロップを受け付ける状態か
 	/// </summary>
-	public bool enableFileDrop = true;
+	public bool enableFileDrop { get { return IsHookSet; } }
 
 	/// <summary>
 	/// ファイルドロップのフックからイベントを呼び出すためインスタンス一覧
@@ -242,11 +284,16 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	/// <param name="hWnd"></param>
 	/// <returns></returns>
-	public void SetWindowHandle(IntPtr hWnd)
+	public void SetWindow(WindowHandle window)
 	{
 		RestoreWndProc();
-		this.hWnd = hWnd;
-		if (enableFileDrop) BeginFileDrop();
+
+		if (window == null) {
+			hWnd = IntPtr.Zero;
+			return;
+		}
+		hWnd = window.hWnd;
+
 		MemorizeWindowState();
 	}
 
@@ -254,27 +301,26 @@ public class UniWinApi : IDisposable {
 	/// アクティブウィンドウのハンドルを取得
 	/// </summary>
 	/// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
-	public bool FindHandle()
+	public WindowHandle FindWindow()
 	{
 		IntPtr hwnd = WinApi.GetActiveWindow();
-		if (hwnd == IntPtr.Zero) return false;
+		if (hwnd == IntPtr.Zero) return null;
 
-		SetWindowHandle(hwnd);
-		return IsActive;
+		WindowHandle window = new WindowHandle(hwnd);
+		return window;
 	}
 
 	/// <summary>
 	/// ウィンドウタイトルを元にハンドルを取得
 	/// </summary>
-	/// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
 	/// <param name="title">Title.</param>
-	public bool FindHandleByTitle(string title)
+	public WindowHandle FindWindowByTitle(string title)
 	{
 		IntPtr hwnd = WinApi.FindWindow(null, title);
-		if (hwnd == IntPtr.Zero) return false;
+		if (hwnd == IntPtr.Zero) return null;
 
-		SetWindowHandle(hwnd);
-		return IsActive;
+		WindowHandle window = new WindowHandle(hwnd);
+		return window;
 	}
 
 	/// <summary>
@@ -282,13 +328,37 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	/// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
 	/// <param name="classname">Title.</param>
-	public bool FindHandleByClass(string classname)
+	public WindowHandle FindWindowByClass(string classname)
 	{
 		IntPtr hwnd = WinApi.FindWindow(classname, null);
-		if (hwnd == IntPtr.Zero) return false;
+		if (hwnd == IntPtr.Zero) return null;
 
-		SetWindowHandle(hwnd);
-		return IsActive;
+		WindowHandle window = new WindowHandle();
+		return window;
+	}
+
+	/// <summary>
+	/// ウィンドウタイトルを元にハンドルを取得
+	/// </summary>
+	/// <returns><c>true</c>, if handle by title was found, <c>false</c> otherwise.</returns>
+	/// <param name="title">Title.</param>
+	public WindowHandle[] FindWindows()
+	{
+		List<WindowHandle> windowList = new List<WindowHandle>();
+
+		WinApi.EnumWindows(new WinApi.EnumWindowsDelegate(delegate (IntPtr hWnd, long lParam)
+		{
+			StringBuilder sb = new StringBuilder(1024);
+			if (WinApi.IsWindow(hWnd) && WinApi.GetWindowText(hWnd, sb, sb.Capacity) != 0)
+			{
+				WindowHandle window = new WindowHandle(hWnd);
+				window.Title = sb.ToString();
+				windowList.Add(window);
+			}
+			return 1;	// 列挙を継続するため0以外を返す
+		}), 0);
+
+		return windowList.ToArray();
 	}
 
 	/// <summary>
@@ -321,30 +391,35 @@ public class UniWinApi : IDisposable {
 			// 現在のウィンドウ情報を記憶
 			StoreWindowSize();
 
-			// ウィンドウサイズ変更
-			SetSize(this.NormalClientSize);
-
 			// 全面をGlassにする
 			DwmApi.DwmExtendIntoClientAll (hWnd);
 
 			// 枠無しウィンドウにする
 			EnableBorderless(true);
-		} else {
+
+			// ウィンドウサイズ変更
+			//SetSize(this.NormalClientSize);
+
+			// ウィンドウ再描画
+			WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
+			SetSize(GetSize());
+		}
+		else {
 			// ウィンドウスタイルを戻す
 			EnableBorderless(false);
 
 			// 操作の透過をやめる
-			EnableUnfocusable(false);
+			EnableClickThrough(false);
 
 			// 枠のみGlassにする
 			//	※ 本来のウィンドウが枠のみで無かった場合は残念ながら表示が戻りません
 			DwmApi.MARGINS margins = new DwmApi.MARGINS (0, 0, 0, 0);
 			DwmApi.DwmExtendFrameIntoClientArea (hWnd, margins);
 
-			// ウィンドウサイズ変更
-			SetSize(this.NormalWindowSize);
+			// サイズ変更イベントを発生させる
+			SetSize(GetSize());
 		}
-	
+
 		// ウィンドウ再描画
 		WinApi.ShowWindow(hWnd, WinApi.SW_SHOW);
 	}
@@ -379,8 +454,8 @@ public class UniWinApi : IDisposable {
 	/// <summary>
 	/// Extended window style で操作の透過/戻す
 	/// </summary>
-	/// <param name="isUnfocusable">If set to <c>true</c> is top.</param>
-	public void EnableUnfocusable(bool isUnfocusable)
+	/// <param name="isClickThrough">If set to <c>true</c> is top.</param>
+	public void EnableClickThrough(bool isClickThrough)
 	{
 		if (!IsActive) return;
 
@@ -388,7 +463,7 @@ public class UniWinApi : IDisposable {
 		// エディタの場合は操作の透過はやめておく
 #else
 		// エディタでなければ操作を透過
-		if (isUnfocusable)
+		if (isClickThrough)
 		{
 			long exstyle = this.CurrentWindowExStyle;
 			exstyle |= WinApi.WS_EX_TRANSPARENT;
@@ -399,6 +474,7 @@ public class UniWinApi : IDisposable {
 		else
 		{
 			this.CurrentWindowExStyle = this.NormalWindowExStyle;
+			if (enableFileDrop) this.CurrentWindowExStyle |= WinApi.WS_EX_ACCEPTFILES;
 			WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
 		}
 #endif
@@ -514,18 +590,6 @@ public class UniWinApi : IDisposable {
 
 #region ファイルドロップ関連
 
-	/// <summary>
-	/// 現在のウィンドウがファイルのドラッグアンドドロップを受け入れるかどうかを設定します
-	/// </summary>
-	/// <param name="accept"></param>
-	public void SetDragAcceptFiles(bool accept)
-	{
-		if (this.IsActive)
-		{
-			WinApi.DragAcceptFiles(this.hWnd, true);
-		}
-	}
-
 	public delegate void FilesDropped(string[] files);
 	public event FilesDropped OnFilesDropped;
 
@@ -602,18 +666,38 @@ public class UniWinApi : IDisposable {
 		return WinApi.CallNextHookEx(IntPtr.Zero, nCode, wParam, ref lParam);
 	}
 
+	/// <summary>
+	/// ファイルドロップの扱いを開始
+	/// </summary>
 	public void BeginFileDrop()
 	{
 		instances[hWnd] = this;
 		//InitWndProc();
 		BeginHook();
+
+		long exstyle = this.CurrentWindowExStyle;
+		exstyle |= WinApi.WS_EX_ACCEPTFILES;
+		this.CurrentWindowExStyle = exstyle;
+		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
+
+		//WinApi.DragAcceptFiles(hWnd, true);
 	}
 
+	/// <summary>
+	/// ファイルドロップの扱いを終了
+	/// </summary>
 	public void EndFileDrop()
 	{
 		//RestoreWndProc();
 		EndHook();
 		instances.Remove(hWnd);
+
+		long exstyle = this.CurrentWindowExStyle;
+		exstyle &= ~WinApi.WS_EX_ACCEPTFILES;	// ドロップ受付をやめる
+		exstyle |= (WinApi.WS_EX_ACCEPTFILES & this.NormalWindowExStyle);	// 元からドロップ許可ならやはり受付
+		this.CurrentWindowExStyle = exstyle;
+		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
+
 	}
 
 	/// <summary>
@@ -621,10 +705,10 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	private void BeginHook()
 	{
-		if (IsWndProcSet) return;
+		if (IsHookSet) return;
 		if (!IsActive)
 		{
-			IsWndProcSet = false;
+			IsHookSet = false;
 			return;
 		}
 
@@ -634,15 +718,14 @@ public class UniWinApi : IDisposable {
 		myHookCallback = new WinApi.HookProc(MessageCallback);
 		myHook = WinApi.SetWindowsHookEx(WinApi.WH_GETMESSAGE, myHookCallback, module, threadId);
 
+		// フック設定失敗時
 		if (myHook == IntPtr.Zero)
 		{
-			Debug.LogError("SetWindowsHookEx:" + WinApi.GetLastError());
+			Debug.Log("SetWindowsHookEx:" + WinApi.GetLastError());
+			return;
 		}
 
-		// このウィンドウをファイルドロップ受付状態にする
-		WinApi.DragAcceptFiles(hWnd, true);
-
-		IsWndProcSet = true;
+		IsHookSet = true;
 
 		Debug.Log("BeginHook");
 	}
@@ -657,9 +740,13 @@ public class UniWinApi : IDisposable {
 			WinApi.UnhookWindowsHookEx(myHook);
 			myHook = IntPtr.Zero;
 			myHookCallback = null;
+
+			// Unityだと通常はドラッグ不可のはずなので戻しても良いのかも
+			WinApi.DragAcceptFiles(hWnd, false);
+
 			Debug.Log("EndHook");
 		}
-		IsWndProcSet = false;
+		IsHookSet = false;
 	}
 
 	/// <summary>
@@ -668,7 +755,7 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	private void InitWndProc()
 	{
-		if (IsWndProcSet) return;
+		if (IsHookSet) return;
 
 		if (this.IsActive)
 		{
@@ -678,7 +765,7 @@ public class UniWinApi : IDisposable {
 
 			WinApi.DragAcceptFiles(this.hWnd, true);
 
-			IsWndProcSet = true;
+			IsHookSet = true;
 		}
 	}
 
@@ -687,7 +774,7 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	private void RestoreWndProc()
 	{
-		if (!IsWndProcSet) return;
+		if (!IsHookSet) return;
 
 		if (newWndProc != null && oldWndProcPtr != IntPtr.Zero)
 		{
@@ -700,7 +787,7 @@ public class UniWinApi : IDisposable {
 			//SetDragAcceptFiles(false);
 		}
 
-		IsWndProcSet = false;
+		IsHookSet = false;
 	}
 
 	/// <summary>
