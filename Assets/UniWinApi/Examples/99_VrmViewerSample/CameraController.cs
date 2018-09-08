@@ -41,6 +41,7 @@ public class CameraController : MonoBehaviour {
 
 	Vector3 rotation;
 	Vector3 translation;
+	[SerializeField]
 	float distance;
 
 	Vector3 relativePosition;
@@ -91,7 +92,7 @@ public class CameraController : MonoBehaviour {
 	{
 		Quaternion rot = Quaternion.Euler(rotation);
 		transform.rotation = rot;
-		transform.position = centerTransform.position + transform.rotation * (Vector3.back * distance + translation);
+		transform.position = centerTransform.position + transform.rotation * Vector3.back * distance + transform.rotation * translation;
 	}
 
 	void Update()

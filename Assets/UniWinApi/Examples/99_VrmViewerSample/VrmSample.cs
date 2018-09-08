@@ -72,7 +72,7 @@ public class VrmSample : MonoBehaviour {
 		{
 			Vector2 pos = Input.mousePosition;
 			bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
-			if (windowController.isClickThrough && inScreen)
+			if (!windowController.isClickThrough && inScreen)
 			{
 				cameraController.wheelMode = originalWheelMode;
 			} else

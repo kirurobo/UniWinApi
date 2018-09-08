@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.45114672, g: 0.49976397, b: 0.56766385, a: 1}
+  m_IndirectSpecularColor: {r: 0.4513998, g: 0.5008927, b: 0.5723166, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -1155,35 +1155,6 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.Toggle+ToggleEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
   m_IsOn: 1
---- !u!1 &1369586131
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1369586132}
-  m_Layer: 0
-  m_Name: LightOrigin
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1369586132
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1369586131}
-  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
-  m_LocalPosition: {x: 0, y: -1, z: 12}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 2141451818}
-  m_Father: {fileID: 1629460662}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1475236383
 GameObject:
   m_ObjectHideFlags: 0
@@ -1707,6 +1678,7 @@ MonoBehaviour:
   minimumAngles: {x: -90, y: -360}
   maximumAngles: {x: 90, y: 360}
   centerTransform: {fileID: 0}
+  distance: 0
 --- !u!81 &1629460658
 AudioListener:
   m_ObjectHideFlags: 0
@@ -1767,7 +1739,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1369586132}
+  - {fileID: 2141451818}
   m_Father: {fileID: 241398689}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2364,13 +2336,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2141451816}
-  m_LocalRotation: {x: -0.056018684, y: 0.9430296, z: -0.20906463, w: -0.25268397}
-  m_LocalPosition: {x: 3, y: 3, z: 6}
+  m_LocalRotation: {x: 0.25660488, y: 0.12607859, z: -0.03378266, w: 0.9576622}
+  m_LocalPosition: {x: -1.5, y: 4, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 1369586132}
+  m_Father: {fileID: 1629460662}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 25, y: 210, z: 0}
+  m_LocalEulerAnglesHint: {x: 30, y: 15, z: 0}
 --- !u!114 &2141451819
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2391,3 +2363,4 @@ MonoBehaviour:
   minimumAngles: {x: -90, y: -360}
   maximumAngles: {x: 90, y: 360}
   centerTransform: {fileID: 0}
+  distance: 0
