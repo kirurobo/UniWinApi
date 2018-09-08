@@ -1,11 +1,8 @@
 # UniWinApi & Example project
 
-**注意：仕様は整理して大きく変わる予定です。**
-
-
 Unityでは本来行えない操作を Windows API 経由で行うものです。  
 以下のようなことができます。  
-他のアプリのウィンドウも原理的には操作可能です。
+他のアプリのウィンドウも操作可能です。
 
 * ウィンドウの移動
 * ウィンドウサイズ変更
@@ -19,7 +16,8 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 [![VRM viewer sample](http://img.youtube.com/vi/EETQxzzv4uY/0.jpg)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
 
 ビルド済みのVRMビューア―例はこちら。  
-* [Ver.0.2.3 UniVRM0.42に。カメラFOVを10度に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.)
+* [Ver.0.3.0 照明の回転と並進移動も追加](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.0)
+* [Ver.0.2.3 UniVRM0.42に。カメラFOVを10度に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.3)
 * [Ver.0.2.2 ライトを白色に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.2)
 * [Ver.0.2.1 シェーダー修正後](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.1/UniWinApiVrmViewer_x64_v0.2.1.zip)
 * [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
