@@ -10,6 +10,8 @@ using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using AOT;
+using System.Collections.Generic;
 
 public class UniWinApi : IDisposable {
 	/// <summary>
@@ -92,6 +94,11 @@ public class UniWinApi : IDisposable {
     /// ウィンドウ取得時のみ有効で、その後は変更できません。
     /// </summary>
     public bool enableFileDrop = true;
+
+    /// <summary>
+    /// ファイルドロップのフックからイベントを呼び出すためインスタンス一覧
+    /// </summary>
+    private static Dictionary<IntPtr, UniWinApi> instances = new Dictionary<IntPtr, UniWinApi>();
 
 
     /// <summary>
@@ -532,6 +539,7 @@ public class UniWinApi : IDisposable {
     private IntPtr myHook = IntPtr.Zero;
 
     // 参考 https://qiita.com/DandyMania/items/d1404c313f67576d395f
+    [MonoPInvokeCallback(typeof(WndProcDelegate))]
     private IntPtr UniWinApiWindowProcedure(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
     {
         if (msg == WinApi.WM_DROPFILES)
@@ -560,7 +568,8 @@ public class UniWinApi : IDisposable {
         return WinApi.CallWindowProc(oldWndProcPtr, hWnd, msg, wParam, lParam);
     }
 
-    private IntPtr MessageCallback(int nCode, IntPtr wParam, ref WinApi.MSG lParam)
+    [MonoPInvokeCallback(typeof(WinApi.HookProc))]
+    private static IntPtr MessageCallback(int nCode, IntPtr wParam, ref WinApi.MSG lParam)
     {
         if (nCode == 0 && lParam.message == WinApi.WM_DROPFILES)
         {
@@ -576,20 +585,26 @@ public class UniWinApi : IDisposable {
                 WinApi.DragQueryFile(hDrop, i, path, bufferSize);
                 files[i] = path.ToString();
                 path.Length = 0;
+                Debug.Log("Dropped:" + files[i]);
             }
 
             WinApi.DragFinish(hDrop);
 
-            if (OnFilesDropped != null)
+            if (instances.ContainsKey(lParam.hwnd))
             {
-                OnFilesDropped(files);
+                UniWinApi uniwin = instances[lParam.hwnd];
+                if (uniwin.OnFilesDropped != null)
+                {
+                    uniwin.OnFilesDropped(files);
+                }
             }
         }
-        return WinApi.CallNextHookEx(myHook, nCode, wParam, ref lParam);
+        return WinApi.CallNextHookEx(IntPtr.Zero, nCode, wParam, ref lParam);
     }
 
     public void BeginFileDrop()
     {
+        instances[hWnd] = this;
         //InitWndProc();
         BeginHook();
     }
@@ -598,10 +613,15 @@ public class UniWinApi : IDisposable {
     {
         //RestoreWndProc();
         EndHook();
+        instances.Remove(hWnd);
     }
 
+    /// <summary>
+    /// メッセージフックを開始
+    /// </summary>
     private void BeginHook()
     {
+        Debug.Log("BeginHook");
         if (IsWndProcSet) return;
         if (!IsActive)
         {
@@ -609,29 +629,34 @@ public class UniWinApi : IDisposable {
             return;
         }
 
+        // フックを設定
         uint threadId = WinApi.GetCurrentThreadId();
         IntPtr module = WinApi.GetModuleHandle(null);
-        Debug.Log("Module:" + module);
         myHookCallback = new WinApi.HookProc(MessageCallback);
         myHook = WinApi.SetWindowsHookEx(WinApi.WH_GETMESSAGE, myHookCallback, module, threadId);
-        Debug.Log("HHook:" + myHook);
 
-        if (myHook == null)
+        if (myHook == IntPtr.Zero)
         {
-            Debug.Log("Error:" + WinApi.GetLastError());
+            Debug.LogError("SetWindowsHookEx:" + WinApi.GetLastError());
         }
 
+        // このウィンドウをファイルドロップ受付状態にする
         WinApi.DragAcceptFiles(hWnd, true);
 
         IsWndProcSet = true;
     }
 
+    /// <summary>
+    /// メッセージフックを終了
+    /// </summary>
     private void EndHook()
     {
+        Debug.Log("EndHook");
         if (myHook != IntPtr.Zero)
         {
             WinApi.UnhookWindowsHookEx(myHook);
             myHook = IntPtr.Zero;
+            myHookCallback = null;
         }
         IsWndProcSet = false;
     }
