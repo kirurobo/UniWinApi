@@ -15,7 +15,7 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
 [![VRM viewer sample](http://img.youtube.com/vi/EETQxzzv4uY/0.jpg)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
 
-ビルド済みのVRMビューア―例はこちらの UniWinVrmViewer です。64ビット版と32ビット版(x86)があります。
+ビルド済みのVRMビューア―例はこちらの UniWinApiVrmViewer です。64ビット版と32ビット版(x86)があります。
 * [Ver.0.3.1 最初から透明化](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.1)
 * [Ver.0.3.0 照明の回転と並進移動も追加](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.0)
 * [Ver.0.2.3 UniVRM0.42に。カメラFOVを10度に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.3)
