@@ -26,6 +26,8 @@ public class VrmSample : MonoBehaviour {
 
 	private CameraController.WheelMode originalWheelMode;
 
+	public AudioSource audioSource;
+
 
 	// Use this for initialization
 	void Start () {
@@ -41,6 +43,11 @@ public class VrmSample : MonoBehaviour {
 			{
 				originalWheelMode = cameraController.wheelMode;
 			}
+		}
+
+		if (!audioSource)
+		{
+			audioSource = FindObjectOfType<AudioSource>();
 		}
 
 		// Load the initial motion.
@@ -119,14 +126,24 @@ public class VrmSample : MonoBehaviour {
 			if (ext == ".vrm")
 			{
 				LoadModel(path);
-				break;
+				continue;
 			}
 
 			// Open the motion file if its extension is ".bvh" or ".txt".
 			if (ext == ".bvh" || ext == ".txt")
 			{
 				LoadMotion(path);
-				break;
+				continue;
+			}
+
+			// Open the audio file.
+			// mp3はライセンスの関係でWindowsスタンドアローンでは読み込めないよう。
+			// 参考 https://docs.unity3d.com/jp/460/ScriptReference/WWW.GetAudioClip.html
+			// 参考 https://answers.unity.com/questions/433428/load-mp3-from-harddrive-on-pc-again.html
+			if (ext == ".ogg" || ext == ".wav")
+			{
+				LoadAudio(path);
+				continue;
 			}
 		}
 	}
@@ -211,6 +228,39 @@ public class VrmSample : MonoBehaviour {
 			{
 				uiController.Show(meta);
 			}
+		}
+	}
+
+	/// <summary>
+	/// Load the audio clip
+	/// Reference: http://fantom1x.blog130.fc2.com/blog-entry-299.html
+	/// </summary>
+	/// <param name="path"></param>
+	private void LoadAudio(string path)
+	{
+		StartCoroutine(LoadAudioCoroutine(path));
+	}
+
+	private System.Collections.IEnumerator LoadAudioCoroutine(string path)
+	{
+		if (!File.Exists(path)) yield break;
+
+		using (WWW www = new WWW("file://" + path))
+		{
+			while (!www.isDone) {
+				yield return null;
+			}
+
+			AudioClip audioClip = www.GetAudioClip(false, false);
+			if (audioClip.loadState != AudioDataLoadState.Loaded)
+			{
+				Debug.Log("Failed to load audio: " + path);
+				yield break;
+			}
+
+			audioSource.clip = audioClip;
+			audioSource.Play();
+			Debug.Log("Audio: " + path);
 		}
 	}
 }
