@@ -211,8 +211,8 @@ public class WindowController : MonoBehaviour {
 			return;
 		}
 
-		// 最大化時はウィンドウドラッグは行わない
-		if (uniWin.IsMaximized)
+		// 最大化時またはフルスクリーンならウィンドウ移動は行わない
+		if (uniWin.IsMaximized || Screen.fullScreen)
 		{
 			isDragging = false;
 			return;
