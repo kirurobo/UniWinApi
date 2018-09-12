@@ -6,7 +6,7 @@ UniWinApi の構成は図のようになっています。
 
 ![構成図](img_jp/fig_01_configuration.png)
 
-利用する上では、黒い太矢印の部分を考えていただくことを想定しています。
+利用する上では、黒い太矢印の部分にあたる呼び出しを想定しています。
 * A. WindowController.cs を使う
 * B. UniWinApi.cs をスクリプトから扱う
 
