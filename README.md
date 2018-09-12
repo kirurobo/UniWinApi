@@ -13,7 +13,7 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 * マウスのボタン操作を送出する
 
 主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
-[![VRM viewer sample](http://img.youtube.com/vi/EETQxzzv4uY/0.jpg)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
+[![VRM viewer sample](https://j.gifs.com/2v56qj.gif)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
 
 ビルド済みのVRMビューア―例はこちらの UniWinApiVrmViewer です。64ビット版と32ビット版(x86)があります。
 * [Ver.0.3.1 最初から透明化](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.1)
