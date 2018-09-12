@@ -1,5 +1,12 @@
 # UniWinApi チュートリアル
 
+## 準備
+
+* [リリースのページ](https://github.com/kirurobo/UniWinApi/releases) にある .unitypackage ファイルをダウンロードします。
+* Unity の「Assets」→「Import Package」→「Custom Package...」からインポートしてください。
+
+<br />
+
 ## 構成
 
 UniWinApi の構成は図のようになっています。
