@@ -37,14 +37,14 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 ## Configuration
 
 本体は Assets/UniWinApi 以下です。  
-このリポジトリには使用例として DWANGO Co., Ltd. による [UniVRM](https://github.com/dwango/UniVRM/releases) を含んでいます。
+このリポジトリには使用例として DWANGO Co., Ltd. による UniVRM を含んでいます。
 
 <br />
 <br />
 
 ---
 
-# About UniVRM
+# About [UniVRM](https://github.com/dwango/UniVRM/releases) 
 
 ## License
 
