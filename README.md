@@ -29,6 +29,11 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 
 [![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png "CC0")](http://creativecommons.org/publicdomain/zero/1.0/deed.ja)
 
+## System requirements
+
+* Unity 5.6 or newer
+* Windows 7 or newer
+
 ## Usage
 
 [日本語版のチュートリアルはこちら](docs/index_jp.md)
