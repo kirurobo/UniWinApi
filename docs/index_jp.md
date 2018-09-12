@@ -71,11 +71,11 @@ WindowController.cs を利用することで、自分のウィンドウ（起動
 ```csharp
 WindowController myWindowController;
 
-Start() {
+void Start() {
 	myWindowController = GetComponent<WindowController>();
 }
 
-Update () {
+void Update () {
 	if (Input.GetKeyDown(KeyCode.End)) {
 		myWindowController.isTransparent = !myWindowController.isTransparent;
 	}
