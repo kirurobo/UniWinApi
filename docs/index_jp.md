@@ -12,6 +12,7 @@ UniWinApi の構成は図のようになっています。
 
 という2通りありますが、単に自分のウィンドウを枠なしにしたいということであれば、A. だけで大丈夫です。
 
+<br />
 
 ## A. WindowController の利用　…　通常の利用
 
@@ -95,16 +96,22 @@ private void FileDropped(string[] files) {
 }
 ```
 
+<br />
+<br />
 
-## B. UniWinApi を直接利用する使い方
+## B. UniWinApi を直接利用する
 
 ### B-1. ウィンドウハンドルの取得
 
-まず、対象となるウィンドウを探します。
+まず、対象となるウィンドウを探します。  
+（ここで言うウィンドウハンドルは Windows API で直接使われるものでなく、IntPtr を表に出さぬよう UniWinApi 独自クラスにカプセル化したものになっています。）
 
 ```csharp
 // 自分のウィンドウ（アクティブなウィンドウ）を取得する例
 var windowHandle = UniWinApi.FindWindow();
+
+// タイトルがあれば見られます
+Debug.Log(windowHandle);
 ```
 
 |メソッド                |動作|
