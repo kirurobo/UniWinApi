@@ -35,7 +35,11 @@ WindowController.cs を利用することで、自分のウィンドウ（起動
 
 	![WindowController設定](img_jp/fig_12_settings.png)
 
-3. Windows PCのスタンドアローンとしてビルド、実行
+3. Project Settings の Player の設定を変更
+	* 本来の動作をさせるためには、「Project Settings」→「Player」にある設定の変更も必要です。
+	* ですが「Apply all recommended settings」ボタンを押せば、自動で推奨設定にします。
+
+4. Windows PCのスタンドアローンとしてビルド、実行
 	* 起動して、設定しておいたようになれば成功です。
 
 以上です。
