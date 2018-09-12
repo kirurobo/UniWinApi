@@ -4,7 +4,7 @@
 
 UniWinApi の構成は図のようになっています。
 
-![構成図](fig_01_configuration.png)
+![構成図](img_jp/fig_01_configuration.png)
 
 利用する上では、黒い太矢印の部分を考えていただくことを想定しています。
 * A. WindowController.cs を使う
@@ -26,9 +26,13 @@ WindowController.cs を利用することで、自分のウィンドウについ
 	* アタッチ対象はなんでもよいのですが、複数アタッチはしないでください。挙動がおかしくなるかもしれません。
 	* 空のオブジェクトに WindowController という名前を付けておき、それにアタッチするなどがお勧めです。
 
+	![アタッチまで](img_jp/fig_11_attach.png)
+
 2. インスペクタで設定を変更
 	* 「Is Transparent」にチェックを付けておけば、枠なしウィンドウになります。
 	* 「Enable Drag Move」にチェックが入っていると、マウス左ボタンでのドラッグがウィンドウ移動になります。無効にしたい場合はチェックを外してください。
+
+	![アタッチまで](img_jp/fig_12_settings.png)
 
 以上です。
 
