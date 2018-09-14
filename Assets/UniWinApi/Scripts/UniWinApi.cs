@@ -519,6 +519,7 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	/// <description>http://gamedev.stackexchange.com/questions/68784/how-do-i-access-the-product-name-in-unity-4</description>
 	/// <returns>The project name.</returns>
+	[Obsolete]
 	public static string GetUnityProcessName() {
 		string[] fileOrFolders = Application.dataPath.Split('/');
 		string file =  fileOrFolders[fileOrFolders.Length - 1];
