@@ -37,17 +37,18 @@ public class UniWinApi : IDisposable {
 			hWnd = hwnd;
 			if (hWnd == IntPtr.Zero) return;
 
-			int len;
-			StringBuilder sb = new StringBuilder(1024);
+			const int len = 1024;
+			StringBuilder sb = new StringBuilder(len);
 
 			// クラス名を取得
-			if (WinApi.GetClassName(hWnd, sb, out len) > 0)
+			if (WinApi.GetClassName(hWnd, sb, len) > 0)
 			{
 				ClassName = sb.ToString();
 			}
 
 			// ウィンドウタイトルを取得
-			if (WinApi.GetWindowText(hWnd, sb, out len) > 0)
+			sb.Length = 0;	// StringBuilder内を消去
+			if (WinApi.GetWindowText(hWnd, sb, len) > 0)
 			{
 				Title = sb.ToString();
 			}
@@ -61,7 +62,7 @@ public class UniWinApi : IDisposable {
 
 		public override string ToString()
 		{
-			return string.Format("HWND:{0} {1} - {2}", hWnd, ProcessName, Title);
+			return string.Format("HWND:{0} Proc:{1} Title:{2} Class:{3}", hWnd, ProcessName, Title, ClassName);
 		}
 	}
 
@@ -361,6 +362,16 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
+	/// 現在のアクティブウインドウが自分自身ならばtrueを返す
+	/// </summary>
+	/// <returns></returns>
+	public bool CheckActiveWindow()
+	{
+		IntPtr hwnd = WinApi.GetActiveWindow();
+		return (hwnd == hWnd);
+	}
+
+	/// <summary>
 	/// ウィンドウスタイルを監視して、替わっていれば戻す
 	/// </summary>
 	public void Update() {
@@ -504,14 +515,19 @@ public class UniWinApi : IDisposable {
 	}
 
 	/// <summary>
-	/// Gets the Unity product-name
+	/// Get the Unity executable file name
 	/// </summary>
 	/// <description>http://gamedev.stackexchange.com/questions/68784/how-do-i-access-the-product-name-in-unity-4</description>
 	/// <returns>The project name.</returns>
-	public static string GetProjectName() {
-		string[] s = Application.dataPath.Split('/');
-		string projectName = s[s.Length - 2];
-		return projectName;
+	[Obsolete]
+	public static string GetUnityProcessName() {
+		string[] fileOrFolders = Application.dataPath.Split('/');
+		string file =  fileOrFolders[fileOrFolders.Length - 1];
+		if (file.Substring(file.Length - 4).ToLower() == ".exe")
+		{
+			file = file.Substring(0, file.Length - 4);
+		}
+		return file;
 	}
 
 #region マウス操作関連
@@ -734,15 +750,23 @@ public class UniWinApi : IDisposable {
 		{
 			EndFileDrop();
 #if UNITY_EDITOR
-			EnableTransparent(false);
-			EnableTopmost(false);
-			Restore();
-			RestoreWindowState();
+			Reset();
 #endif
 		}
 
 		hWnd = IntPtr.Zero;
 	}
 
-#endregion
+	/// <summary>
+	/// ウィンドウ状態を最初に戻す
+	/// </summary>
+	public void Reset()
+	{
+		EnableTransparent(false);
+		EnableTopmost(false);
+		Restore();
+		RestoreWindowState();
+	}
+
+	#endregion
 }
