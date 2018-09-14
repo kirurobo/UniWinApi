@@ -120,6 +120,11 @@ public class WindowController : MonoBehaviour {
 	private Vector2 lastMousePosition;
 
 	/// <summary>
+	/// 現在対象としているウィンドウが自分自身らしいと確認できたらtrueとする
+	/// </summary>
+	private bool isWindowChecked = false;
+
+	/// <summary>
 	/// ファイルドロップ時のイベントハンドラー。 UniWinApiの OnFilesDropped にそのまま渡す。
 	/// </summary>
 	public event UniWinApi.FilesDropped OnFilesDropped
@@ -172,20 +177,44 @@ public class WindowController : MonoBehaviour {
 		// キー、マウス操作の下ウィンドウへの透過状態を更新
 		UpdateClickThrough();
 
-		// もしウィンドウハンドル取得に失敗していたら再取得
-		//	キー押下時点でアクティブなのは自分のウィンドウと仮定
-		//	特にビルドしたものの実行だと起動時に見失ったりするので。
-		if (Input.anyKeyDown) {
-			if (!uniWin.IsActive) {
-				FindMyWindow();
-			}
-		}
-
 		// マウスドラッグでウィンドウ移動
 		DragMove();
 
 		// ウィンドウ枠が復活している場合があるので監視するため、呼ぶ
 		uniWin.Update();
+	}
+
+	/// <summary>
+	/// ウィンドウへのフォーカスが変化したときに呼ばれる
+	/// </summary>
+	/// <param name="focus"></param>
+	private void OnApplicationFocus(bool focus)
+	{
+		if (focus)
+		{
+			// もしウィンドウハンドル取得に失敗していたら再取得
+			if (!uniWin.IsActive)
+			{
+				FindMyWindow();
+			}
+
+			// アクティブウィンドウを監視して
+			if (!isWindowChecked)
+			{
+				if (uniWin.CheckActiveWindow())
+				{
+					isWindowChecked = true; // どうやら正しくウィンドウをつかめているよう
+				}
+				else
+				{
+					// ウィンドウが違っているようなので、もう一度アクティブウィンドウを取得
+					uniWin.Reset();
+					uniWin.Dispose();
+					uniWin = new UniWinApi();
+					FindMyWindow();
+				}
+			}
+		}
 	}
 
 	/// <summary>
@@ -315,9 +344,25 @@ public class WindowController : MonoBehaviour {
 	/// </summary>
 	private void FindMyWindow()
 	{
+		// ウィンドウが確かではないとしておく
+		isWindowChecked = false;
+
+		// 現在このウィンドウがアクティブでなければ、取得はやめておく
+		if (!Application.isFocused) return;
+
 		// 今アクティブなウィンドウを取得
 		var window = UniWinApi.FindWindow();
 		if (window == null) return;
+
+		if (Application.isEditor) {
+			// Unityエディタと一致するかチェック
+			//  （別アプリのウィンドウは対象とさせない）
+			if (window.ProcessName != "Unity") return;
+		} else {
+			// このUnityプロジェクトの名前と一致するかどうかをチェック
+			//  （別アプリのウィンドウは対象とさせない）
+			if (window.Title != Application.productName) return;
+		}
 
 		// 見つかったウィンドウを利用開始
 		uniWin.SetWindow(window);

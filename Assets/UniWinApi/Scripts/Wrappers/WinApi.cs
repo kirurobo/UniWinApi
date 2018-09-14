@@ -103,18 +103,15 @@ public class WinApi {
 	
 	[DllImport("user32.dll", CharSet = CharSet.Auto)]
 	public static extern int GetWindowText (IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+	[DllImport("user32.dll", CharSet = CharSet.Auto)]
+	public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 	
 	[DllImport("user32.dll")]
 	public static extern uint GetWindowThreadProcessId (IntPtr hWnd, out long lpdwProcessId);
 	
 	[DllImport("user32.dll")]
 	public static extern IntPtr FindWindow (string lpszClass, string lpszTitle);
-
-	[DllImport("user32.dll")]
-	public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, out int nMaxCount);
-
-	[DllImport("user32.dll")]
-	public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpTitle, out int nMaxCount);
 
 	[DllImport("user32.dll")]
 	public static extern long GetWindowRect (IntPtr hWnd, out RECT rect);
