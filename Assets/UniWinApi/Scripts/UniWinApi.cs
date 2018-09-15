@@ -719,7 +719,7 @@ public class UniWinApi : IDisposable {
 
 		IsHookSet = true;
 
-		Debug.Log("BeginHook");
+		//Debug.Log("BeginHook");
 	}
 
 	/// <summary>
@@ -736,7 +736,7 @@ public class UniWinApi : IDisposable {
 			// Unityだと通常はドラッグ不可のはずなので戻しても良いのかも
 			WinApi.DragAcceptFiles(hWnd, false);
 
-			Debug.Log("EndHook");
+			//Debug.Log("EndHook");
 		}
 		IsHookSet = false;
 	}

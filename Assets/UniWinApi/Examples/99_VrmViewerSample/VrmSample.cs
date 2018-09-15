@@ -182,6 +182,13 @@ public class VrmSample : MonoBehaviour {
 		motion.GetComponent<Renderer>().enabled = false;
 
 		SetMotion(motion, model, meta);
+
+		// Play loaded audio if available
+		if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)
+		{
+			audioSource.Stop();
+			audioSource.Play();
+		}
 	}
 
 	/// <summary>
@@ -222,7 +229,6 @@ public class VrmSample : MonoBehaviour {
 			SetMotion(motion, model, meta);
 
 			model.gameObject.AddComponent<CharacterBehaviour>();
-
 
 			if (uiController)
 			{

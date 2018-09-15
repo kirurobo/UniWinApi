@@ -86,14 +86,13 @@ public class VrmUiController : MonoBehaviour {
 	/// </summary>
 	private void Quit()
 	{
-		if (Application.isEditor) {
-			// Stop playing for the editor
-			UnityEditor.EditorApplication.isPlaying = false;
-		} else
-		{
-			// Quit application for the standalone player
-			Application.Quit();
-		}
+#if UNITY_EDITOR
+		// Stop playing for the editor
+		UnityEditor.EditorApplication.isPlaying = false;
+#else
+		// Quit application for the standalone player
+		Application.Quit();
+#endif
 	}
 
 	/// <summary>
