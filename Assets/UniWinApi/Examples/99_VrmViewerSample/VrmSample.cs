@@ -24,7 +24,7 @@ public class VrmSample : MonoBehaviour {
 	public CameraController cameraController;
 	public Transform cameraTransform;
 
-	private CameraController.WheelMode originalWheelMode;
+	private CameraController.ZoomMode originalWheelMode;
 
 	public AudioSource audioSource;
 
@@ -41,7 +41,7 @@ public class VrmSample : MonoBehaviour {
 			cameraController = FindObjectOfType<CameraController>();
 			if (cameraController)
 			{
-				originalWheelMode = cameraController.wheelMode;
+				originalWheelMode = cameraController.zoomMode;
 			}
 		}
 
@@ -81,10 +81,10 @@ public class VrmSample : MonoBehaviour {
 			bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
 			if (!windowController.isClickThrough && inScreen)
 			{
-				cameraController.wheelMode = originalWheelMode;
+				cameraController.zoomMode = originalWheelMode;
 			} else
 			{
-				cameraController.wheelMode = CameraController.WheelMode.None;
+				cameraController.zoomMode = CameraController.ZoomMode.None;
 			}
 		}
 
@@ -177,11 +177,29 @@ public class VrmSample : MonoBehaviour {
 			Path = path
 		};
 
-		BvhImporter.Import(context);
-		motion = context.Root.GetComponent<HumanPoseTransfer>();
-		motion.GetComponent<Renderer>().enabled = false;
+		try
+		{
 
-		SetMotion(motion, model, meta);
+			BvhImporter.Import(context);
+			motion = context.Root.GetComponent<HumanPoseTransfer>();
+			motion.GetComponent<Renderer>().enabled = false;
+
+			SetMotion(motion, model, meta);
+		} catch (Exception ex)
+		{
+			if (uiController) uiController.SetWarning("Motion load failed.");
+			Debug.LogError(ex);
+			return;
+		}
+		finally
+		{
+			// Play loaded audio if available
+			if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)
+			{
+				audioSource.Stop();
+				audioSource.Play();
+			}
+		}
 	}
 
 	/// <summary>
@@ -207,6 +225,7 @@ public class VrmSample : MonoBehaviour {
 		}
 		catch (Exception ex)
 		{
+			if (uiController) uiController.SetWarning("Model load failed.");
 			Debug.LogError(ex);
 			return;
 		}
@@ -222,7 +241,6 @@ public class VrmSample : MonoBehaviour {
 			SetMotion(motion, model, meta);
 
 			model.gameObject.AddComponent<CharacterBehaviour>();
-
 
 			if (uiController)
 			{

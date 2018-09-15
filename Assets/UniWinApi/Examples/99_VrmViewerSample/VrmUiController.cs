@@ -87,9 +87,11 @@ public class VrmUiController : MonoBehaviour {
 	private void Quit()
 	{
 #if UNITY_EDITOR
+		// Stop playing for the editor
 		UnityEditor.EditorApplication.isPlaying = false;
 #else
-		 Application.Quit();
+		// Quit application for the standalone player
+		Application.Quit();
 #endif
 	}
 
@@ -206,5 +208,17 @@ public class VrmUiController : MonoBehaviour {
 		}
 
 		Show();
+	}
+
+	/// <summary>
+	/// Set the warning text
+	/// </summary>
+	/// <param name="message"></param>
+	public void SetWarning(string message)
+	{
+		if (warningText)
+		{
+			warningText.text = message;
+		}
 	}
 }
