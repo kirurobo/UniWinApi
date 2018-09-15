@@ -1670,11 +1670,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   axes: 3
-  wheelMode: 1
+  zoomMode: 1
   sensitivityX: 15
   sensitivityY: 15
   dragSensitivity: 0.1
-  wheelSensitivity: 0.2
+  wheelSensitivity: 0.5
   minimumAngles: {x: -90, y: -360}
   maximumAngles: {x: 90, y: 360}
   centerTransform: {fileID: 0}
@@ -2437,7 +2437,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   axes: 3
-  wheelMode: 1
+  zoomMode: 1
   sensitivityX: 15
   sensitivityY: 15
   dragSensitivity: 1

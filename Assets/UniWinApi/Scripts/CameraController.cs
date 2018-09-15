@@ -6,8 +6,6 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour {
@@ -20,19 +18,19 @@ public class CameraController : MonoBehaviour {
 	}
 
 	[Flags]
-	public enum WheelMode
+	public enum ZoomMode
 	{
 		None = 0,
 		Dolly = 1,	// Dolly in/out
-		//Zoom = 2,		// Not implemented
+		Zoom = 2,	// Zoom in/out
 	}
 
 	public RotationAxes axes = RotationAxes.PitchAndYaw;
-	public WheelMode wheelMode = WheelMode.Dolly;
+	public ZoomMode zoomMode = ZoomMode.Dolly;
 	public float sensitivityX = 15f;
 	public float sensitivityY = 15f;
-	public float dragSensitivity = 1f;
-	public float wheelSensitivity = 0.2f;
+	public float dragSensitivity = 0.1f;
+	public float wheelSensitivity = 0.5f;
 
 	public Vector2 minimumAngles = new Vector2(-90f, -360f);
 	public Vector2 maximumAngles = new Vector2( 90f,  360f);
@@ -41,13 +39,16 @@ public class CameraController : MonoBehaviour {
 
 	Vector3 rotation;
 	Vector3 translation;
+
 	[SerializeField]
 	float distance;
 
 	Vector3 relativePosition;
 	Quaternion relativeRotation;
 	float originalDistance;
-	float wheel;
+	float originalFieldOfView;
+	float dolly;
+	float zoom;
 
 	Camera currentCamera;
 
@@ -67,9 +68,17 @@ public class CameraController : MonoBehaviour {
 		relativeRotation = Quaternion.LookRotation(relativePosition, Vector3.up);
 		originalDistance = relativePosition.magnitude;
 
-		ResetTransform();
+		if (!currentCamera)
+		{
+			currentCamera = GetComponent<Camera>();
+		}
+		if (!currentCamera)
+		{
+			currentCamera = Camera.main;
+		}
+		originalFieldOfView = currentCamera.fieldOfView;
 
-		currentCamera = GetComponent<Camera>();
+		ResetTransform();
 	}
 
 	/// <summary>
@@ -80,7 +89,8 @@ public class CameraController : MonoBehaviour {
 		rotation = relativeRotation.eulerAngles;
 		translation = Vector3.zero;
 		distance = originalDistance;
-		wheel = 0f;
+		dolly = 0f;
+		zoom = Mathf.Log10(originalFieldOfView);
 
 		UpdateTransform();
 	}
@@ -93,6 +103,8 @@ public class CameraController : MonoBehaviour {
 		Quaternion rot = Quaternion.Euler(rotation);
 		transform.rotation = rot;
 		transform.position = centerTransform.position + transform.rotation * Vector3.back * distance + transform.rotation * translation;
+
+		currentCamera.fieldOfView = Mathf.Pow(10f, zoom);
 	}
 
 	void Update()
@@ -140,14 +152,21 @@ public class CameraController : MonoBehaviour {
 
 			if (wheelDelta != 0f)
 			{
-				if (wheelMode == WheelMode.Dolly)
+				if ((zoomMode & ZoomMode.Dolly) != ZoomMode.None)
 				{
 					// ドリーの場合。カメラを近づけたり遠ざけたり。
-					wheel += wheelDelta;
-					if (wheel > 5f) wheel = 5f;     // 上限
-					if (wheel < -2f) wheel = -2f;   // 下限
+					dolly += wheelDelta;
+					dolly = Mathf.Clamp(dolly, -2f, 5f);	// Logarithm of distance [m] range
 
-					distance = originalDistance * Mathf.Pow(10f, -wheel);
+					distance = originalDistance * Mathf.Pow(10f, -dolly);
+
+					UpdateTransform();
+				}
+				else if ((zoomMode & ZoomMode.Zoom) != ZoomMode.None)
+				{
+					// ズームの場合。カメラのFOVを変更
+					zoom -= wheelDelta;
+					zoom = Mathf.Clamp(zoom, -1f, 2f);	// Logarithm of field-of-view [deg] range
 
 					UpdateTransform();
 				}

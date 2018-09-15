@@ -24,7 +24,7 @@ public class VrmSample : MonoBehaviour {
 	public CameraController cameraController;
 	public Transform cameraTransform;
 
-	private CameraController.WheelMode originalWheelMode;
+	private CameraController.ZoomMode originalWheelMode;
 
 	public AudioSource audioSource;
 
@@ -41,7 +41,7 @@ public class VrmSample : MonoBehaviour {
 			cameraController = FindObjectOfType<CameraController>();
 			if (cameraController)
 			{
-				originalWheelMode = cameraController.wheelMode;
+				originalWheelMode = cameraController.zoomMode;
 			}
 		}
 
@@ -81,10 +81,10 @@ public class VrmSample : MonoBehaviour {
 			bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
 			if (!windowController.isClickThrough && inScreen)
 			{
-				cameraController.wheelMode = originalWheelMode;
+				cameraController.zoomMode = originalWheelMode;
 			} else
 			{
-				cameraController.wheelMode = CameraController.WheelMode.None;
+				cameraController.zoomMode = CameraController.ZoomMode.None;
 			}
 		}
 
