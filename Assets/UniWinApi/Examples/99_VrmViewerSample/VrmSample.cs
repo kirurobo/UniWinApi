@@ -177,17 +177,28 @@ public class VrmSample : MonoBehaviour {
 			Path = path
 		};
 
-		BvhImporter.Import(context);
-		motion = context.Root.GetComponent<HumanPoseTransfer>();
-		motion.GetComponent<Renderer>().enabled = false;
-
-		SetMotion(motion, model, meta);
-
-		// Play loaded audio if available
-		if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)
+		try
 		{
-			audioSource.Stop();
-			audioSource.Play();
+
+			BvhImporter.Import(context);
+			motion = context.Root.GetComponent<HumanPoseTransfer>();
+			motion.GetComponent<Renderer>().enabled = false;
+
+			SetMotion(motion, model, meta);
+		} catch (Exception ex)
+		{
+			if (uiController) uiController.SetWarning("Motion load failed.");
+			Debug.LogError(ex);
+			return;
+		}
+		finally
+		{
+			// Play loaded audio if available
+			if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)
+			{
+				audioSource.Stop();
+				audioSource.Play();
+			}
 		}
 	}
 
@@ -214,6 +225,7 @@ public class VrmSample : MonoBehaviour {
 		}
 		catch (Exception ex)
 		{
+			if (uiController) uiController.SetWarning("Model load failed.");
 			Debug.LogError(ex);
 			return;
 		}

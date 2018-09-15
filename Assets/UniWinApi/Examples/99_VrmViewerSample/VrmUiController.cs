@@ -209,4 +209,16 @@ public class VrmUiController : MonoBehaviour {
 
 		Show();
 	}
+
+	/// <summary>
+	/// Set the warning text
+	/// </summary>
+	/// <param name="message"></param>
+	public void SetWarning(string message)
+	{
+		if (warningText)
+		{
+			warningText.text = message;
+		}
+	}
 }
