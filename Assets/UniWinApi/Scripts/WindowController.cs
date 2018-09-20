@@ -9,12 +9,17 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Set to readonly during playing
+/// Set editable the bool property
 /// </summary>
 [System.AttributeUsage(System.AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-public class BoolPropertyAttribute : PropertyAttribute
-{
-}
+public class BoolPropertyAttribute : PropertyAttribute {}
+
+/// <summary>
+/// Set the attribute as readonly
+/// </summary>
+[System.AttributeUsage(System.AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+public class ReadOnlyAttribute : PropertyAttribute { }
+
 
 /// <summary>
 /// デスクトップマスコット風の利用法を想定した UniWinApi サンプル。
@@ -113,7 +118,7 @@ public class WindowController : MonoBehaviour {
 	/// <summary>
 	/// Pixel color under the mouse pointer. (Read only)
 	/// </summary>
-	[Tooltip("Pixel color under the mouse pointer. (Read only)")]
+	[ReadOnly, Tooltip("Pixel color under the mouse pointer. (Read only)")]
 	public Color pickedColor;
 
 	private bool isDragging = false;

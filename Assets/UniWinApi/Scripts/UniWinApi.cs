@@ -75,7 +75,7 @@ public class UniWinApi : IDisposable {
 	/// ウィンドウ操作ができる状態ならtrueを返す
 	/// </summary>
 	/// <value><c>true</c> if this instance is active; otherwise, <c>false</c>.</value>
-	public bool IsActive { get{return hWnd != IntPtr.Zero;} }
+	public bool IsActive { get{return (hWnd != IntPtr.Zero && WinApi.IsWindow(hWnd));} }
 
 	/// <summary>
 	/// ウィンドウが最大化されていればtrue
@@ -664,6 +664,12 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	public void BeginFileDrop()
 	{
+		if (!IsActive)
+		{
+			EndFileDrop();
+			return;
+		}
+
 		if (!instances.Contains(this)) {
 			instances.Add(this);
 		}
@@ -684,12 +690,14 @@ public class UniWinApi : IDisposable {
 		EndHook();
 		instances.Remove(this);
 
+		if (!IsActive) return;
+
+		// ドロップを受け付ける状態を元に戻す
 		long exstyle = this.CurrentWindowExStyle;
-		exstyle &= ~WinApi.WS_EX_ACCEPTFILES;	// ドロップ受付をやめる
+		exstyle &= ~WinApi.WS_EX_ACCEPTFILES;
 		exstyle |= (WinApi.WS_EX_ACCEPTFILES & this.OriginalWindowExStyle);	// 元からドロップ許可ならやはり受付
 		this.CurrentWindowExStyle = exstyle;
 		WinApi.SetWindowLong(hWnd, WinApi.GWL_EXSTYLE, this.CurrentWindowExStyle);
-
 	}
 
 	/// <summary>
@@ -697,12 +705,15 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	private void BeginHook()
 	{
-		if (IsHookSet) return;
+		// ウィンドウが操作不可なら設定はできない
 		if (!IsActive)
 		{
-			IsHookSet = false;
+			EndHook();	// フック設定なしということにしておく
 			return;
 		}
+
+		// フック設定済みなら二重には設定しない
+		if (IsHookSet) return;
 
 		// フックを設定
 		uint threadId = WinApi.GetCurrentThreadId();
@@ -718,7 +729,6 @@ public class UniWinApi : IDisposable {
 		}
 
 		IsHookSet = true;
-
 		//Debug.Log("BeginHook");
 	}
 
@@ -733,9 +743,6 @@ public class UniWinApi : IDisposable {
 			myHook = IntPtr.Zero;
 			myHookCallback = null;
 
-			// Unityだと通常はドラッグ不可のはずなので戻しても良いのかも
-			WinApi.DragAcceptFiles(hWnd, false);
-
 			//Debug.Log("EndHook");
 		}
 		IsHookSet = false;
@@ -746,7 +753,7 @@ public class UniWinApi : IDisposable {
 	/// </summary>
 	public void Dispose()
 	{
-		if (hWnd != IntPtr.Zero && WinApi.IsWindow(hWnd))
+		if (IsActive)
 		{
 			EndFileDrop();
 #if UNITY_EDITOR

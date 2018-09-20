@@ -60,6 +60,17 @@ public class WindowControllerEditor : Editor {
 	}
 }
 
+[CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
+public class WindowControllerReadOnlyDrawer : PropertyDrawer
+{
+	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+	{
+		GUI.enabled = false;
+		EditorGUI.PropertyField(position, property, label, true);
+		GUI.enabled = true;
+	}
+}
+
 /// <summary>
 /// Set to readonly during playing
 /// Reference: http://ponkotsu-hiyorin.hateblo.jp/entry/2015/10/20/003042
