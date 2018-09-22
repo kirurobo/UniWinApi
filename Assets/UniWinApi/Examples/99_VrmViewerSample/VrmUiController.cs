@@ -16,7 +16,6 @@ public class VrmUiController : MonoBehaviour {
 	public Toggle maximizeToggle;
 	public Button quitButton;
 	public Text titleText;
-	public RectTransform loadingPanel;
 
 	private float mouseMoveSS = 0f;				// Sum of mouse trajectory squares. [px^2]
 	private float mouseMoveSSThreshold = 16f;	// Threshold to be regarded as not moving. [px^2]
@@ -220,22 +219,6 @@ public class VrmUiController : MonoBehaviour {
 		if (warningText)
 		{
 			warningText.text = message;
-		}
-	}
-
-	public void ShowLoading()
-	{
-		if (loadingPanel)
-		{
-			loadingPanel.gameObject.SetActive(true);
-		}
-	}
-
-	public void HideLoading()
-	{
-		if (loadingPanel)
-		{
-			loadingPanel.gameObject.SetActive(false);
 		}
 	}
 }
