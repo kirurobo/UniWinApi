@@ -177,6 +177,8 @@ public class VrmSample : MonoBehaviour {
 			Path = path
 		};
 
+		if (uiController) uiController.ShowLoading();
+
 		try
 		{
 
@@ -200,6 +202,8 @@ public class VrmSample : MonoBehaviour {
 				audioSource.Play();
 			}
 		}
+
+		if (uiController) uiController.HideLoading();
 	}
 
 	/// <summary>
@@ -211,6 +215,8 @@ public class VrmSample : MonoBehaviour {
 		if (!File.Exists(path)) return;
 
 		GameObject newModel = null;
+
+		if (uiController) uiController.ShowLoading();
 
 		try
 		{
@@ -247,6 +253,8 @@ public class VrmSample : MonoBehaviour {
 				uiController.Show(meta);
 			}
 		}
+
+		if (uiController) uiController.HideLoading();
 	}
 
 	/// <summary>
