@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4513998, g: 0.5008927, b: 0.5723166, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657815, g: 0.49641407, b: 0.57481676, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -1929,7 +1929,6 @@ MonoBehaviour:
   maximizeToggle: {fileID: 1143313283}
   quitButton: {fileID: 1511164576}
   titleText: {fileID: 73029309}
-  loadingPanel: {fileID: 0}
 --- !u!114 &1787938568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2386,7 +2385,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 8
   m_Type: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 0.5
   m_Range: 10
   m_SpotAngle: 30
@@ -2419,13 +2418,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2141451816}
-  m_LocalRotation: {x: 0.25660488, y: 0.12607859, z: -0.03378266, w: 0.9576622}
+  m_LocalRotation: {x: 0.76328206, y: -0.3904523, z: -0.024150606, w: 0.5141636}
   m_LocalPosition: {x: -1.5, y: 4, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1629460662}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 30, y: 15, z: 0}
+  m_LocalEulerAnglesHint: {x: 130, y: 43, z: 75}
 --- !u!114 &2141451819
 MonoBehaviour:
   m_ObjectHideFlags: 0

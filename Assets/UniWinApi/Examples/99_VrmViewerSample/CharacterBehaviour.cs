@@ -16,7 +16,8 @@ public class CharacterBehaviour : MonoBehaviour
 	private VRMBlendShapeProxy blendShapeProxy;
 
 	private GameObject targetObject;    // 視線目標オブジェクト
-	private Transform headTransform;	// Head transform
+	private Transform headTransform;    // Head transform
+	private bool isNewTargetObject = false;	// 新規に目標オブジェクトを作成したらtrue
 
 	// Use this for initialization
 	void Start()
@@ -24,6 +25,7 @@ public class CharacterBehaviour : MonoBehaviour
 		if (!targetObject)
 		{
 			targetObject = new GameObject("LookAtTarget");
+			isNewTargetObject = true;
 		}
 
 		lookAtHead = GetComponent<VRMLookAtHead>();
@@ -39,6 +41,17 @@ public class CharacterBehaviour : MonoBehaviour
 		if (!headTransform)
 		{
 			headTransform = this.transform;
+		}
+	}
+
+	/// <summary>
+	/// Destroy created target object
+	/// </summary>
+	void OnDestroy()
+	{
+		if (isNewTargetObject)
+		{
+			GameObject.Destroy(targetObject);
 		}
 	}
 
