@@ -17,10 +17,11 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 ## Download
 
 ビルド済みのVRMビューア―例はこの中の UniWinApiVrmViewer です。64ビット版と32ビット版(x86)があります。
+* [Ver.0.3.3 UniVRM 0.44に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.2)
 * [Ver.0.3.2 マウスを追う](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.2)
 * [Ver.0.3.1 最初から透明化](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.1)
 * [Ver.0.3.0 照明の回転と並進移動も追加](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.0)
-* [Ver.0.2.3 UniVRM0.42に。カメラFOVを10度に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.3)
+* [Ver.0.2.3 UniVRM 0.42に。カメラFOVを10度に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.3)
 * [Ver.0.2.2 ライトを白色に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.2)
 * [Ver.0.2.1 シェーダー修正後](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.1/UniWinApiVrmViewer_x64_v0.2.1.zip)
 * [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
