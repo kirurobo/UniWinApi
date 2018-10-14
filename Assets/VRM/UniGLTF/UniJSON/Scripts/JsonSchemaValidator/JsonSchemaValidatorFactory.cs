@@ -41,7 +41,7 @@ namespace UniJSON
 
                 if (a == null)
                 {
-                    int x = 0;
+                    //int x = 0;
                 }
                 else
                 {
@@ -207,40 +207,51 @@ namespace UniJSON
 
                 case JsonValueType.Object:
                     {
-                        var v = new JsonObjectValidator();
-                        if (a != null)
+                        if (t.GetIsGenericDictionary())
                         {
-                            if (a.MinProperties > 0)
+                            var genericFactory = typeof(JsonDictionaryValidator).GetMethod("Create", BindingFlags.Static | BindingFlags.Public);
+                            var factory = genericFactory.MakeGenericMethod(t.GetGenericArguments()[1]);
+                            var v = factory.Invoke(null, null) as IJsonSchemaValidator;
+                            return v;
+                        }
+                        else
+                        {
+                            var v = new JsonObjectValidator();
+                            if (a != null)
                             {
-                                v.MinProperties = a.MinProperties;
+                                if (a.MinProperties > 0)
+                                {
+                                    v.MinProperties = a.MinProperties;
+                                }
+
+                                // props
+                                foreach (var prop in GetProperties(t, a.ExportFlags))
+                                {
+                                    v.Properties.Add(prop.Key, prop.Schema);
+                                    if (prop.Required)
+                                    {
+                                        v.Required.Add(prop.Key);
+                                    }
+                                    if (prop.Dependencies != null)
+                                    {
+                                        v.Dependencies.Add(prop.Key, prop.Dependencies);
+                                    }
+                                }
+
                             }
 
-                            // props
-                            foreach (var prop in GetProperties(t, a.ExportFlags))
+                            if (ia != null)
                             {
-                                v.Properties.Add(prop.Key, prop.Schema);
-                                if (prop.Required)
+                                var sub = new JsonSchema
                                 {
-                                    v.Required.Add(prop.Key);
-                                }
-                                if (prop.Dependencies != null)
-                                {
-                                    v.Dependencies.Add(prop.Key, prop.Dependencies);
-                                }
+                                    SkipComparison = ia.SkipSchemaComparison,
+                                    Validator = Create(typeof(object), ia, null)
+                                };
+                                v.AdditionalProperties = sub;
                             }
-                        }
 
-                        if (ia != null)
-                        {
-                            var sub = new JsonSchema
-                            {
-                                SkipComparison = ia.SkipSchemaComparison,
-                                Validator = Create(typeof(object), ia, null)
-                            };
-                            v.AdditionalProperties = sub;
+                            return v;
                         }
-
-                        return v;
                     }
 
                 default:
@@ -261,7 +272,7 @@ namespace UniJSON
             {typeof(bool), JsonValueType.Boolean },
 
             // Unity types
-            {typeof(Vector3), JsonValueType.Array },
+            {typeof(Vector3), JsonValueType.Object },
         };
 
         static JsonValueType ToJsonType(Type t)

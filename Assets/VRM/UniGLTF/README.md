@@ -2,6 +2,13 @@
 
 [glTF](https://github.com/KhronosGroup/glTF) 2.0 importer and exporter for Unity 5.6 or later
 
+Improved material importer(UniGLTF-1.21) ! 
+
+Below is imported from [DamagedHelmet](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/DamagedHelmet). Using unity standard shader.
+
+![standard shader](doc/pbr_to_standard.png)
+
+
 ![duck](doc/duck.png)
 ![animation](doc/animation.gif)
 
@@ -43,33 +50,7 @@ or
 * menu [UniGLTF] - [Import] 
 * open gltf file(gltf, glb, zip) from out of Asset Folder
 
-## Import in runTime
+## API
 
-```cs
-string path; // gltf, glb or zip(include gltf)
-
-var context = gltfImporter.Load(path);
-context.ShowMeshes();
-
-GameObject root = context.Root;
-```
-
-## Export from scene
-
-* select target root GameObject in scene(GameObect must be empty root, because target become gltf's ``/scene``. A scene includes nodes.
-* menu [UniGLTF] - [Export]
-* support only glb format
-
-## Export in runTime
-
-```cs
-GameObject go; // export target
-string path; // glb write path
-
-var gltf = gltfExporter.Export(go);
-var bytes = gltf.ToGlbBytes();
-File.WriteAllBytes(path, bytes);
-```
-
-* support only glb format
+* https://github.com/ousttrue/UniGLTF/wiki/Rutime-API
 

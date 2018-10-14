@@ -130,6 +130,12 @@ public class WindowController : MonoBehaviour {
 	private bool isWindowChecked = false;
 
 	/// <summary>
+	/// カメラのインスタンス
+	/// </summary>
+	private Camera currentCamera;
+
+
+	/// <summary>
 	/// ファイルドロップ時のイベントハンドラー。 UniWinApiの OnFilesDropped にそのまま渡す。
 	/// </summary>
 	public event UniWinApi.FilesDropped OnFilesDropped
@@ -152,10 +158,25 @@ public class WindowController : MonoBehaviour {
 
 	// Use this for initialization
 	void Awake () {
-		// カメラの元の背景を記憶
-		originalCameraClearFlags = Camera.main.clearFlags;
-		originalCameraBackground = Camera.main.backgroundColor;
+		if (!currentCamera)
+		{
+			// メインカメラを探す
+			currentCamera = Camera.main;
 
+			// もしメインカメラが見つからなければ、Findで探す
+			if (!currentCamera)
+			{
+				currentCamera = FindObjectOfType<Camera>();
+			}
+		}
+
+		// カメラの元の背景を記憶
+		if (currentCamera)
+		{
+			originalCameraClearFlags = currentCamera.clearFlags;
+			originalCameraBackground = currentCamera.backgroundColor;
+
+		}
 		// 描画色抽出用テクスチャ
 		colorPickerTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
 
@@ -306,7 +327,7 @@ public class WindowController : MonoBehaviour {
 		while (Application.isPlaying)
 		{
 			yield return new WaitForEndOfFrame();
-			MyPostRender(Camera.main);
+			MyPostRender(currentCamera);
 		}
 		yield return null;
 	}
@@ -317,6 +338,9 @@ public class WindowController : MonoBehaviour {
 	/// <param name="cam"></param>
 	void MyPostRender(Camera cam)
 	{
+		// カメラが不明ならば何もしない
+		if (!cam) return;
+
 		Vector2 mousePos = Input.mousePosition;
 		Rect camRect = cam.pixelRect;
 
@@ -386,15 +410,18 @@ public class WindowController : MonoBehaviour {
 	/// <param name="isTransparent"></param>
 	void SetCameraBackground(bool isTransparent)
 	{
+		// カメラが特定できていなければ何もしない
+		if (!currentCamera) return;
+
 		if (isTransparent)
 		{
-			Camera.main.clearFlags = CameraClearFlags.SolidColor;
-			Camera.main.backgroundColor = Color.clear;
+			currentCamera.clearFlags = CameraClearFlags.SolidColor;
+			currentCamera.backgroundColor = Color.clear;
 		}
 		else
 		{
-			Camera.main.clearFlags = originalCameraClearFlags;
-			Camera.main.backgroundColor = originalCameraBackground;
+			currentCamera.clearFlags = originalCameraClearFlags;
+			currentCamera.backgroundColor = originalCameraBackground;
 		}
 	}
 

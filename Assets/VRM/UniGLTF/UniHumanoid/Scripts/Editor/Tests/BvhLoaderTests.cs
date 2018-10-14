@@ -7,7 +7,7 @@ namespace UniHumanoid
 #if UNITY_5_6_OR_NEWER
     public class BvhLoaderTests
     {
-        #region LOUICE
+    #region LOUICE
         /// <summary>
         /// https://github.com/wspr/bvh-matlab/blob/master/louise.bvh
         /// </summary>
@@ -159,9 +159,9 @@ ROOT Hips
             Assert.AreEqual("RightAnkle", skeleton.GetBoneName(HumanBodyBones.RightFoot));
             Assert.IsNull(skeleton.GetBoneName(HumanBodyBones.RightToes));
         }
-        #endregion
+    #endregion
 
-        #region cgspeed
+    #region cgspeed
         /// <summary>
         /// https://sites.google.com/a/cgspeed.com/cgspeed/motion-capture
         /// </summary>
@@ -388,9 +388,9 @@ ROOT Hips
             Assert.AreEqual("RightFoot", skeleton.GetBoneName(HumanBodyBones.RightFoot));
             Assert.AreEqual("RightToeBase", skeleton.GetBoneName(HumanBodyBones.RightToes));
         }
-        #endregion
+    #endregion
 
-        #region mocap
+    #region mocap
         const string bvh_mocap = @"HIERARCHY
 ROOT Hips
 {
@@ -557,9 +557,9 @@ ROOT Hips
             Assert.AreEqual("RightFoot", skeleton.GetBoneName(HumanBodyBones.RightFoot));
             Assert.AreEqual("RightToeBase", skeleton.GetBoneName(HumanBodyBones.RightToes));
         }
-        #endregion
+    #endregion
 
-        #region mocap2
+    #region mocap2
         const string bvh_mocap2 = @"HIERARCHY
 ROOT Hips
 {
@@ -736,9 +736,9 @@ ROOT Hips
             Assert.AreEqual("RightAnkle", skeleton.GetBoneName(HumanBodyBones.RightFoot));
             Assert.AreEqual("RightToe", skeleton.GetBoneName(HumanBodyBones.RightToes));
         }
-        #endregion
+    #endregion
 
-        #region mocapdata.com
+    #region mocapdata.com
         const string mocapdata_com_hierarchy = @"HIERARCHY
 ROOT Hips
 {
@@ -1046,9 +1046,9 @@ ROOT reference
             Assert.AreEqual("RightKnee", skeleton.GetBoneName(HumanBodyBones.RightLowerLeg));
             Assert.AreEqual("RightAnkle", skeleton.GetBoneName(HumanBodyBones.RightFoot));
         }
-        #endregion
+    #endregion
 
-        #region daz_friendry
+    #region daz_friendry
         const string daz_friendry_herarchy = @"HIERARCHY
 ROOT hip
 {
@@ -1354,7 +1354,7 @@ ROOT hip
             Assert.AreEqual("rShin", skeleton.GetBoneName(HumanBodyBones.RightLowerLeg));
             Assert.AreEqual("rFoot", skeleton.GetBoneName(HumanBodyBones.RightFoot));
         }
-        #endregion
-#endif
+    #endregion
     }
+#endif
 }

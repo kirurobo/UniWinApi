@@ -93,9 +93,8 @@ namespace UniJSON
             }
 
             {
-                var value = @"fuga
-  hoge";
-                var quoted = "\"fuga\\r\\n  hoge\"";
+                var value = "fuga\n  hoge";
+                var quoted = "\"fuga\\n  hoge\"";
                 Assert.AreEqual(quoted, JsonString.Quote(value));
                 var node = JsonParser.Parse(quoted);
                 Assert.AreEqual(0, node.Value.Segment.Offset);

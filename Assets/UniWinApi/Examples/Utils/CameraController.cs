@@ -37,22 +37,39 @@ public class CameraController : MonoBehaviour {
 
 	public Transform centerTransform;   // 回転中心
 
-	Vector3 rotation;
-	Vector3 translation;
+	internal Vector3 rotation;
+	internal Vector3 translation;
 
 	[SerializeField]
-	float distance;
+	internal float distance;
 
-	Vector3 relativePosition;
-	Quaternion relativeRotation;
-	float originalDistance;
-	float originalFieldOfView;
-	float dolly;
-	float zoom;
+	internal Vector3 relativePosition;
+	internal Quaternion relativeRotation;
+	internal float originalDistance;
+	internal float originalFieldOfView;
+	internal float dolly;
+	internal float zoom;
 
-	Camera currentCamera;
+	internal Camera currentCamera;
 
 	void Start()
+	{
+		Initialize();
+	}
+
+	void Update()
+	{
+		if (!currentCamera.isActiveAndEnabled) return;
+		if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
+		{
+			HandleMouse();
+		}
+	}
+
+	/// <summary>
+	/// Initialize
+	/// </summary>
+	internal void Initialize()
 	{
 		if (!centerTransform)
 		{
@@ -98,7 +115,7 @@ public class CameraController : MonoBehaviour {
 	/// <summary>
 	/// Apply rotation and translation
 	/// </summary>
-	private void UpdateTransform()
+	internal void UpdateTransform()
 	{
 		Quaternion rot = Quaternion.Euler(rotation);
 		transform.rotation = rot;
@@ -107,16 +124,7 @@ public class CameraController : MonoBehaviour {
 		currentCamera.fieldOfView = Mathf.Pow(10f, zoom);
 	}
 
-	void Update()
-	{
-		if (!currentCamera.isActiveAndEnabled) return;
-		if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
-		{
-			HandleMouse();
-		}
-	}
-
-	internal void HandleMouse()
+	internal virtual void HandleMouse()
 	{
 		if (Input.GetMouseButton(1))
 		{

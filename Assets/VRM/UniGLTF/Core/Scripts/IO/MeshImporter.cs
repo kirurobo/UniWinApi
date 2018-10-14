@@ -9,6 +9,9 @@ namespace UniGLTF
 {
     public class MeshImporter
     {
+        const float FRAME_WEIGHT = 100.0f;
+
+
         // multiple submMesh is not sharing a VertexBuffer.
         // each subMesh use a independent VertexBuffer.
         private static MeshContext _ImportMeshIndependentVertexBuffer(ImporterContext ctx, glTFMesh gltfMesh)
@@ -57,8 +60,10 @@ namespace UniGLTF
                 {
                     if (ctx.IsGeneratedUniGLTFAndOlder(1, 16))
                     {
+#pragma warning disable 0612
                         // backward compatibility
                         uv.AddRange(ctx.GLTF.GetArrayFromAccessor<Vector2>(prim.attributes.TEXCOORD_0).Select(x => x.ReverseY()));
+#pragma warning restore 0612
                     }
                     else
                     {
@@ -184,8 +189,10 @@ namespace UniGLTF
                 {
                     if (ctx.IsGeneratedUniGLTFAndOlder(1, 16))
                     {
+#pragma warning disable 0612
                         // backward compatibility
                         context.uv = ctx.GLTF.GetArrayFromAccessor<Vector2>(prim.attributes.TEXCOORD_0).SelectInplace(x => x.ReverseY());
+#pragma warning restore 0612
                     }
                     else
                     {
@@ -350,6 +357,205 @@ namespace UniGLTF
             }
 
             return meshContext;
+        }
+
+
+        public static MeshWithMaterials BuildMesh(ImporterContext ctx, MeshImporter.MeshContext meshContext)
+        {
+            if (!meshContext.materialIndices.Any())
+            {
+                meshContext.materialIndices.Add(0);
+            }
+
+            //Debug.Log(prims.ToJson());
+            var mesh = new Mesh();
+            mesh.name = meshContext.name;
+
+            if (meshContext.positions.Length > UInt16.MaxValue)
+            {
+#if UNITY_2017_3_OR_NEWER
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#else
+                Debug.LogWarningFormat("vertices {0} exceed 65535. not implemented. Unity2017.3 supports large mesh",
+                    meshContext.positions.Length);
+#endif
+            }
+
+            mesh.vertices = meshContext.positions;
+            bool recalculateNormals = false;
+            if (meshContext.normals != null && meshContext.normals.Length > 0)
+            {
+                mesh.normals = meshContext.normals;
+            }
+            else
+            {
+                recalculateNormals = true;
+            }
+
+            if (meshContext.uv != null && meshContext.uv.Length > 0)
+            {
+                mesh.uv = meshContext.uv;
+            }
+
+            bool recalculateTangents = true;
+#if UNIGLTF_IMPORT_TANGENTS
+            if (meshContext.tangents != null && meshContext.tangents.Length > 0)
+            {
+                mesh.tangents = meshContext.tangents;
+                recalculateTangents = false;
+            }
+#endif
+
+            if (meshContext.colors != null && meshContext.colors.Length > 0)
+            {
+                mesh.colors = meshContext.colors;
+            }
+            if (meshContext.boneWeights != null && meshContext.boneWeights.Count > 0)
+            {
+                mesh.boneWeights = meshContext.boneWeights.ToArray();
+            }
+            mesh.subMeshCount = meshContext.subMeshes.Count;
+            for (int i = 0; i < meshContext.subMeshes.Count; ++i)
+            {
+                mesh.SetTriangles(meshContext.subMeshes[i], i);
+            }
+
+            if (recalculateNormals)
+            {
+                mesh.RecalculateNormals();
+            }
+            if (recalculateTangents)
+            {
+#if UNITY_5_6_OR_NEWER
+                mesh.RecalculateTangents();
+#else
+                CalcTangents(mesh);
+#endif
+            }
+
+            var result = new MeshWithMaterials
+            {
+                Mesh = mesh,
+                Materials = meshContext.materialIndices.Select(x => ctx.GetMaterial(x)).ToArray()
+            };
+
+            if (meshContext.blendShapes != null)
+            {
+                Vector3[] emptyVertices = null;
+                foreach (var blendShape in meshContext.blendShapes)
+                {
+                    if (blendShape.Positions.Count > 0)
+                    {
+                        if (blendShape.Positions.Count == mesh.vertexCount)
+                        {
+                            mesh.AddBlendShapeFrame(blendShape.Name, FRAME_WEIGHT,
+                                blendShape.Positions.ToArray(),
+                                (meshContext.normals != null && meshContext.normals.Length == mesh.vertexCount) ? blendShape.Normals.ToArray() : null,
+                                null
+                                );
+                        }
+                        else
+                        {
+                            Debug.LogWarningFormat("May be partial primitive has blendShape. Rquire separete mesh or extend blend shape, but not implemented: {0}", blendShape.Name);
+                        }
+                    }
+                    else
+                    {
+                        if (emptyVertices == null)
+                        {
+                            emptyVertices = new Vector3[mesh.vertexCount];
+                        }
+                        Debug.LogFormat("empty blendshape: {0}.{1}", mesh.name, blendShape.Name);
+                        // add empty blend shape for keep blend shape index
+                        mesh.AddBlendShapeFrame(blendShape.Name, FRAME_WEIGHT,
+                            emptyVertices,
+                            null,
+                            null
+                            );
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Meshの法線を元にタンジェントを計算する。
+        /// </summary>
+        /// <param name="mesh">メッシュ</param>
+        /// <returns>タンジェント</returns>
+        public static void CalcTangents(Mesh mesh)
+        {
+            int vertexCount = mesh.vertexCount;
+            Vector3[] vertices = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            Vector2[] texcoords = mesh.uv;
+            int[] triangles = mesh.triangles;
+            int triangleCount = triangles.Length / 3;
+
+            Vector4[] tangents = new Vector4[vertexCount];
+            Vector3[] tan1 = new Vector3[vertexCount];
+            Vector3[] tan2 = new Vector3[vertexCount];
+
+            int tri = 0;
+
+            for (int i = 0; i < (triangleCount); i++)
+            {
+                int i1 = triangles[tri];
+                int i2 = triangles[tri + 1];
+                int i3 = triangles[tri + 2];
+
+                Vector3 v1 = vertices[i1];
+                Vector3 v2 = vertices[i2];
+                Vector3 v3 = vertices[i3];
+
+                Vector2 w1 = texcoords[i1];
+                Vector2 w2 = texcoords[i2];
+                Vector2 w3 = texcoords[i3];
+
+                float x1 = v2.x - v1.x;
+                float x2 = v3.x - v1.x;
+                float y1 = v2.y - v1.y;
+                float y2 = v3.y - v1.y;
+                float z1 = v2.z - v1.z;
+                float z2 = v3.z - v1.z;
+
+                float s1 = w2.x - w1.x;
+                float s2 = w3.x - w1.x;
+                float t1 = w2.y - w1.y;
+                float t2 = w3.y - w1.y;
+
+                float r = 1.0f / (s1 * t2 - s2 * t1);
+                Vector3 sdir = new Vector3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+                Vector3 tdir = new Vector3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+
+                tan1[i1] += sdir;
+                tan1[i2] += sdir;
+                tan1[i3] += sdir;
+
+                tan2[i1] += tdir;
+                tan2[i2] += tdir;
+                tan2[i3] += tdir;
+
+                tri += 3;
+            }
+
+            for (int i = 0; i < (vertexCount); i++)
+            {
+                Vector3 n = normals[i];
+                Vector3 t = tan1[i];
+
+                // Gram-Schmidt orthogonalize
+                Vector3.OrthoNormalize(ref n, ref t);
+                tangents[i].x = t.x;
+                tangents[i].y = t.y;
+                tangents[i].z = t.z;
+
+                // Calculate handedness
+                tangents[i].w = (Vector3.Dot(Vector3.Cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
+            }
+
+            mesh.tangents = tangents;
         }
     }
 }

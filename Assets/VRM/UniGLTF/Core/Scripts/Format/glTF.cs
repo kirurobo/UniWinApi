@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using UniJSON;
 
 
@@ -25,33 +24,9 @@ namespace UniGLTF
         }
     }
 
-    public partial class glTFUsedExtensions
-    {
-        public static IEnumerable<string> GeetUsedExtensions()
-        {
-            foreach (var prop in typeof(glTFUsedExtensions).GetProperties(BindingFlags.Static |
-                BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (prop.GetCustomAttributes(typeof(UsedExtensionAttribute), true).Any())
-                {
-                    var extension = (string)prop.GetValue(null, new object[] { });
-                    yield return extension;
-                }
-            }
-        }
-    }
-
     [Serializable]
     public class glTF : JsonSerializableBase, IEquatable<glTF>
     {
-        /*
-        public string baseDir
-        {
-            get;
-            set;
-        }
-        */
-
         [JsonSchema(Required = true)]
         public glTFAssets asset = new glTFAssets();
 
@@ -191,6 +166,35 @@ namespace UniGLTF
             }
             return result;
         }
+
+        public float[] GetArrayFromAccessorAsFloat(int accessorIndex)
+        {
+            var vertexAccessor = accessors[accessorIndex];
+
+            if (vertexAccessor.count <= 0) return new float[] { };
+
+            var bufferCount = vertexAccessor.count * vertexAccessor.TypeCount;
+            var result = (vertexAccessor.bufferView != -1)
+                    ? GetAttrib<float>(bufferCount, vertexAccessor.byteOffset, bufferViews[vertexAccessor.bufferView])
+                    : new float[bufferCount]
+                ;
+
+            var sparse = vertexAccessor.sparse;
+            if (sparse != null && sparse.count > 0)
+            {
+                // override sparse values
+                var indices = _GetIndices(bufferViews[sparse.indices.bufferView], sparse.count, sparse.indices.byteOffset, sparse.indices.componentType);
+                var values = GetAttrib<float>(sparse.count * vertexAccessor.TypeCount, sparse.values.byteOffset, bufferViews[sparse.values.bufferView]);
+
+                var it = indices.GetEnumerator();
+                for (int i = 0; i < sparse.count; ++i)
+                {
+                    it.MoveNext();
+                    result[it.Current] = values[i];
+                }
+            }
+            return result;
+        }
         #endregion
 
         [JsonSchema(MinItems = 1)]
@@ -211,15 +215,46 @@ namespace UniGLTF
         [JsonSchema(MinItems = 1)]
         public List<glTFImage> images = new List<glTFImage>();
 
+        public int GetImageIndexFromTextureIndex(int textureIndex)
+        {
+            return textures[textureIndex].source;
+        }
+
         public glTFImage GetImageFromTextureIndex(int textureIndex)
         {
-            return images[textures[textureIndex].source];
+            return images[GetImageIndexFromTextureIndex(textureIndex)];
         }
 
         public glTFTextureSampler GetSamplerFromTextureIndex(int textureIndex)
         {
             var samplerIndex = textures[textureIndex].sampler;
             return GetSampler(samplerIndex);
+        }
+
+        public ArraySegment<Byte> GetImageBytes(IStorage storage, int imageIndex, out string textureName)
+        {
+            var image = images[imageIndex];
+            if (string.IsNullOrEmpty(image.uri))
+            {
+                //
+                // use buffer view (GLB)
+                //
+                //m_imageBytes = ToArray(byteSegment);
+                textureName = !string.IsNullOrEmpty(image.name) ? image.name : string.Format("{0:00}#GLB", imageIndex);
+                return GetViewBytes(image.bufferView);
+            }
+            else
+            {
+                if (image.uri.StartsWith("data:"))
+                {
+                    textureName = !string.IsNullOrEmpty(image.name) ? image.name : string.Format("{0:00}#Base64Embeded", imageIndex);
+                }
+                else
+                {
+                    textureName = !string.IsNullOrEmpty(image.name) ? image.name : Path.GetFileNameWithoutExtension(image.uri);
+                }
+                return storage.Get(image.uri);
+            }
         }
 
         [JsonSchema(MinItems = 1)]
@@ -237,8 +272,35 @@ namespace UniGLTF
             }
         }
 
+        public bool MaterialHasVertexColor(glTFMaterial material)
+        {
+            if (material == null)
+            {
+                return false;
+            }
+
+            var materialIndex = materials.IndexOf(material);
+            if (materialIndex == -1)
+            {
+                return false;
+            }
+
+            return MaterialHasVertexColor(materialIndex);
+        }
+
         [JsonSchema(MinItems = 1)]
         public List<glTFMesh> meshes = new List<glTFMesh>();
+
+        public bool MaterialHasVertexColor(int materialIndex)
+        {
+            if (materialIndex < 0 || materialIndex >= materials.Count)
+            {
+                return false;
+            }
+
+            var hasVertexColor = meshes.SelectMany(x => x.primitives).Any(x => x.material == materialIndex && x.HasVertexColor);
+            return hasVertexColor;
+        }
 
         [JsonSchema(MinItems = 1)]
         public List<glTFNode> nodes = new List<glTFNode>();
@@ -266,7 +328,10 @@ namespace UniGLTF
         public List<glTFCamera> cameras = new List<glTFCamera>();
 
         [JsonSchema(MinItems = 1)]
-        public List<string> extensionsUsed = glTFUsedExtensions.GeetUsedExtensions().ToList();
+        public List<string> extensionsUsed = new List<string>
+        {
+            glTF_KHR_materials_unlit.ExtensionName,
+        };
 
         [JsonSchema(MinItems = 1)]
         public List<string> extensionsRequired = new List<string>();
@@ -381,9 +446,17 @@ namespace UniGLTF
                 ;
         }
 
-        public byte[] ToGlbBytes()
+        public byte[] ToGlbBytes(bool UseUniJSONSerializer=false)
         {
-            var json = ToJson();
+            string json;
+            if (UseUniJSONSerializer)
+            {
+                json = JsonSchema.FromType(GetType()).Serialize(this);
+            }
+            else
+            {
+                json = ToJson();
+            }
 
             var buffer = buffers[0];
             using (var s = new MemoryStream())

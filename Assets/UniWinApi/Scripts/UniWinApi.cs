@@ -641,6 +641,8 @@ public class UniWinApi : IDisposable {
 			IntPtr hwnd = lParam.hwnd;
 			if (hwnd != IntPtr.Zero)
 			{
+				int instanceCount = 0;
+
 				// 存在するインスタンス内を検索
 				foreach (UniWinApi uniwin in instances)
 				{
@@ -652,7 +654,14 @@ public class UniWinApi : IDisposable {
 						{
 							uniwin.OnFilesDropped(files);
 						}
+						instanceCount++;
 					}
+				}
+
+				// もしインスタンスが見つからなければおかしいのでログ出力
+				if (instanceCount < 1)
+				{
+					Debug.Log("File dropped, but no UniWinApi instances were found.");
 				}
 			}
 		}

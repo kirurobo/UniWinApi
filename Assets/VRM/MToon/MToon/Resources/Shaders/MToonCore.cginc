@@ -13,9 +13,12 @@ half _BumpScale;
 sampler2D _BumpMap; float4 _BumpMap_ST;
 sampler2D _ReceiveShadowTexture; float4 _ReceiveShadowTexture_ST;
 half _ReceiveShadowRate;
+sampler2D _ShadingGradeTexture; float4 _ShadingGradeTexture_ST;
+half _ShadingGradeRate;
 half _ShadeShift;
 half _ShadeToony;
 half _LightColorAttenuation;
+half _IndirectLightIntensity;
 sampler2D _SphereAdd;
 fixed4 _EmissionColor;
 sampler2D _EmissionMap; float4 _EmissionMap_ST;
@@ -126,42 +129,26 @@ float4 frag_forward(v2f i, fixed facing : VFACE) : SV_TARGET
     half3 worldNormal = half3(i.tspace0.z, i.tspace1.z, i.tspace2.z);
 #endif
     worldNormal *= facing;
+    worldNormal *= lerp(+1.0, -1.0, i.isOutline);
     worldNormal = normalize(worldNormal);
 
-#ifdef MTOON_DEBUG_NORMAL
-    #ifdef MTOON_FORWARD_ADD
-        return float4(0, 0, 0, 0);
-    #else
-        return float4(worldNormal * 0.5 + 0.5, 1);
-    #endif
-#endif
-
-    // information for lighting
+    // lighting intensity
     half3 lightDir = lerp(_WorldSpaceLightPos0.xyz, normalize(_WorldSpaceLightPos0.xyz - i.posWorld.xyz), _WorldSpaceLightPos0.w);
-    half receiveShadowRate = _ReceiveShadowRate * min(1.0, (_ShadeShift + 1.0));
-    half receiveShadow = 1 - receiveShadowRate * tex2D(_ReceiveShadowTexture, TRANSFORM_TEX(i.uv0, _ReceiveShadowTexture)).a;
+    half receiveShadow = _ReceiveShadowRate * tex2D(_ReceiveShadowTexture, TRANSFORM_TEX(i.uv0, _ReceiveShadowTexture)).a;
+    half shadingGrade = 1.0 - _ShadingGradeRate * (1.0 - tex2D(_ShadingGradeTexture, TRANSFORM_TEX(i.uv0, _ShadingGradeTexture)).r);
     UNITY_LIGHT_ATTENUATION(atten, i, i.posWorld.xyz);
-    atten = 1.0 - (1.0 - atten) * (1.0 - receiveShadow);
+    half lightIntensity = dot(lightDir, worldNormal);
+    lightIntensity = lightIntensity * 0.5 + 0.5; // from [-1, +1] to [0, 1]
+    lightIntensity = lightIntensity * (1.0 - receiveShadow * (1.0 - (atten * 0.5 + 0.5))); // receive shadow
+    lightIntensity = lightIntensity * shadingGrade; // darker
+    lightIntensity = lightIntensity * 2.0 - 1.0; // from [0, 1] to [-1, +1]
+    lightIntensity = smoothstep(_ShadeShift, _ShadeShift + (1.0 - _ShadeToony), lightIntensity); // shade & tooned
 
-    // ambient
-    half3 indirect = ShadeSH9(half4(worldNormal, 1));
-    half indirectLighting = max(0.001, max(indirect.x, max(indirect.y, indirect.z)));
-    half3 indirectColor = indirect;
-    
-    // direct lighting
-    half directLighting = dot(lightDir, worldNormal); // neutral
-    directLighting = lerp(0, directLighting, atten); // receive shadow
-    directLighting = smoothstep(_ShadeShift, _ShadeShift + (1.0 - _ShadeToony), directLighting); // shade & tooned
-    
-    // brightness
-    half brightness = directLighting + indirectLighting;
-    brightness = smoothstep(_ShadeShift, _ShadeShift + (1.0 - _ShadeToony), brightness); // shade & tooned
-    brightness = lerp(0, brightness, atten); // receive shadow
-    
-    // colored
-    half3 colorShift = lerp(indirectColor, _LightColor0.rgb, saturate(directLighting / indirectLighting));
-    half colorShiftBrightness = max(0.001, max(colorShift.x, max(colorShift.y, colorShift.z)));
-    half3 lighting = brightness * lerp(colorShift, colorShiftBrightness.xxx, _LightColorAttenuation); // color atten
+    // lighting with color
+    half3 directLighting = lightIntensity * _LightColor0.rgb; // direct
+    half3 indirectLighting = _IndirectLightIntensity * ShadeSH9(half4(worldNormal, 1)); // ambient
+    half3 lighting = directLighting + indirectLighting;
+    lighting = lerp(lighting, max(0.001, max(lighting.x, max(lighting.y, lighting.z))), _LightColorAttenuation); // color atten
     
     // color lerp
     half4 shade = _ShadeColor * tex2D(_ShadeTexture, TRANSFORM_TEX(i.uv0, _ShadeTexture));
@@ -184,13 +171,6 @@ float4 frag_forward(v2f i, fixed facing : VFACE) : SV_TARGET
     col += lerp(rimLighting, half3(0, 0, 0), i.isOutline);
 #endif
 
-    // energy conservation
-    half3 energy = ShadeSH9(half4(0, 1, 0, 1)) + _LightColor0.rgb;
-    half energyV = max(0.001, max(energy.r, max(energy.g, energy.b)));
-    half colV = max(0.001, max(col.r, max(col.g, col.b)));
-    half tint = min(energyV, colV) / colV;
-    col *= tint;
-    
     // Emission
 #ifdef MTOON_FORWARD_ADD
 #else
@@ -202,9 +182,25 @@ float4 frag_forward(v2f i, fixed facing : VFACE) : SV_TARGET
 #ifdef MTOON_OUTLINE_COLOR_FIXED
     col = lerp(col, _OutlineColor, i.isOutline);
 #elif MTOON_OUTLINE_COLOR_MIXED
-    col = lerp(col, _OutlineColor * lerp(tint.xxx, col, _OutlineLightingMix), i.isOutline);
+    col = lerp(col, _OutlineColor * lerp(half3(1, 1, 1), col, _OutlineLightingMix), i.isOutline);
 #else
 #endif
+
+    // debug
+#ifdef MTOON_DEBUG_NORMAL
+    #ifdef MTOON_FORWARD_ADD
+        return float4(0, 0, 0, 0);
+    #else
+        return float4(worldNormal * 0.5 + 0.5, alpha);
+    #endif
+#elif MTOON_DEBUG_LITSHADERATE
+    #ifdef MTOON_FORWARD_ADD
+        return float4(0, 0, 0, 0);
+    #else
+        return float4(lighting, alpha);
+    #endif
+#endif
+
 
     half4 result = half4(col, alpha);
     UNITY_APPLY_FOG(i.fogCoord, result);

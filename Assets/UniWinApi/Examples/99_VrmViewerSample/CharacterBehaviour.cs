@@ -9,14 +9,14 @@ public class CharacterBehaviour : MonoBehaviour
 
 	private float lastBlinkTime = 0f;
 	private float nextBlinkTime = 0f;
-	private int blinkBlendShapeIndex = -1;
 	private int blinkState = 0; // まばたきの状態管理。 0:なし, 1:閉じ中, 2:開き中
 
 	private VRMLookAtHead lookAtHead;
 	private VRMBlendShapeProxy blendShapeProxy;
 
 	private GameObject targetObject;    // 視線目標オブジェクト
-	private Transform headTransform;	// Head transform
+	private Transform headTransform;    // Head transform
+	private bool isNewTargetObject = false;	// 新規に目標オブジェクトを作成したらtrue
 
 	// Use this for initialization
 	void Start()
@@ -24,6 +24,7 @@ public class CharacterBehaviour : MonoBehaviour
 		if (!targetObject)
 		{
 			targetObject = new GameObject("LookAtTarget");
+			isNewTargetObject = true;
 		}
 
 		lookAtHead = GetComponent<VRMLookAtHead>();
@@ -34,11 +35,22 @@ public class CharacterBehaviour : MonoBehaviour
 			lookAtHead.Target = targetObject.transform;
 			lookAtHead.UpdateType = UpdateType.LateUpdate;
 
-			headTransform = lookAtHead.Head.Transform;
+			headTransform = lookAtHead.Head;
 		}
 		if (!headTransform)
 		{
 			headTransform = this.transform;
+		}
+	}
+
+	/// <summary>
+	/// Destroy created target object
+	/// </summary>
+	void OnDestroy()
+	{
+		if (isNewTargetObject)
+		{
+			GameObject.Destroy(targetObject);
 		}
 	}
 

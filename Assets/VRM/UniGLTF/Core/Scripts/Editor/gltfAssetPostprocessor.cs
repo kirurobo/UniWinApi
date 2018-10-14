@@ -20,65 +20,61 @@ namespace UniGLTF
                 {
                     case ".gltf":
                     case ".glb":
-                        Import(UnityPath.FromUnityPath(path));
-                        break;
+                        {
+                            var gltfPath = UnityPath.FromUnityPath(path);
+                            var prefabPath = gltfPath.Parent.Child(gltfPath.FileNameWithoutExtension + ".prefab");
+                            ImportAsset(UnityPath.FromUnityPath(path).FullPath, ext, prefabPath);
+                            break;
+                        }
                 }
             }
         }
 
-        public static void Import(UnityPath gltfPath)
+        public static void ImportAsset(string src, string ext, UnityPath prefabPath)
         {
-            if (!gltfPath.IsUnderAssetsFolder)
+            if (!prefabPath.IsUnderAssetsFolder)
             {
-                throw new Exception();
+                Debug.LogWarningFormat("out of asset path: {0}", prefabPath);
+                return;
             }
 
-            ImporterContext context = new ImporterContext(gltfPath);
-            var ext = gltfPath.Extension.ToLower();
-            try
-            {
-                var prefabPath = gltfPath.Parent.Child(gltfPath.FileNameWithoutExtension + ".prefab");
-                if (ext == ".gltf")
+            var context = new ImporterContext();
+            context.Parse(src);
+
+            // Extract textures to assets folder
+            context.ExtranctImages(prefabPath);
+
+            ImportDelayed(src, prefabPath, context);
+        }
+
+        static void ImportDelayed(string src, UnityPath prefabPath, ImporterContext context)
+        {
+            EditorApplication.delayCall += () =>
                 {
-                    context.ParseJson(File.ReadAllText(gltfPath.FullPath, System.Text.Encoding.UTF8),
-                        new FileSystemStorage(gltfPath.Parent.FullPath));
-                    gltfImporter.Load(context);
-                    context.SaveAsAsset(prefabPath);
-                    context.Destroy(false);
-                }
-                else if (ext == ".glb")
-                {
-                    context.ParseGlb(File.ReadAllBytes(gltfPath.FullPath));
-                    context.SaveTexturesAsPng(prefabPath);
-                    EditorApplication.delayCall += () =>
+                    //
+                    // After textures imported(To ensure TextureImporter be accessible).
+                    //
+                    try
                     {
-                            // delay and can import png texture
-                            gltfImporter.Load(context);
+                        context.Load();
                         context.SaveAsAsset(prefabPath);
                         context.Destroy(false);
-                    };
-                }
-                else
-                {
-                    return;
-                }
-            }
-            catch (UniGLTFNotSupportedException ex)
-            {
-                Debug.LogWarningFormat("{0}: {1}",
-                    gltfPath,
-                    ex.Message
-                    );
-            }
-            catch (Exception ex)
-            {
-                Debug.LogErrorFormat("import error: {0}", gltfPath);
-                Debug.LogErrorFormat("{0}", ex);
-                if (context != null)
-                {
-                    context.Destroy(true);
-                }
-            }
+                    }
+                    catch (UniGLTFNotSupportedException ex)
+                    {
+                        Debug.LogWarningFormat("{0}: {1}",
+                            src,
+                            ex.Message
+                            );
+                        context.Destroy(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogErrorFormat("import error: {0}", src);
+                        Debug.LogErrorFormat("{0}", ex);
+                        context.Destroy(true);
+                    }
+                };
         }
     }
 }
