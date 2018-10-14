@@ -27,6 +27,14 @@ namespace VRM
             // "Queue",
         };
 
+        private static readonly string[] VRMExtensionShaders = new string[]
+        {
+            "VRM/UnlitTransparentZWrite",
+            "VRM/MToon"
+        };
+
+        private static readonly string VRM_USE_GLTFSHADER = "VRM_USE_GLTFSHADER";
+
         protected override void SerializeMembers(GLTFJsonFormatter f)
         {
             f.KeyValue(() => name);
@@ -76,7 +84,12 @@ namespace VRM
 
         public static List<glTF_VRM_Material> Parse(string src)
         {
-            var json = UniJSON.JsonParser.Parse(src)["extensions"]["VRM"]["materialProperties"];
+            var json = JsonParser.Parse(src)["extensions"]["VRM"]["materialProperties"];
+            return Parse(json);
+        }
+
+        public static List<glTF_VRM_Material> Parse(JsonNode json)
+        {
             var materials = json.DeserializeList<glTF_VRM_Material>();
             var jsonItems = json.ArrayItems.ToArray();
             for (int i = 0; i < materials.Count; ++i)
@@ -107,6 +120,12 @@ namespace VRM
                 renderQueue = m.renderQueue,
             };
 
+            if (!VRMExtensionShaders.Contains(m.shader.name))
+            {
+                material.shader = VRM_USE_GLTFSHADER;
+                return material;
+            }
+
             var prop = PreShaderPropExporter.GetPropsForSupportedShader(m.shader.name);
             if (prop == null)
             {
@@ -114,6 +133,11 @@ namespace VRM
             }
             else
             {
+                foreach (var keyword in m.shaderKeywords)
+                {
+                    material.keywordMap.Add(keyword, m.IsKeywordEnabled(keyword));
+                }
+
                 // get properties
                 //material.SetProp(prop);
                 foreach (var kv in prop.Properties)
@@ -170,12 +194,6 @@ namespace VRM
                             throw new NotImplementedException();
                     }
                 }
-
-            }
-
-            foreach (var keyword in m.shaderKeywords)
-            {
-                material.keywordMap.Add(keyword, m.IsKeywordEnabled(keyword));
             }
 
             foreach (var tag in TAGS)

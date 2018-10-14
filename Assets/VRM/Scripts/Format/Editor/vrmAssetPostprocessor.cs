@@ -28,16 +28,20 @@ namespace VRM
             {
                 throw new Exception();
             }
-            var context = new VRMImporterContext(path);
+            var context = new VRMImporterContext();
             context.ParseGlb(File.ReadAllBytes(path.FullPath));
 
             var prefabPath = path.Parent.Child(path.FileNameWithoutExtension + ".prefab");
-            context.SaveTexturesAsPng(prefabPath);
+
+            // save texture assets !
+            context.ExtranctImages(prefabPath);
 
             EditorApplication.delayCall += () =>
             {
-                // delay and can import png texture
-                VRMImporter.LoadFromBytes(context);
+                //
+                // after textures imported
+                //
+                context.Load();
                 context.SaveAsAsset(prefabPath);
                 context.Destroy(false);
             };

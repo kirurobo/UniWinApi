@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
 namespace UniHumanoid
 {
     public static class SkeletonMeshUtility
@@ -13,14 +14,25 @@ namespace UniHumanoid
             List<int> m_indices = new List<int>();
             List<BoneWeight> m_boneWeights = new List<BoneWeight>();
 
-            public void AddBone(Vector3 head, Vector3 tail, int boneIndex, float width=0.05f)
+            public void AddBone(Vector3 head, Vector3 tail, int boneIndex, float xWidth, float zWidth)
             {
                 var dir = (tail - head).normalized;
-                var xaxis = Vector3.Cross(dir, Vector3.forward).normalized;
+                Vector3 xaxis;
+                Vector3 zaxis;
+                if (Vector3.Dot(dir, Vector3.forward) >= 1.0f - float.Epsilon)
+                {
+                    xaxis = Vector3.right;
+                    zaxis = Vector3.down;
+                }
+                else
+                {
+                    xaxis = Vector3.Cross(dir, Vector3.forward).normalized;
+                    zaxis = Vector3.forward;
+                }
                 AddBox((head+tail)*0.5f, 
-                    xaxis*width, 
+                    xaxis*xWidth, 
                     (tail-head)*0.5f, 
-                    Vector3.forward*width, 
+                    zaxis*zWidth, 
                     boneIndex);
             }
 
@@ -120,40 +132,56 @@ namespace UniHumanoid
         {
             public HumanBodyBones Head;
             public HumanBodyBones Tail;
+            public Vector3 TailOffset;
+            public float XWidth;
+            public float ZWidth;
 
-            public BoneHeadTail(HumanBodyBones head, HumanBodyBones tail)
+            public BoneHeadTail(HumanBodyBones head, HumanBodyBones tail, float xWidth = 0.05f, float zWidth = 0.05f)
             {
                 Head = head;
                 Tail = tail;
+                TailOffset = Vector3.zero;
+                XWidth = xWidth;
+                ZWidth = zWidth;
+            }
+
+            public BoneHeadTail(HumanBodyBones head, Vector3 tailOffset, float xWidth = 0.05f, float zWidth = 0.05f)
+            {
+                Head = head;
+                Tail = HumanBodyBones.LastBone;
+                TailOffset = tailOffset;
+                XWidth = xWidth;
+                ZWidth = zWidth;
             }
         }
 
         static BoneHeadTail[] Bones = new BoneHeadTail[]
         {
-            new BoneHeadTail(HumanBodyBones.Hips, HumanBodyBones.Spine),
+            new BoneHeadTail(HumanBodyBones.Hips, HumanBodyBones.Spine, 0.1f, 0.06f),
             new BoneHeadTail(HumanBodyBones.Spine, HumanBodyBones.Chest),
-            new BoneHeadTail(HumanBodyBones.Chest, HumanBodyBones.Neck),
-            new BoneHeadTail(HumanBodyBones.Neck, HumanBodyBones.Head),
-
-            // Head
+            new BoneHeadTail(HumanBodyBones.Chest, HumanBodyBones.Neck, 0.1f, 0.06f),
+            new BoneHeadTail(HumanBodyBones.Neck, HumanBodyBones.Head, 0.03f, 0.03f),
+            new BoneHeadTail(HumanBodyBones.Head, new Vector3(0, 0.1f, 0), 0.1f, 0.1f),
 
             new BoneHeadTail(HumanBodyBones.LeftShoulder, HumanBodyBones.LeftUpperArm),
             new BoneHeadTail(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm),
             new BoneHeadTail(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand),
+            new BoneHeadTail(HumanBodyBones.LeftHand, new Vector3(-0.1f, 0, 0)),
 
             new BoneHeadTail(HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg),
             new BoneHeadTail(HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftFoot),
-
-            // Toe
+            new BoneHeadTail(HumanBodyBones.LeftFoot, HumanBodyBones.LeftToes),
+            new BoneHeadTail(HumanBodyBones.LeftToes, new Vector3(0, 0, 0.1f)),
 
             new BoneHeadTail(HumanBodyBones.RightShoulder, HumanBodyBones.RightUpperArm),
             new BoneHeadTail(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm),
             new BoneHeadTail(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand),
+            new BoneHeadTail(HumanBodyBones.RightHand, new Vector3(0.1f, 0, 0)),
 
             new BoneHeadTail(HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg),
             new BoneHeadTail(HumanBodyBones.RightLowerLeg, HumanBodyBones.RightFoot),
-
-            // Toe
+            new BoneHeadTail(HumanBodyBones.RightFoot, HumanBodyBones.RightToes),
+            new BoneHeadTail(HumanBodyBones.RightToes, new Vector3(0, 0, 0.1f)),
         };
 
         public static SkinnedMeshRenderer CreateRenderer(Animator animator)
@@ -165,14 +193,31 @@ namespace UniHumanoid
             foreach(var headTail in Bones)
             {
                 var head = animator.GetBoneTransform(headTail.Head);
-                var tail = animator.GetBoneTransform(headTail.Tail);
-                if (head!=null && tail!=null)
+                if (head!=null)
                 {
-                    builder.AddBone(head.position,  tail.position, bones.IndexOf(head));
+                    Transform tail = null;
+                    if(headTail.Tail!= HumanBodyBones.LastBone)
+                    {
+                        tail = animator.GetBoneTransform(headTail.Tail);
+                    }
+
+                    if (tail != null)
+                    {
+                        builder.AddBone(head.position, tail.position, bones.IndexOf(head), headTail.XWidth, headTail.ZWidth);
+                    }
+                    else
+                    {
+                        builder.AddBone(head.position, head.position + headTail.TailOffset, bones.IndexOf(head), headTail.XWidth, headTail.ZWidth);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarningFormat("{0} not found", headTail.Head);
                 }
             }
 
             var mesh = builder.CreateMesh();
+            mesh.name = "box-man";
             mesh.bindposes = bones.Select(x =>
                             x.worldToLocalMatrix * animator.transform.localToWorldMatrix).ToArray();
             var renderer = animator.gameObject.AddComponent<SkinnedMeshRenderer>();

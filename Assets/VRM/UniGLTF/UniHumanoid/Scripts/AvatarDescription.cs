@@ -181,9 +181,22 @@ namespace UniHumanoid
             return avatarDescription;
         }
 
-        public void SetHumanBones(Dictionary<HumanBodyBones, Transform> map)
+        public static AvatarDescription Create(Transform[] boneTransforms, Skeleton skeleton)
         {
-            human = map.Select(x =>
+            return Create(skeleton.Bones.Select(
+                x => new KeyValuePair<HumanBodyBones, Transform>(x.Key, boneTransforms[x.Value])));
+        }
+
+        public static AvatarDescription Create(IEnumerable<KeyValuePair<HumanBodyBones, Transform>> skeleton)
+        {
+            var description = Create();
+            description.SetHumanBones(skeleton);
+            return description;
+        }
+
+        public void SetHumanBones(IEnumerable<KeyValuePair<HumanBodyBones, Transform>> skeleton)
+        {
+            human = skeleton.Select(x =>
             {
                 return new BoneLimit
                 {

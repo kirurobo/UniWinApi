@@ -16,13 +16,11 @@ namespace UniHumanoid
                 if (ext == ".bvh")
                 {
                     Debug.LogFormat("ImportBvh: {0}", path);
-                    var context = new ImporterContext
-                    {
-                        Path=path,
-                    };
+                    var context = new BvhImporterContext();
                     try
                     {
-                        BvhImporter.Import(context);
+                        context.Parse(path);
+                        context.Load();
                         context.SaveAsAsset();
                         context.Destroy(false);
                     }

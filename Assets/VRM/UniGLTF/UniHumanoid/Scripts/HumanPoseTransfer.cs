@@ -66,7 +66,7 @@ namespace UniHumanoid
         }
 
         HumanPoseHandler m_handler;
-        private void Awake()
+        public void OnEnable()
         {
             var animator = GetComponent<Animator>();
             if (animator != null)

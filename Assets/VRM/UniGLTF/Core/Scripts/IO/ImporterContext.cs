@@ -4,40 +4,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System.Text;
+using System.Collections;
+using DepthFirstScheduler;
 #if UNITY_EDITOR
 using UnityEditor;
+#endif
+#if (NET_4_6 && UNITY_2017_1_OR_NEWER)
+using System.Threading.Tasks;
 #endif
 
 
 namespace UniGLTF
 {
-    public struct KeyElapsed
-    {
-        public string Key;
-        public TimeSpan Elapsed;
-        public KeyElapsed(string key, TimeSpan elapsed)
-        {
-            Key = key;
-            Elapsed = elapsed;
-        }
-    }
-
-    public struct MeasureScope : IDisposable
-    {
-        Action m_onDispose;
-        public MeasureScope(Action onDispose)
-        {
-            m_onDispose = onDispose;
-        }
-        public void Dispose()
-        {
-            m_onDispose();
-        }
-    }
-
+    /// <summary>
+    /// GLTF importer
+    /// </summary>
     public class ImporterContext
     {
+        #region MeasureTime
+        public struct KeyElapsed
+        {
+            public string Key;
+            public TimeSpan Elapsed;
+            public KeyElapsed(string key, TimeSpan elapsed)
+            {
+                Key = key;
+                Elapsed = elapsed;
+            }
+        }
+
+        public struct MeasureScope : IDisposable
+        {
+            Action m_onDispose;
+            public MeasureScope(Action onDispose)
+            {
+                m_onDispose = onDispose;
+            }
+            public void Dispose()
+            {
+                m_onDispose();
+            }
+        }
+
         public List<KeyElapsed> m_speedReports = new List<KeyElapsed>();
+
         public IDisposable MeasureTime(string key)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -46,6 +56,7 @@ namespace UniGLTF
                 m_speedReports.Add(new KeyElapsed(key, sw.Elapsed));
             });
         }
+
         public string GetSpeedLog()
         {
             var total = TimeSpan.Zero;
@@ -61,15 +72,50 @@ namespace UniGLTF
 
             return sb.ToString();
         }
+        #endregion
 
-        public UnityPath TextureBaseDir
+        IShaderStore m_shaderStore;
+        public IShaderStore ShaderStore
         {
-            get; private set;
+            get
+            {
+                if (m_shaderStore == null)
+                {
+                    m_shaderStore = new ShaderStore(this);
+                }
+                return m_shaderStore;
+            }
         }
 
-        public ImporterContext(UnityPath gltfPath = default(UnityPath))
+        IMaterialImporter m_materialImporter;
+        protected void SetMaterialImporter(IMaterialImporter importer)
         {
-            TextureBaseDir = gltfPath.Parent;
+            m_materialImporter = importer;
+        }
+        public IMaterialImporter MaterialImporter
+        {
+            get
+            {
+                if (m_materialImporter == null)
+                {
+                    m_materialImporter = new MaterialImporter(ShaderStore, this);
+                }
+                return m_materialImporter;
+            }
+        }
+
+        public ImporterContext(IShaderStore shaderStore)
+        {
+            m_shaderStore = shaderStore;
+        }
+
+        public ImporterContext(IMaterialImporter materialImporter)
+        {
+            m_materialImporter = materialImporter;
+        }
+
+        public ImporterContext()
+        {
         }
 
         #region Source
@@ -132,6 +178,49 @@ namespace UniGLTF
         public IStorage Storage;
         #endregion
 
+        #region Parse
+        public void Parse(string path)
+        {
+            Parse(path, File.ReadAllBytes(path));
+        }
+
+        /// <summary>
+        /// Parse gltf json or Parse json chunk of glb
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="bytes"></param>
+        public virtual void Parse(string path, Byte[] bytes)
+        {
+            var ext = Path.GetExtension(path).ToLower();
+            switch (ext)
+            {
+                case ".gltf":
+                    ParseJson(Encoding.UTF8.GetString(bytes), new FileSystemStorage(Path.GetDirectoryName(path)));
+                    break;
+
+                case ".zip":
+                    {
+                        var zipArchive = Zip.ZipArchiveStorage.Parse(bytes);
+                        var gltf = zipArchive.Entries.FirstOrDefault(x => x.FileName.ToLower().EndsWith(".gltf"));
+                        if (gltf == null)
+                        {
+                            throw new Exception("no gltf in archive");
+                        }
+                        var jsonBytes = zipArchive.Extract(gltf);
+                        var json = Encoding.UTF8.GetString(jsonBytes);
+                        ParseJson(json, zipArchive);
+                    }
+                    break;
+
+                case ".glb":
+                    ParseGlb(bytes);
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -160,7 +249,7 @@ namespace UniGLTF
                 new SimpleStorage(chunks[1].Bytes));
         }
 
-        public void ParseJson(string json, IStorage storage)
+        public virtual void ParseJson(string json, IStorage storage)
         {
             Json = json;
             Storage = storage;
@@ -242,37 +331,333 @@ namespace UniGLTF
             }
 #endif
         }
+        #endregion
 
-        public IMaterialImporter MaterialImporter;
-
-        public bool MaterialHasVertexColor(glTFMaterial material)
+        #region Load. Build unity objects
+        /// <summary>
+        /// ReadAllBytes, Parse, Create GameObject
+        /// </summary>
+        /// <param name="path">allbytes</param>
+        public void Load(string path)
         {
-            if (material == null)
-            {
-                return false;
-            }
-
-            var materialIndex = GLTF.materials.IndexOf(material);
-            if (materialIndex == -1)
-            {
-                return false;
-            }
-
-            return MaterialHasVertexColor(materialIndex);
+            var bytes = File.ReadAllBytes(path);
+            Load(path, bytes);
         }
 
-        public bool MaterialHasVertexColor(int materialIndex)
+        /// <summary>
+        /// Parse, Create GameObject
+        /// </summary>
+        /// <param name="path">gltf or glb path</param>
+        /// <param name="bytes">allbytes</param>
+        public void Load(string path, byte[] bytes)
         {
-            if (materialIndex < 0 || materialIndex >= GLTF.materials.Count)
-            {
-                return false;
-            }
-
-            var hasVertexColor = GLTF.meshes.SelectMany(x => x.primitives).Any(x => x.material == materialIndex && x.HasVertexColor);
-            return hasVertexColor;
+            Parse(path, bytes);
+            Load();
+            Root.name = Path.GetFileNameWithoutExtension(path);
         }
 
-        #region Imported
+        public void CreateTextureItems(UnityPath imageBaseDir = default(UnityPath))
+        {
+            if (m_textures.Any())
+            {
+                return;
+            }
+
+            for (int i = 0; i < GLTF.textures.Count; ++i)
+            {
+                var item = new TextureItem(i);
+
+#if UNITY_EDITOR
+                if (imageBaseDir.IsUnderAssetsFolder)
+                {
+                    var image = GLTF.GetImageFromTextureIndex(i);
+                    if (!string.IsNullOrEmpty(image.uri)
+                        && !image.uri.StartsWith("data:")
+                        && imageBaseDir.IsUnderAssetsFolder)
+                    {
+                        ///
+                        /// required SaveTexturesAsPng or SetTextureBaseDir
+                        ///
+                        var assetPath = imageBaseDir.Child(image.uri);
+                        var textureName = !string.IsNullOrEmpty(image.name) ? image.name : Path.GetFileNameWithoutExtension(image.uri);
+                        item.SetAssetInfo(assetPath, textureName);
+                    }
+                }
+#endif
+
+                AddTexture(item);
+            }
+        }
+
+        /// <summary>
+        /// Build unity objects from parsed gltf
+        /// </summary>
+        public void Load()
+        {
+            var schedulable = LoadAsync();
+            schedulable.ExecuteAll();
+        }
+
+        public IEnumerator LoadCoroutine(Action<Unit> onLoaded = null, Action<Exception> onError = null)
+        {
+            if (onLoaded == null)
+            {
+                onLoaded = _ => { };
+            }
+
+            if (onError == null)
+            {
+                onError = Debug.LogError;
+            }
+
+            var schedulable = LoadAsync();
+            foreach (var x in schedulable.GetRoot().Traverse())
+            {
+                while (true)
+                {
+                    var status = x.Execute();
+                    if (status != ExecutionStatus.Continue)
+                    {
+                        break;
+                    }
+                    yield return null;
+                }
+            }
+        }
+
+        public void LoadAsync(Action<Unit> onLoaded, Action<Exception> onError = null)
+        {
+            if (onError == null)
+            {
+                onError = Debug.LogError;
+            }
+
+            LoadAsync()
+                .Subscribe(Scheduler.MainThread,
+                onLoaded,
+                onError
+                );
+        }
+
+#if (NET_4_6 && UNITY_2017_1_OR_NEWER)
+        public Task<Unit> LoadAsyncTask()
+        {
+            return LoadAsync().ToTask();
+        }
+#endif
+
+        protected virtual Schedulable<Unit> LoadAsync()
+        {
+            return
+            Schedulable.Create()
+                .AddTask(Scheduler.ThreadPool, () =>
+                {
+                    if (m_textures.Count == 0)
+                    {
+                        //
+                        // runtime
+                        //
+                        CreateTextureItems();
+                    }
+                    else
+                    {
+                        //
+                        // already CreateTextures(by assetPostProcessor or editor menu)
+                        //
+                    }
+                })
+                .ContinueWithCoroutine(Scheduler.ThreadPool, () =>
+                {
+                    using (MeasureTime("TexturesProcessOnAnyThread"))
+                    {
+                        return TexturesProcessOnAnyThread();
+                    }
+                })
+                .ContinueWithCoroutine(Scheduler.MainThread, () =>
+                {
+                    using (MeasureTime("TexturesProcessOnMainThread"))
+                    {
+                        return TexturesProcessOnMainThread();
+                    }
+                })
+                .ContinueWithCoroutine(Scheduler.MainThread, () =>
+                {
+                    using (MeasureTime("LoadMaterials"))
+                    {
+                        return LoadMaterials();
+                    }
+                })
+                .OnExecute(Scheduler.ThreadPool, parent =>
+                {
+                    if (GLTF.meshes
+                        .SelectMany(x => x.primitives)
+                        .Any(x => x.extensions.KHR_draco_mesh_compression != null))
+                    {
+                        throw new UniGLTFNotSupportedException("draco is not supported");
+                    }
+
+                    // meshes
+                    var meshImporter = new MeshImporter();
+                    for (int i = 0; i < GLTF.meshes.Count; ++i)
+                    {
+                        var index = i;
+                        parent.AddTask(Scheduler.ThreadPool,
+                                () =>
+                                {
+                                    using (MeasureTime("ReadMesh"))
+                                    {
+                                        return meshImporter.ReadMesh(this, index);
+                                    }
+                                })
+                        .ContinueWith(Scheduler.MainThread, x =>
+                        {
+                            using (MeasureTime("BuildMesh"))
+                            {
+                                var meshWithMaterials = MeshImporter.BuildMesh(this, x);
+
+                                var mesh = meshWithMaterials.Mesh;
+
+                                // mesh name
+                                if (string.IsNullOrEmpty(mesh.name))
+                                {
+                                    mesh.name = string.Format("UniGLTF import#{0}", i);
+                                }
+                                var originalName = mesh.name;
+                                for (int j = 1; Meshes.Any(y => y.Mesh.name == mesh.name); ++j)
+                                {
+                                    mesh.name = string.Format("{0}({1})", originalName, j);
+                                }
+
+                                return meshWithMaterials;
+                            }
+                        })
+                        .ContinueWith(Scheduler.ThreadPool, x => Meshes.Add(x))
+                        ;
+                    }
+                })
+                .ContinueWithCoroutine(Scheduler.MainThread, () =>
+                {
+                    using (MeasureTime("LoadNodes"))
+                    {
+                        return LoadNodes();
+                    }
+                })
+                .ContinueWithCoroutine(Scheduler.MainThread, () =>
+                {
+                    using (MeasureTime("BuildHierarchy"))
+                    {
+                        return BuildHierarchy();
+                    }
+                })
+                .ContinueWith(Scheduler.MainThread, _ =>
+                {
+                    AnimationImporter.ImportAnimation(this);
+                })
+                .ContinueWith(Scheduler.CurrentThread,
+                    _ =>
+                    {
+                        OnLoadModel();
+                        Debug.Log(GetSpeedLog());
+                        return Unit.Default;
+                    });
+        }
+
+        protected virtual void OnLoadModel()
+        {
+            Root.name = "GLTF";
+        }
+
+        IEnumerator TexturesProcessOnAnyThread()
+        {
+            foreach (var x in GetTextures())
+            {
+                x.ProcessOnAnyThread(GLTF, Storage);
+                yield return null;
+            }
+        }
+
+        IEnumerator TexturesProcessOnMainThread()
+        {
+            foreach (var x in GetTextures())
+            {
+                x.ProcessOnMainThread(GLTF);
+                yield return null;
+            }
+        }
+
+        IEnumerator LoadMaterials()
+        {
+            if (GLTF.materials == null || !GLTF.materials.Any())
+            {
+                AddMaterial(MaterialImporter.CreateMaterial(0, null));
+            }
+            else
+            {
+                for (int i = 0; i < GLTF.materials.Count; ++i)
+                {
+                    AddMaterial(MaterialImporter.CreateMaterial(i, GLTF.materials[i]));
+                    yield return null;
+                }
+            }
+        }
+
+        IEnumerator LoadMeshes()
+        {
+            var meshImporter = new MeshImporter();
+            for (int i = 0; i < GLTF.meshes.Count; ++i)
+            {
+                var meshContext = meshImporter.ReadMesh(this, i);
+                var meshWithMaterials = MeshImporter.BuildMesh(this, meshContext);
+                var mesh = meshWithMaterials.Mesh;
+                if (string.IsNullOrEmpty(mesh.name))
+                {
+                    mesh.name = string.Format("UniGLTF import#{0}", i);
+                }
+                Meshes.Add(meshWithMaterials);
+
+                yield return null;
+            }
+        }
+
+        IEnumerator LoadNodes()
+        {
+            foreach (var x in GLTF.nodes)
+            {
+                Nodes.Add(NodeImporter.ImportNode(x).transform);
+            }
+
+            yield return null;
+        }
+
+        IEnumerator BuildHierarchy()
+        {
+            var nodes = new List<NodeImporter.TransformWithSkin>();
+            for (int i = 0; i < Nodes.Count; ++i)
+            {
+                nodes.Add(NodeImporter.BuildHierarchy(this, i));
+            }
+
+            NodeImporter.FixCoordinate(this, nodes);
+
+            // skinning
+            for (int i = 0; i < nodes.Count; ++i)
+            {
+                NodeImporter.SetupSkinning(this, nodes, i);
+            }
+
+            // connect root
+            Root = new GameObject("_root_");
+            foreach (var x in GLTF.rootnodes)
+            {
+                var t = nodes[x].Transform;
+                t.SetParent(Root.transform, false);
+            }
+
+            yield return null;
+        }
+#endregion
+
+#region Imported
         public GameObject Root;
         public List<Transform> Nodes = new List<Transform>();
 
@@ -321,9 +706,9 @@ namespace UniGLTF
         {
             foreach (var x in Meshes)
             {
-                if (x.Renderer != null)
+                foreach(var y in x.Renderers)
                 {
-                    x.Renderer.enabled = true;
+                    y.enabled = true;
                 }
             }
         }
@@ -332,19 +717,22 @@ namespace UniGLTF
         {
             foreach (var x in Meshes)
             {
-                var skinnedMeshRenderer = x.Renderer as SkinnedMeshRenderer;
-                if (skinnedMeshRenderer != null)
+                foreach (var r in x.Renderers)
                 {
-                    skinnedMeshRenderer.updateWhenOffscreen = true;
+                    var skinnedMeshRenderer = r as SkinnedMeshRenderer;
+                    if (skinnedMeshRenderer != null)
+                    {
+                        skinnedMeshRenderer.updateWhenOffscreen = true;
+                    }
                 }
             }
         }
 
         public AnimationClip Animation;
-        #endregion
+#endregion
 
 #if UNITY_EDITOR
-        #region Assets
+#region Assets
         protected virtual IEnumerable<UnityEngine.Object> ObjectsForSubAsset()
         {
             HashSet<Texture2D> textures = new HashSet<Texture2D>();
@@ -411,6 +799,8 @@ namespace UniGLTF
             };
             foreach (var o in ObjectsForSubAsset())
             {
+                if (o == null) continue;
+
                 var assetPath = GetAssetPath(prefabPath, o);
                 if (!assetPath.IsNull)
                 {
@@ -443,40 +833,57 @@ namespace UniGLTF
             }
         }
 
-        public void SaveTexturesAsPng(UnityPath prefabPath)
+        /// <summary>
+        /// Extract images from glb or gltf out of Assets folder.
+        /// </summary>
+        /// <param name="prefabPath"></param>
+        public void ExtranctImages(UnityPath prefabPath)
         {
-            TextureBaseDir = prefabPath.Parent;
-            TextureBaseDir.ImportAsset();
+            var prefabParentDir = prefabPath.Parent;
+
+            // glb buffer
+            var folder = prefabPath.GetAssetFolder(".Textures");
 
             //
             // https://answers.unity.com/questions/647615/how-to-update-import-settings-for-newly-created-as.html
             //
-            for (int i = 0; i < GLTF.textures.Count; ++i)
+            int created = 0;
+            //for (int i = 0; i < GLTF.textures.Count; ++i)
+            for (int i = 0; i < GLTF.images.Count; ++i)
             {
-                var x = GLTF.textures[i];
-                var image = GLTF.images[x.source];
-                if (string.IsNullOrEmpty(image.uri))
-                {
-                    // glb buffer
-                    var folder = prefabPath.GetAssetFolder(".Textures");
-                    folder.EnsureFolder();
+                folder.EnsureFolder();
 
-                    // name & bytes
-                    var textureName = !string.IsNullOrEmpty(image.name) ? image.name : string.Format("{0:00}#GLB", i);
-                    var byteSegment = GLTF.GetViewBytes(image.bufferView);
+                //var x = GLTF.textures[i];
+                var image = GLTF.images[i];
+                var src = Storage.GetPath(image.uri);
+                if (UnityPath.FromFullpath(src).IsUnderAssetsFolder)
+                {
+                    // asset is exists.
+                }
+                else
+                {
+                    string textureName;
+                    var byteSegment = GLTF.GetImageBytes(Storage, i, out textureName);
 
                     // path
-                    var png = folder.Child(textureName + ".png");
-                    File.WriteAllBytes(png.FullPath, byteSegment.ToArray());
-                    png.ImportAsset();
+                    var dst = folder.Child(textureName + image.GetExt());
+                    File.WriteAllBytes(dst.FullPath, byteSegment.ToArray());
+                    dst.ImportAsset();
 
-                    image.uri = png.Value.Substring(TextureBaseDir.Value.Length + 1);
-                    //Debug.LogFormat("image.uri: {0}", image.uri);
+                    // make relative path from PrefabParentDir
+                    image.uri = dst.Value.Substring(prefabParentDir.Value.Length + 1);
+                    ++created;
                 }
             }
-            UnityEditor.AssetDatabase.Refresh();
+
+            if (created > 0)
+            {
+                AssetDatabase.Refresh();
+            }
+
+            CreateTextureItems(prefabParentDir);
         }
-        #endregion
+#endregion
 #endif
 
         public void Destroy(bool destroySubAssets)

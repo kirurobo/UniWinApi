@@ -50,9 +50,6 @@ public class VrmSample : MonoBehaviour {
 			audioSource = FindObjectOfType<AudioSource>();
 		}
 
-		// Load the initial motion.
-		LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
-
 		// Load the initial model.
 		string[] cmdArgs = System.Environment.GetCommandLineArgs();
 		if (cmdArgs.Length > 1)
@@ -63,8 +60,11 @@ public class VrmSample : MonoBehaviour {
 			LoadModel(Application.streamingAssetsPath + "/default_vrm.vrm");
 		}
 
+		// Load the initial motion.
+		LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
+
 		// Initialize window manager
-		windowController =FindObjectOfType<WindowController>();
+		windowController = FindObjectOfType<WindowController>();
 		if (windowController)
 		{
 			// Add a file drop handler.
@@ -172,27 +172,44 @@ public class VrmSample : MonoBehaviour {
 	/// <param name="path"></param>
 	private void LoadMotion(string path)
 	{
-		ImporterContext context = new ImporterContext
-		{
-			Path = path
-		};
+		if (!File.Exists(path)) return;
+
+		GameObject newMotionObject = null;
 
 		try
 		{
+			BvhImporterContext context = new BvhImporterContext();
+			//Debug.Log("Loading motion : " + path);
 
-			BvhImporter.Import(context);
-			motion = context.Root.GetComponent<HumanPoseTransfer>();
-			motion.GetComponent<Renderer>().enabled = false;
+			context.Parse(path);
+			context.Load();
+			newMotionObject = context.Root;
 
-			SetMotion(motion, model, meta);
+			// Hide the motion model
+			Renderer renderer = newMotionObject.GetComponent<Renderer>();
+			if (renderer)
+			{
+				renderer.enabled = false;
+			}
+
 		} catch (Exception ex)
 		{
 			if (uiController) uiController.SetWarning("Motion load failed.");
+			Debug.LogError("Failed loading " + path);
 			Debug.LogError(ex);
 			return;
 		}
-		finally
+
+		if (newMotionObject)
 		{
+			if (motion)
+			{
+				GameObject.Destroy(motion.gameObject);
+			}
+
+			motion = newMotionObject.GetComponent<HumanPoseTransfer>();
+			SetMotion(motion, model, meta);
+
 			// Play loaded audio if available
 			if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)
 			{
@@ -209,35 +226,36 @@ public class VrmSample : MonoBehaviour {
 	private void LoadModel(string path)
 	{
 		if (!File.Exists(path)) return;
-
-		GameObject newModel = null;
+		GameObject newModelObject = null;
 
 		try
 		{
 			// Load from a VRM file.
-			byte[] bytes = File.ReadAllBytes(path);
-			context = new VRMImporterContext(UniGLTF.UnityPath.FromFullpath(path));
-			context.ParseGlb(bytes);
-			VRMImporter.LoadFromBytes(context);
+			context = new VRMImporterContext();
+			//Debug.Log("Loading model : " + path);
 
-			newModel = context.Root;
+			context.Load(path);
+			newModelObject = context.Root;
 			meta = context.ReadMeta();
+
+			context.ShowMeshes();
 		}
 		catch (Exception ex)
 		{
 			if (uiController) uiController.SetWarning("Model load failed.");
+			Debug.LogError("Failed loading " + path);
 			Debug.LogError(ex);
 			return;
 		}
 
-		if (model)
+		if (newModelObject)
 		{
-			GameObject.Destroy(model.gameObject);
-		}
+			if (model)
+			{
+				GameObject.Destroy(model.gameObject);
+			}
 
-		if (newModel)
-		{
-			model = newModel.AddComponent<HumanPoseTransfer>();
+			model = newModelObject.AddComponent<HumanPoseTransfer>();
 			SetMotion(motion, model, meta);
 
 			model.gameObject.AddComponent<CharacterBehaviour>();

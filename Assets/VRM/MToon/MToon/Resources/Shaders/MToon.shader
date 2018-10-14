@@ -11,9 +11,12 @@ Shader "VRM/MToon"
         [Normal] _BumpMap ("Normal Texture", 2D) = "bump" {}
         _ReceiveShadowRate ("Receive Shadow", Range(0, 1)) = 1
         [NoScaleOffset] _ReceiveShadowTexture ("Receive Shadow Texture", 2D) = "white" {}
+        _ShadingGradeRate ("Shading Grade", Range(0, 1)) = 1
+        [NoScaleOffset] _ShadingGradeTexture ("Shading Grade Texture", 2D) = "white" {}
         _ShadeShift ("Shade Shift", Range(-1, 1)) = 0
         _ShadeToony ("Shade Toony", Range(0, 1)) = 0.9
         _LightColorAttenuation ("Light Color Attenuation", Range(0, 1)) = 0
+        _IndirectLightIntensity ("Indirect Light Intensity", Range(0, 1)) = 0.1
         [NoScaleOffset] _SphereAdd ("Sphere Texture(Add)", 2D) = "black" {}
         _EmissionColor ("Color", Color) = (0,0,0)
         [NoScaleOffset] _EmissionMap ("Emission", 2D) = "white" {}
@@ -32,7 +35,6 @@ Shader "VRM/MToon"
         [HideInInspector] _SrcBlend ("_SrcBlend", Float) = 1.0
         [HideInInspector] _DstBlend ("_DstBlend", Float) = 0.0
         [HideInInspector] _ZWrite ("_ZWrite", Float) = 1.0
-        [HideInInspector] _IsFirstSetup ("_IsFirstSetup", Float) = 1.0
     }
     
     // for SM 3.0
@@ -54,7 +56,7 @@ Shader "VRM/MToon"
 
             CGPROGRAM
             #pragma target 3.0
-            #pragma multi_compile _ MTOON_DEBUG_NORMAL
+            #pragma multi_compile _ MTOON_DEBUG_NORMAL MTOON_DEBUG_LITSHADERATE
             #pragma multi_compile _ _NORMALMAP
             #pragma multi_compile _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
             #include "./MToonSM3.cginc"
@@ -81,7 +83,7 @@ Shader "VRM/MToon"
 
             CGPROGRAM
             #pragma target 3.0
-            #pragma multi_compile _ MTOON_DEBUG_NORMAL
+            #pragma multi_compile _ MTOON_DEBUG_NORMAL MTOON_DEBUG_LITSHADERATE
             #pragma multi_compile _ MTOON_OUTLINE_WIDTH_WORLD MTOON_OUTLINE_WIDTH_SCREEN
             #pragma multi_compile _ MTOON_OUTLINE_COLOR_FIXED MTOON_OUTLINE_COLOR_MIXED
             #pragma multi_compile _ _NORMALMAP
@@ -112,7 +114,7 @@ Shader "VRM/MToon"
 
             CGPROGRAM
             #pragma target 3.0
-            #pragma multi_compile _ MTOON_DEBUG_NORMAL
+            #pragma multi_compile _ MTOON_DEBUG_NORMAL MTOON_DEBUG_LITSHADERATE
             #pragma multi_compile _ _NORMALMAP
             #pragma multi_compile _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
             #define MTOON_FORWARD_ADD
@@ -129,5 +131,5 @@ Shader "VRM/MToon"
     }
     
     Fallback "Unlit/Texture"
-    CustomEditor "MToonInspector"
+    CustomEditor "MToon.MToonInspector"
 }

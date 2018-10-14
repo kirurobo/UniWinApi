@@ -14,7 +14,9 @@ namespace VRM
         }
 
         public VRMExporter(glTF gltf) : base(gltf)
-        { }
+        {
+            gltf.extensionsUsed.Add(glTF_VRM_extensions.ExtensionName);
+        }
 
         public new static glTF Export(GameObject go)
         {
@@ -102,6 +104,7 @@ namespace VRM
                 x => gltf.extensions.VRM.secondaryAnimation.boneGroups.Add(x)
                 );
 
+#pragma warning disable 0618
             // meta(obsolete)
             {
                 var meta = exporter.Copy.GetComponent<VRMMetaInformation>();
@@ -112,13 +115,15 @@ namespace VRM
                     gltf.extensions.VRM.meta.title = meta.Title;
                     if (meta.Thumbnail != null)
                     {
-                        gltf.extensions.VRM.meta.texture = TextureIO.ExportTexture(gltf, gltf.buffers.Count - 1, meta.Thumbnail, false);
+                        gltf.extensions.VRM.meta.texture = TextureIO.ExportTexture(gltf, gltf.buffers.Count - 1, meta.Thumbnail, glTFTextureTypes.Unknown);
                     }
                     gltf.extensions.VRM.meta.licenseType = meta.LicenseType;
                     gltf.extensions.VRM.meta.otherLicenseUrl = meta.OtherLicenseUrl;
                     gltf.extensions.VRM.meta.reference = meta.Reference;
                 }
             }
+#pragma warning restore 0618
+
             // meta
             {
                 var _meta = exporter.Copy.GetComponent<VRMMeta>();
@@ -134,7 +139,7 @@ namespace VRM
                     gltf.extensions.VRM.meta.title = meta.Title;
                     if (meta.Thumbnail != null)
                     {
-                        gltf.extensions.VRM.meta.texture = TextureIO.ExportTexture(gltf, gltf.buffers.Count - 1, meta.Thumbnail, false);
+                        gltf.extensions.VRM.meta.texture = TextureIO.ExportTexture(gltf, gltf.buffers.Count - 1, meta.Thumbnail, glTFTextureTypes.Unknown);
                     }
 
                     // ussage pemission

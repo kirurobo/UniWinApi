@@ -2,17 +2,32 @@
 
 Unity humanoid utility with bvh importer.
 
-## License
+# License
 
 * [MIT](./LICENSE.md)
 
-## BVH files
+# BVH runtime loader
 
-* https://sites.google.com/a/cgspeed.com/cgspeed/motion-capture
-* http://mocapdata.com/
-* http://www.thetrailerspark.com/download/Mocap/Packed/EYES-JAPAN/BVH/
+```cs
+var context = new BvhImporterContext();
+context.Parse(path);
+context.Load(); // create Skeleton hierarchy and mesh for visualize
+GameObject root = context.Root;
+```
 
-## BVH Asset Importer
+## RuntimeLoader
+* Scenes/RuntimeBvhLoader.unity
+
+## RuntimeLoader and PoseTransfer
+Load BVH and transfer pose to any model with humanoid avatar.
+
+* Scenes/PoseTransfer.unity
+
+![humanpose transfer target](doc/humanpose_transfer_inspector.png)
+
+![humanpose transfer](doc/humanpose_transfer.png)
+
+# Load bvh and create prefab with AnimationClip
 
 Drop bvh file to Assets folder.
 Then, AssetPostprocessor import bvh file.
@@ -30,33 +45,10 @@ Instanciate prefab to scene.
 
 That object can play. 
 
+# BoneMapping
 
-## BVH Runtime Importer
-
-```cs
-var context = new UniHumanoid.ImporterContext
-{
-    Path = path
-};
-UniHumanoid.BvhImporter.Import(context);
-GameObject root = context.Root;
-```
-
-## Transfer humanoid pose to other humanoid
-
-Set avatar to HumanPoseTransfer attached to bvh gameobject.
-
-Instanciate target humanoid model from asset, For example fbx.
-Attach HumanPoseTransfer to new human model and set to bvh HumanPoseTransfer's Source of bvh gameobject. 
-![humanpose transfer target](doc/humanpose_transfer_inspector.png)
-
-Then, Bvh animtion copy to new humanoid ! 
-![humanpose transfer](doc/humanpose_transfer.png)
-
-## BoneMapping
-
-This script help create human avatar from GameObject hierarchy.
-First, attach this script to GameObject that has Animator with HumanAvatar.
+This script help create human avatar from exist GameObject hierarchy.
+First, attach this script to root GameObject that has Animator.
 
 Next, setup below.
 
@@ -76,4 +68,10 @@ Create avatar.
 These humanoids imported by [UniGLTF](https://github.com/ousttrue/UniGLTF) and created human avatar by BoneMapping. 
 
 ![humanoid](doc/humanoid.gif)
+
+# Download BVH files
+
+* https://sites.google.com/a/cgspeed.com/cgspeed/motion-capture
+* http://mocapdata.com/
+* http://www.thetrailerspark.com/download/Mocap/Packed/EYES-JAPAN/BVH/
 

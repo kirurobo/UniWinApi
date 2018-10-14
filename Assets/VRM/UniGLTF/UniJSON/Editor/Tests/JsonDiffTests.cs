@@ -51,5 +51,15 @@ namespace UniJSON
             var diff = JsonParser.Parse(a).Diff(JsonParser.Parse(b)).ToArray();
             Assert.AreEqual(1, diff.Length);
         }
+
+        [Test]
+        public void Vector3()
+        {
+            var src = new UnityEngine.Vector3(1, 2, 3);
+            var json = UnityEngine.JsonUtility.ToJson(src);
+            Assert.AreEqual("{\"x\":1.0,\"y\":2.0,\"z\":3.0}", json);
+            var dst = UnityEngine.JsonUtility.FromJson<UnityEngine.Vector3>(json);
+            Assert.AreEqual(src, dst);
+        }
     }
 }

@@ -544,6 +544,11 @@ namespace UniJSON
             }
         }
 
+        public IEnumerable<JsonNode> GetNodes(string jsonPointer)
+        {
+            return GetNodes(new JsonPointer(jsonPointer));
+        }
+
         void SetValue(JsonPointer jsonPointer, Func<int, JsonValue> createNodeValue)
         {
             foreach (var node in GetNodes(jsonPointer))
