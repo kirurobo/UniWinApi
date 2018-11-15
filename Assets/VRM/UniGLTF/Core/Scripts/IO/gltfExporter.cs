@@ -90,11 +90,7 @@ namespace UniGLTF
             private set;
         }
 
-        public List<Texture> Textures
-        {
-            get;
-            private set;
-        }
+        public TextureExportManager TextureManager;
 
         protected virtual IMaterialExporter CreateMaterialExporter()
         {
@@ -445,15 +441,15 @@ namespace UniGLTF
                 Materials = Nodes.SelectMany(x => x.GetSharedMaterials()).Where(x => x != null).Distinct().ToList();
                 var unityTextures = Materials.SelectMany(x => TextureIO.GetTextures(x)).Where(x => x.Texture != null).Distinct().ToList();
 
-                List<Texture> exportTextures=null;
-                Textures = unityTextures.Select(y => y.Texture).ToList();
+                TextureManager = new TextureExportManager(unityTextures.Select(x => x.Texture));
+
                 var materialExporter = CreateMaterialExporter();
-                gltf.materials = Materials.Select(x => materialExporter.ExportMaterial(x, Textures, out exportTextures)).ToList();
+                gltf.materials = Materials.Select(x => materialExporter.ExportMaterial(x, TextureManager)).ToList();
 
                 for (int i = 0; i < unityTextures.Count; ++i)
                 {
                     var unityTexture = unityTextures[i];
-                    TextureIO.ExportTexture(gltf, bufferIndex, exportTextures[i], unityTexture.TextureType);
+                    TextureIO.ExportTexture(gltf, bufferIndex, TextureManager.GetExportTexture(i), unityTexture.TextureType);
                 }
                 #endregion
 
@@ -561,7 +557,7 @@ namespace UniGLTF
                             {
                                 case 1:
                                     outputAccessor.type = "SCALAR";
-                                    outputAccessor.count = 1;
+                                    //outputAccessor.count = ;
                                     break;
                                 case 3:
                                     outputAccessor.type = "VEC3";

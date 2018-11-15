@@ -114,12 +114,21 @@ namespace VRM
             BlendShapeAvatar = ScriptableObject.CreateInstance<BlendShapeAvatar>();
             BlendShapeAvatar.name = "BlendShape";
 
+            var transformMeshTable = new Dictionary<Mesh, Transform>();
+            foreach (var transform in Root.transform.Traverse())
+            {
+                if (transform.GetSharedMesh() != null)
+                {
+                    transformMeshTable.Add(transform.GetSharedMesh(), transform);
+                }
+            }
+
             var blendShapeList = GLTF.extensions.VRM.blendShapeMaster.blendShapeGroups;
             if (blendShapeList != null && blendShapeList.Count > 0)
             {
                 foreach (var x in blendShapeList)
                 {
-                    BlendShapeAvatar.Clips.Add(LoadBlendShapeBind(x));
+                    BlendShapeAvatar.Clips.Add(LoadBlendShapeBind(x, transformMeshTable));
                 }
             }
 
@@ -128,7 +137,7 @@ namespace VRM
             proxy.BlendShapeAvatar = BlendShapeAvatar;
         }
 
-        BlendShapeClip LoadBlendShapeBind(glTF_VRM_BlendShapeGroup group)
+        BlendShapeClip LoadBlendShapeBind(glTF_VRM_BlendShapeGroup group, Dictionary<Mesh, Transform> transformMeshTable)
         {
             var asset = ScriptableObject.CreateInstance<BlendShapeClip>();
             var groupName = group.name;
@@ -143,6 +152,7 @@ namespace VRM
             {
                 asset.BlendShapeName = groupName;
                 asset.Preset = EnumUtil.TryParseOrDefault<BlendShapePreset>(group.presetName);
+                asset.IsBinary = group.isBinary;
                 if (asset.Preset == BlendShapePreset.Unknown)
                 {
                     // fallback
@@ -151,7 +161,7 @@ namespace VRM
                 asset.Values = group.binds.Select(x =>
                 {
                     var mesh = Meshes[x.mesh].Mesh;
-                    var node = Root.transform.Traverse().First(y => y.GetSharedMesh() == mesh);
+                    var node = transformMeshTable[mesh];
                     var relativePath = UniGLTF.UnityExtensions.RelativePathFrom(node, Root.transform);
                     return new BlendShapeBinding
                     {
@@ -241,7 +251,7 @@ namespace VRM
             AvatarDescription = GLTF.extensions.VRM.humanoid.ToDescription(Nodes);
             AvatarDescription.name = "AvatarDescription";
             HumanoidAvatar = AvatarDescription.CreateAvatar(Root.transform);
-            if(!HumanoidAvatar.isValid || !HumanoidAvatar.isHuman)
+            if (!HumanoidAvatar.isValid || !HumanoidAvatar.isHuman)
             {
                 throw new Exception("fail to create avatar");
             }
@@ -280,7 +290,7 @@ namespace VRM
             meta.Title = gltfMeta.title;
 
             var thumbnail = GetTexture(gltfMeta.texture);
-            if (thumbnail!=null)
+            if (thumbnail != null)
             {
                 // ロード済み
                 meta.Thumbnail = thumbnail.Texture;

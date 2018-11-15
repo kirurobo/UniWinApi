@@ -114,6 +114,10 @@ namespace DepthFirstScheduler
                     var status = x.Execute();
                     if (status != ExecutionStatus.Continue)
                     {
+                        if (status == ExecutionStatus.Error)
+                        {
+                            throw x.GetError();
+                        }
                         break;
                     }
                     // Coroutineタスクが継続している

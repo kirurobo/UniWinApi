@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.Linq;
+using System.Collections.Generic;
 
 namespace UniJSON
 {
@@ -39,9 +40,19 @@ namespace UniJSON
 
     public static class IStoreExtensions
     {
+        public static void WriteValues(this IStore s, params Byte[] bytes)
+        {
+            s.Write(new ArraySegment<Byte>(bytes));
+        }
+
         public static void Write(this IStore s, Byte[] bytes)
         {
             s.Write(new ArraySegment<Byte>(bytes));
+        }
+
+        public static void Write(this IStore s, IEnumerable<Byte> bytes)
+        {
+            s.Write(new ArraySegment<Byte>(bytes.ToArray()));
         }
     }
 }

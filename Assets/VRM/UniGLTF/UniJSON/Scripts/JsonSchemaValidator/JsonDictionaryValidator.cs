@@ -215,7 +215,8 @@ namespace UniJSON
                 {
                     using (c.Push(x))
                     {
-                        /*var value =*/ o.GetValueByKey(x);
+                        /*var value =*/
+                        o.GetValueByKey(x);
                     }
                 }
             }
@@ -230,7 +231,7 @@ namespace UniJSON
             // validate properties
             m_validValueMap.Clear();
 
-            using (f.BeginMap())
+            using (f.BeginMapDisposable())
             {
                 var dict = o as Dictionary<string, T>;
                 foreach (var kv in dict)

@@ -165,7 +165,23 @@ namespace UniJSON
 
         public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
         {
-            if (Values.Contains((string)o))
+            if (o == null)
+            {
+                return new JsonSchemaValidationException(c, "null");
+            }
+
+            var t = o.GetType();
+            string value = null;
+            if (t.IsEnum)
+            {
+                value = Enum.GetName(t, o);
+            }
+            else
+            {
+                value = (string)o;
+            }
+
+            if (Values.Contains(value))
             {
                 return null;
             }
@@ -185,7 +201,7 @@ namespace UniJSON
             f.Key("type"); f.Value("string");
             f.Key("enum");
             f.BeginList();
-            foreach(var x in Values)
+            foreach (var x in Values)
             {
                 f.Value(x);
             }

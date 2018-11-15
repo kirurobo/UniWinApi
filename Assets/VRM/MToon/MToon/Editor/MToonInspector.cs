@@ -71,23 +71,11 @@ namespace MToon
             _outlineColor = FindProperty(Utils.PropOutlineColor, properties);
             _outlineLightingMix = FindProperty(Utils.PropOutlineLightingMix, properties);
 
-            var uvMappedTextureProperties = new[]
-            {
-                _mainTex,
-                _shadeTexture,
-                _bumpMap,
-                _receiveShadowTexture,
-                _shadingGradeTexture,
-                _emissionMap,
-                _outlineWidthTexture,
-            };
-
             var materials = materialEditor.targets.Select(x => x as Material).ToArray();
-            Draw(materialEditor, materials, uvMappedTextureProperties);
+            Draw(materialEditor, materials);
         }
 
-        private void Draw(MaterialEditor materialEditor, Material[] materials,
-            MaterialProperty[] uvMappedTextureProperties)
+        private void Draw(MaterialEditor materialEditor, Material[] materials)
         {
             EditorGUI.BeginChangeCheck();
             {
@@ -165,9 +153,16 @@ namespace MToon
 
                     EditorGUILayout.LabelField("Emission", EditorStyles.boldLabel);
                     {
-                        materialEditor.TexturePropertySingleLine(new GUIContent("Emission", "Emission (RGB)"),
+                        materialEditor.TexturePropertyWithHDRColor(new GUIContent("Emission", "Emission (RGB)"),
                             _emissionMap,
-                            _emissionColor);
+                            _emissionColor,
+#if UNITY_2018_1_OR_NEWER
+#else
+                            new ColorPickerHDRConfig(minBrightness: 0, maxBrightness: 10, minExposureValue: -10,
+                                maxExposureValue: 10),
+#endif
+                            showAlpha: false);
+                        
                         materialEditor.TexturePropertySingleLine(new GUIContent("MatCap", "MatCap Texture (RGB)"),
                             _sphereAdd);
                     }
@@ -244,11 +239,7 @@ namespace MToon
                 {
                     EditorGUILayout.LabelField("Texture Options", EditorStyles.boldLabel);
                     {
-                        EditorGUI.BeginChangeCheck();
                         materialEditor.TextureScaleOffsetProperty(_mainTex);
-                        if (EditorGUI.EndChangeCheck())
-                            foreach (var textureProperty in uvMappedTextureProperties)
-                                textureProperty.textureScaleAndOffset = _mainTex.textureScaleAndOffset;
                     }
                     EditorGUILayout.Space();
 
@@ -267,7 +258,12 @@ namespace MToon
 //                    materialEditor.EnableInstancingField();
                         materialEditor.DoubleSidedGIField();
 #endif
+                        EditorGUI.BeginChangeCheck();
                         materialEditor.RenderQueueField();
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            ModeChanged(materials);
+                        }
                     }
                 }
                 EditorGUILayout.EndVertical();

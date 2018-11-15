@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace DepthFirstScheduler
 {
@@ -88,7 +89,7 @@ namespace DepthFirstScheduler
 
         Func<T> m_arg;
         Func<T, IEnumerator> m_starter;
-        IEnumerator m_it;
+        Stack<IEnumerator> m_it;
         public CoroutineFunctor(Func<T> arg, Func<T, IEnumerator> starter)
         {
             m_arg = arg;
@@ -100,19 +101,33 @@ namespace DepthFirstScheduler
             if (m_it == null)
             {
                 m_result = m_arg();
-                m_it = m_starter(m_result);
+                m_it = new Stack<IEnumerator>();
+                m_it.Push(m_starter(m_result));
             }
 
             try
             {
-                if (m_it.MoveNext())
+                if (m_it.Count!=0)
                 {
+                    if (m_it.Peek().MoveNext())
+                    {
+                        var nested = m_it.Peek().Current as IEnumerator;
+                        if (nested!=null)
+                        {
+                            m_it.Push(nested);
+                        }
+                    }
+                    else
+                    {
+                        m_it.Pop();
+                    }
                     return ExecutionStatus.Continue;
                 }
                 else
                 {
                     return ExecutionStatus.Done;
                 }
+
             }
             catch(Exception ex)
             {

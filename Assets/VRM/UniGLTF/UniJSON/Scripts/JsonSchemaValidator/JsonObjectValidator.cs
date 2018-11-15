@@ -330,7 +330,7 @@ namespace UniJSON
                 }
             }
 
-            using (f.BeginMap())
+            using (f.BeginMapDisposable())
             {
                 foreach (var kv in Properties)
                 {

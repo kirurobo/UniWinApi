@@ -129,7 +129,7 @@ namespace UniJSON
         {
             var array = o as IEnumerable;
 
-            using (f.BeginList())
+            using (f.BeginListDisposable())
             {
                 int i = 0;
                 foreach (var x in array)

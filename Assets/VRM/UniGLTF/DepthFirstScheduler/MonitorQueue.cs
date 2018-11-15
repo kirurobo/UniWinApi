@@ -12,7 +12,6 @@ namespace DepthFirstScheduler
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class MonitorQueue<T>
-        where T : class
     {
         private Int32 _count = 0;
         public Int32 Count
