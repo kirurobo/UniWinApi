@@ -1,0 +1,40 @@
+﻿{
+  "labels": {
+    "Headline": "ModelDetail",
+    "Title": "Model name",
+    "Version": "Version",
+    "Author": "Author",
+    "Contact": "Author contact URL",
+    "Reference": "Reference source",
+    "PermissionAct": "Permission of personality act",
+    "PermissionViolent": "Permission of violent act",
+    "PermissionSexual": "Permission of sexual act",
+    "PermissionCommercial": "Permission of using commercial content",
+    "PermissionOther": "Additional permission conditions",
+    "DistributionLicense": "License of distribution",
+    "DistributionOther": "Additional distribution conditions"
+  },
+  "buttons": {
+    "BtnLoad": "Load",
+    "BtnCancel": "Cancel"
+  },
+  "selections": {
+    "PermissionAct":[
+      "Only author",
+      "Licensed users",
+      "Everyone"
+    ],
+    "PermissionUsage":[ "Disallow", "Allow" ],
+    "LicenseType": [
+      "Re-destribution prohibited",
+      "No Rights Reserved (CC0)",
+      "Licensed under CC BY 4.0",
+      "Licensed under CC BY-NC 4.0",
+      "Licensed under CC BY-SA 4.0",
+      "Licensed under CC BY-NC-SA 4.0",
+      "Licensed under CC BY-ND 4.0",
+      "Licensed under CC BY-NC-ND 4.0",
+      "Another license"
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+﻿{
+  "labels": {
+    "Headline": "ModelDetail",
+    "Title": "名前",
+    "Version": "バージョン",
+    "Author": "作者",
+    "Contact": "連絡先",
+    "Reference": "親作品",
+    "PermissionAct": "アバターに 人格を与えること の許諾範囲",
+    "PermissionViolent": "暴力表現を 演じることの許可",
+    "PermissionSexual": "性的表現を 演じることの許可",
+    "PermissionCommercial": "商用利用の許可",
+    "PermissionOther": "その他のライセンス条件",
+    "DistributionLicense": "ライセンスタイプ",
+    "DistributionOther": "その他ライセンス条件"
+  },
+  "buttons": {
+    "BtnLoad": "Load",
+    "BtnCancel": "Cancel"
+  },
+  "selections": {
+    "PermissionAct":[
+      "作者のみ",
+      "許可された人限定",
+      "全員に許可"
+    ],
+    "PermissionUsage":[ "不許可", "許可" ],
+    "LicenseType": [
+      "再配布禁止",
+      "著作権放棄(CC0)",
+      "表示 (CC BY 4.0)",
+      "表示 非営利 (CC BY-NC 4.0)",
+      "表示 継承 (CC BY-SA 4.0)",
+      "表示 非営利 継承 (CC BY-NC-SA 4.0)",
+      "表示 改変禁止 (CC BY-ND 4.0)",
+      "表示 非営利 改変禁止 (CC BY-NC-ND 4.0)",
+      "その他"
+    ]
+  }
+}

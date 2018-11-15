@@ -1941,6 +1941,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiController: {fileID: 0}
+  canvas: {fileID: 0}
+  modalWindowPrefab: {fileID: 1417642719711440, guid: 076974e56cf73d7409fd6aec2bdef2e6,
+    type: 2}
   cameraController: {fileID: 0}
   cameraTransform: {fileID: 0}
   audioSource: {fileID: 0}

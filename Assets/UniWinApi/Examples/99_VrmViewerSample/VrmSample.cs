@@ -21,6 +21,8 @@ public class VrmSample : MonoBehaviour {
 	private VRMMetaObject meta;
 
 	public VrmUiController uiController;
+	public Canvas canvas;
+	public GameObject modalWindowPrefab;
 	public CameraController cameraController;
 	public Transform cameraTransform;
 
@@ -31,11 +33,19 @@ public class VrmSample : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		// 指定がなければ自動で探す
 		if (!uiController)
 		{
 			uiController = FindObjectOfType<VrmUiController>();
 		}
 
+		// 指定がなければ自動で探す
+		if (!canvas)
+		{
+			canvas = FindObjectOfType<Canvas>();
+		}
+
+		// 指定がなければ自動で探す
 		if (!cameraController)
 		{
 			cameraController = FindObjectOfType<CameraController>();
@@ -45,6 +55,7 @@ public class VrmSample : MonoBehaviour {
 			}
 		}
 
+		// 指定がなければ自動で探す
 		if (!audioSource)
 		{
 			audioSource = FindObjectOfType<AudioSource>();
@@ -236,7 +247,7 @@ public class VrmSample : MonoBehaviour {
 
 			context.Load(path);
 			newModelObject = context.Root;
-			meta = context.ReadMeta();
+			meta = context.ReadMeta(true);
 
 			context.ShowMeshes();
 		}
@@ -260,11 +271,31 @@ public class VrmSample : MonoBehaviour {
 
 			model.gameObject.AddComponent<CharacterBehaviour>();
 
-			if (uiController)
-			{
-				uiController.Show(meta);
-			}
+			ShowVRMInfo(meta);
+			//if (uiController)
+			//{
+			//	uiController.Show(meta);
+			//}
 		}
+	}
+
+	/// <summary>
+	/// VRM情報ウィンドウを表示
+	/// https://github.com/m2wasabi/VRMLoaderUI
+	/// </summary>
+	/// <param name="meta"></param>
+	private void ShowVRMInfo(VRMMetaObject meta)
+	{
+		GameObject modalObject = Instantiate(modalWindowPrefab, canvas.transform) as GameObject;
+		VRMLoader.VRMPreviewLocale modalLocale = modalObject.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
+		modalLocale.SetLocale();
+
+		VRMLoader.VRMPreviewUI modalUI = modalObject.GetComponentInChildren<VRMLoader.VRMPreviewUI>();
+		modalUI.setMeta(meta);
+
+		modalUI.setLoadable(false);
+
+		//modalUI.m_ok.onClick.AddListener(ModelLoad);
 	}
 
 	/// <summary>
