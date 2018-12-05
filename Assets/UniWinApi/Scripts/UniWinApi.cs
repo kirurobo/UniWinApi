@@ -320,12 +320,15 @@ public class UniWinApi : IDisposable {
 		System.Diagnostics.Process process = System.Diagnostics.Process.GetCurrentProcess();
 		//return new WindowHandle(process.MainWindowHandle);	// ←これではダメだった。MainWindowHandle == 0 となった。
 
+		int pid = process.Id;
+		//Debug.Log("PID: " + pid);
+
 		// 現存するウィンドウ一式を取得
 		WindowHandle[] handles = FindWindows();
 		foreach (WindowHandle window in handles)
 		{
 			// PIDが一致するものを検索
-			if (process.Id == window.ProcessId)
+			if (window.ProcessId == pid)
 			{
 				return window;
 			}

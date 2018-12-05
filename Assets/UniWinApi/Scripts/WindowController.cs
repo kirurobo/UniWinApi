@@ -216,31 +216,31 @@ public class WindowController : MonoBehaviour {
 	/// <param name="focus"></param>
 	private void OnApplicationFocus(bool focus)
 	{
-		if (focus)
-		{
-			// もしウィンドウハンドル取得に失敗していたら再取得
-			if (!uniWin.IsActive)
-			{
-				FindMyWindow();
-			}
+		//if (focus)
+		//{
+		//	// もしウィンドウハンドル取得に失敗していたら再取得
+		//	if (!uniWin.IsActive)
+		//	{
+		//		FindMyWindow();
+		//	}
 
-			// アクティブウィンドウを監視して
-			if (!isWindowChecked)
-			{
-				if (uniWin.CheckActiveWindow())
-				{
-					isWindowChecked = true; // どうやら正しくウィンドウをつかめているよう
-				}
-				else
-				{
-					// ウィンドウが違っているようなので、もう一度アクティブウィンドウを取得
-					uniWin.Reset();
-					uniWin.Dispose();
-					uniWin = new UniWinApi();
-					FindMyWindow();
-				}
-			}
-		}
+		//	// アクティブウィンドウを監視して
+		//	if (!isWindowChecked)
+		//	{
+		//		if (uniWin.CheckActiveWindow())
+		//		{
+		//			isWindowChecked = true; // どうやら正しくウィンドウをつかめているよう
+		//		}
+		//		else
+		//		{
+		//			// ウィンドウが違っているようなので、もう一度アクティブウィンドウを取得
+		//			uniWin.Reset();
+		//			uniWin.Dispose();
+		//			uniWin = new UniWinApi();
+		//			FindMyWindow();
+		//		}
+		//	}
+		//}
 	}
 
 	/// <summary>
@@ -376,22 +376,22 @@ public class WindowController : MonoBehaviour {
 		// ウィンドウが確かではないとしておく
 		isWindowChecked = false;
 
-		// 現在このウィンドウがアクティブでなければ、取得はやめておく
-		if (!Application.isFocused) return;
+		//// 現在このウィンドウがアクティブでなければ、取得はやめておく
+		//if (!Application.isFocused) return;
 
 		// 今アクティブなウィンドウを取得
 		var window = UniWinApi.FindWindow();
 		if (window == null) return;
 
-		if (Application.isEditor) {
-			// Unityエディタと一致するかチェック
-			//  （別アプリのウィンドウは対象とさせない）
-			if (window.ProcessName != "Unity") return;
-		} else {
-			// このUnityプロジェクトの名前と一致するかどうかをチェック
-			//  （別アプリのウィンドウは対象とさせない）
-			if (window.Title != Application.productName) return;
-		}
+		//if (Application.isEditor) {
+		//	// Unityエディタと一致するかチェック
+		//	//  （別アプリのウィンドウは対象とさせない）
+		//	if (window.ProcessName != "Unity") return;
+		//} else {
+		//	// このUnityプロジェクトの名前と一致するかどうかをチェック
+		//	//  （別アプリのウィンドウは対象とさせない）
+		//	if (window.Title != Application.productName) return;
+		//}
 
 		// 見つかったウィンドウを利用開始
 		uniWin.SetWindow(window);
