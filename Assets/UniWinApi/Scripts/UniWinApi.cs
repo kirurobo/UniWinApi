@@ -23,6 +23,7 @@ public class UniWinApi : IDisposable {
 		public string Title = "";
 		public string ClassName = "";
 		public string ProcessName = "";
+		public int ProcessId = 0;
 
 		public WindowHandle()
 		{
@@ -30,6 +31,7 @@ public class UniWinApi : IDisposable {
 			Title = "";
 			ClassName = "";
 			ProcessName = "";
+			ProcessId = 0;
 		}
 
 		public WindowHandle(IntPtr hwnd)
@@ -54,10 +56,21 @@ public class UniWinApi : IDisposable {
 			}
 
 			// プロセス名を取得
-			long pid;
+			int pid;
 			WinApi.GetWindowThreadProcessId(hWnd, out pid);
-			System.Diagnostics.Process p = System.Diagnostics.Process.GetProcessById((int)pid);
-			ProcessName = p.ProcessName;
+
+			// GetProcessNyId(PID) で指定PIDが存在しない例外になる場合があるため try {} を使用
+			try
+			{
+				System.Diagnostics.Process p = System.Diagnostics.Process.GetProcessById(pid);
+				ProcessName = p.ProcessName;
+				//ProcessId = p.Id;	// = pid; でおそらく同様
+			} catch
+			{
+				ProcessName = "";
+			}
+			ProcessId = pid;
+			//Debug.Log("PID: " + pid + ", Name: " + ProcessName);
 		}
 
 		public override string ToString()
@@ -303,11 +316,58 @@ public class UniWinApi : IDisposable {
 	/// <returns><c>true</c>, if window handle was set, <c>false</c> otherwise.</returns>
 	static public WindowHandle FindWindow()
 	{
-		IntPtr hwnd = WinApi.GetActiveWindow();
-		if (hwnd == IntPtr.Zero) return null;
+		// 自分自身のPIDを取得し、スレッドを取得
+		System.Diagnostics.Process process = System.Diagnostics.Process.GetCurrentProcess();
+		IntPtr hwnd = process.Handle;
+		Debug.Log("HWND " + hwnd);
+		//WindowHandle window = new WindowHandle(hwnd);
+		//return window;
 
-		WindowHandle window = new WindowHandle(hwnd);
-		return window;
+		System.Diagnostics.ProcessThreadCollection threads = process.Threads;
+		Debug.Log("Threads: " + threads.Count);
+		Debug.Log("Current PID: " + process.Id);
+
+
+		// 現存するウィンドウ一式を取得
+		WindowHandle[] handles = FindWindows();
+
+		if (threads.Count == 0)
+		{
+			foreach (WindowHandle window in handles)
+			{
+				// 念のため指定PIDのみでなく関連スレッド内PIDにあるかで判断
+				if (process.Id == window.ProcessId)
+				{
+					Debug.Log(window.hWnd);
+					return window;
+				}
+			}
+
+		}
+		else
+		{
+			// if (process.Threads(p => p.Id == window.ProcessId)) {}	// .NETにより利用できる？
+
+			// エディタで試したときは threads は空だったが、できる場合はある？
+			foreach (System.Diagnostics.ProcessThread p in threads)
+			{
+				Debug.Log("Thread PID: " + p.Id);
+			}
+
+			foreach (WindowHandle window in handles)
+			{
+
+				// 念のため指定PIDのみでなく関連スレッド内PIDにあるかで判断
+				foreach (System.Diagnostics.ProcessThread p in threads)
+				{
+					if (p.Id == window.ProcessId)
+					{
+						return window;
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	/// <summary>

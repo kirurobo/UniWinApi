@@ -108,7 +108,7 @@ public class WinApi {
 	public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 	
 	[DllImport("user32.dll")]
-	public static extern uint GetWindowThreadProcessId (IntPtr hWnd, out long lpdwProcessId);
+	public static extern uint GetWindowThreadProcessId (IntPtr hWnd, out int lpdwProcessId);
 	
 	[DllImport("user32.dll")]
 	public static extern IntPtr FindWindow (string lpszClass, string lpszTitle);

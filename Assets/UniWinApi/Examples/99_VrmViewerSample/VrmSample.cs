@@ -62,14 +62,17 @@ public class VrmSample : MonoBehaviour {
 		}
 
 		// Load the initial model.
-		string[] cmdArgs = System.Environment.GetCommandLineArgs();
-		if (cmdArgs.Length > 1)
-		{
-			LoadModel(cmdArgs[1]);
-		} else
-		{
-			LoadModel(Application.streamingAssetsPath + "/default_vrm.vrm");
-		}
+		LoadModel(Application.streamingAssetsPath + "/default_vrm.vrm");
+
+		//// 引数でオプションが渡る場合の処理が面倒なため、引数でモデル指定は無しとする
+		//string[] cmdArgs = System.Environment.GetCommandLineArgs();
+		//if (cmdArgs.Length > 1)
+		//{
+		//	LoadModel(cmdArgs[1]);
+		//} else
+		//{
+		//	LoadModel(Application.streamingAssetsPath + "/default_vrm.vrm");
+		//}
 
 		// Load the initial motion.
 		LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
@@ -183,7 +186,11 @@ public class VrmSample : MonoBehaviour {
 	/// <param name="path"></param>
 	private void LoadMotion(string path)
 	{
-		if (!File.Exists(path)) return;
+		if (!File.Exists(path))
+		{
+			Debug.Log("Motion " + path + " is not exits.");
+			return;
+		}
 
 		GameObject newMotionObject = null;
 
@@ -236,7 +243,12 @@ public class VrmSample : MonoBehaviour {
 	/// <param name="path"></param>
 	private void LoadModel(string path)
 	{
-		if (!File.Exists(path)) return;
+		if (!File.Exists(path))
+		{
+			Debug.Log("Model " + path + " is not exits.");
+			return;
+		}
+
 		GameObject newModelObject = null;
 
 		try
