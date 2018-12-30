@@ -208,14 +208,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 78305867}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13bcdf69fdb73ac4388722569c356a3f, type: 3}
+  m_Script: {fileID: 11500000, guid: 217ed13a86cdf67418ad665ff6f659a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _isTransparent: 1
-  _isTopmost: 1
+  _isTopmost: 0
   _isMaximized: 0
   _isMinimized: 0
-  _enableFileDrop: 1
+  _enableFileDrop: 0
   enableDragMove: 1
   pickedColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!4 &78305869
@@ -766,7 +766,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Model detail
+  m_Text: Model
 --- !u!222 &540203414
 CanvasRenderer:
   m_ObjectHideFlags: 0
