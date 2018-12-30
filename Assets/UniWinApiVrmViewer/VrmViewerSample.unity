@@ -218,6 +218,8 @@ MonoBehaviour:
   _enableFileDrop: 0
   enableDragMove: 1
   pickedColor: {r: 0, g: 0, b: 0, a: 0}
+  KeyColor: {r: 0.007843138, g: 0.003921569, b: 0, a: 0}
+  TransparentType: 1
 --- !u!4 &78305869
 Transform:
   m_ObjectHideFlags: 0
@@ -2568,7 +2570,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.15343858, g: 0.39454708, b: 0.63235295, a: 0}
+  m_BackGroundColor: {r: 0.15294118, g: 0.39607844, b: 0.6313726, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
