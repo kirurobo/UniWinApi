@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -102,6 +102,8 @@ namespace VRMLoader
         [SerializeField]
         TextFields m_texts;
 
+        VRMMetaObject vrmMeta;
+
         static string[] m_textAllowedUser = {"作者のみ", "許可された人限定", "全員に許可"};
         static string[] m_textUsage = {"不許可", "許可"};
         static string[] m_textLicenseType = {
@@ -123,10 +125,13 @@ namespace VRMLoader
             m_textAllowedUser = selections.PermissionAct;
             m_textUsage = selections.PermissionUsage;
             m_textLicenseType = selections.LicenseType;
+
+            if (vrmMeta != null) setMeta(vrmMeta);
         }
         public void setMeta(VRMMetaObject meta)
         {
             m_texts.UpdateMeta(meta);
+            vrmMeta = meta;
         }
 
         public void setLoadable(bool loadable)

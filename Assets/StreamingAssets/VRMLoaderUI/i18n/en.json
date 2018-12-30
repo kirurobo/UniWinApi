@@ -1,7 +1,7 @@
 ﻿{
   "labels": {
     "Headline": "ModelDetail",
-    "Title": "Model name",
+    "Title": "Name",
     "Version": "Version",
     "Author": "Author",
     "Contact": "Author contact URL",

@@ -59,7 +59,7 @@ namespace VRMLoader
 
         private void UpdateText(LocaleText localeText)
         {
-			if (localeText == null) return;
+            if (localeText == null) return;
 
             //var labelsParent = transform.Find("LoadConfirmPanel/Label");
             var labelsParent = transform.Find("Label");
