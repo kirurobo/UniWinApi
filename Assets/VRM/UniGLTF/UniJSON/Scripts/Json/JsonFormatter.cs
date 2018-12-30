@@ -1,23 +1,13 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq.Expressions;
 using System.Globalization;
-#if UNIJSON_PROFILING
-public struct Vector3
-{
-    public float x;
-    public float y;
-    public float z;
-}
-#else
-using UnityEngine;
-#endif
+using System.Linq;
+using System.Text;
+
 
 namespace UniJSON
 {
-    public class JsonFormatter
+    public class JsonFormatter : IFormatter, IRpc
     {
         IStore m_w;
         protected IStore Store
@@ -62,21 +52,21 @@ namespace UniJSON
         string m_colon;
 
         public JsonFormatter(int indent = 0)
-            : this(new StringBuilderStore(new StringBuilder()))
+            : this(new BytesStore(128), indent)
         {
+        }
+
+        public JsonFormatter(IStore w, int indent = 0)
+        {
+            m_w = w;
+            m_stack.Push(new Context(Current.ROOT));
             m_indent = new string(Enumerable.Range(0, indent).Select(x => ' ').ToArray());
             m_colon = indent == 0 ? ":" : ": ";
         }
 
-        public JsonFormatter(IStore w)
-        {
-            m_w = w;
-            m_stack.Push(new Context(Current.ROOT));
-        }
-
         public override string ToString()
         {
-            var bytes = GetStore().Bytes;
+            var bytes = this.GetStoreBytes();
             return Encoding.UTF8.GetString(bytes.Array, bytes.Offset, bytes.Count);
         }
 
@@ -99,7 +89,7 @@ namespace UniJSON
             {
                 case Current.ROOT:
                     {
-                        if (top.Count != 0) throw new JsonFormatException("multiple root value");
+                        if (top.Count != 0) throw new FormatterException("multiple root value");
                     }
                     break;
 
@@ -116,7 +106,7 @@ namespace UniJSON
                     {
                         if (top.Count % 2 == 0)
                         {
-                            if (!isKey) throw new JsonFormatException("key exptected");
+                            if (!isKey) throw new FormatterException("key exptected");
                             if (top.Count != 0)
                             {
                                 m_w.Write(',');
@@ -124,7 +114,7 @@ namespace UniJSON
                         }
                         else
                         {
-                            if (isKey) throw new JsonFormatException("key not exptected");
+                            if (isKey) throw new FormatterException("key not exptected");
                         }
                     }
                     break;
@@ -139,18 +129,18 @@ namespace UniJSON
             m_stack.Push(top);
         }
 
+        static Utf8String s_null = Utf8String.From("null");
         public void Null()
         {
             CommaCheck();
-            m_w.Write("null");
+            m_w.Write(s_null.Bytes);
         }
 
-        public ActionDisposer BeginList()
+        public void BeginList(int _ = 0)
         {
             CommaCheck();
             m_w.Write('[');
             m_stack.Push(new Context(Current.ARRAY));
-            return new ActionDisposer(EndList);
         }
 
         public void EndList()
@@ -163,12 +153,11 @@ namespace UniJSON
             m_stack.Pop();
         }
 
-        public ActionDisposer BeginMap()
+        public void BeginMap(int _ = 0)
         {
             CommaCheck();
             m_w.Write('{');
             m_stack.Push(new Context(Current.OBJECT));
-            return new ActionDisposer(EndMap);
         }
 
         public void EndMap()
@@ -182,63 +171,39 @@ namespace UniJSON
             m_w.Write('}');
         }
 
-        protected virtual System.Reflection.MethodInfo GetMethod<T>(Expression<Func<T>> expression)
+        public void Key(Utf8String key)
         {
-            var formatterType = GetType();
-            var method = formatterType.GetMethod("Value", new Type[] { typeof(T) });
-            return method;
-        }
-
-        public void KeyValue<T>(Expression<Func<T>> expression)
-        {
-            var func = expression.Compile();
-            var value = func();
-            if (value != null)
-            {
-                var body = expression.Body as MemberExpression;
-                if (body == null)
-                {
-                    body = ((UnaryExpression)expression.Body).Operand as MemberExpression;
-                }
-                Key(body.Member.Name);
-
-                var method = GetMethod(expression);
-                method.Invoke(this, new object[] { value });
-            }
-        }
-
-        public void Key(String key)
-        {
-            CommaCheck(true);
-            Indent();
-            m_w.Write(JsonString.Quote(key));
+            _Value(key, true);
             m_w.Write(m_colon);
         }
 
-        public void Value(String key)
+        public void Value(string x)
         {
-            CommaCheck();
-            m_w.Write(JsonString.Quote(key));
+            Value(Utf8String.From(x));
         }
 
+        public void Value(Utf8String key)
+        {
+            _Value(key, false);
+        }
+
+        void _Value(Utf8String key, bool isKey)
+        {
+            CommaCheck(isKey);
+            if (isKey)
+            {
+                Indent();
+            }
+            JsonString.Quote(key, m_w);
+        }
+
+        static Utf8String s_true = Utf8String.From("true");
+        static Utf8String s_false = Utf8String.From("false");
         public void Value(Boolean x)
         {
             CommaCheck();
-            m_w.Write(x ? "true" : "false");
+            m_w.Write(x ? s_true.Bytes : s_false.Bytes);
         }
-
-        public void Value(JsonNode node)
-        {
-            CommaCheck();
-            m_w.Write(node.Value.Segment.ToString());
-        }
-
-        /*
-        public void Value<T>(T x) where T : struct, IConvertible
-        {
-            Value(Convert.ToInt32(x));
-        }
-        */
 
         public void Value(SByte x)
         {
@@ -292,66 +257,8 @@ namespace UniJSON
             CommaCheck();
             m_w.Write(x.ToString("R", CultureInfo.InvariantCulture));
         }
-        public void Value(Vector3 v)
-        {
-            //CommaCheck();
-            BeginMap();
-            Key("x"); Value(v.x);
-            Key("y"); Value(v.y);
-            Key("z"); Value(v.z);
-            EndMap();
-        }
 
-        public void Value(string[] a)
-        {
-            BeginList();
-            foreach (var x in a)
-            {
-                Value(x);
-            }
-            EndList();
-        }
-        public void Value(List<string> a)
-        {
-            BeginList();
-            foreach (var x in a)
-            {
-                Value(x);
-            }
-            EndList();
-        }
-
-        public void Value(double[] a)
-        {
-            BeginList();
-            foreach (var x in a)
-            {
-                Value(x);
-            }
-            EndList();
-        }
-
-        public void Value(float[] a)
-        {
-            BeginList();
-            foreach (var x in a)
-            {
-                Value(x);
-            }
-            EndList();
-        }
-
-        public void Value(int[] a)
-        {
-            BeginList();
-            foreach (var x in a)
-            {
-                Value(x);
-            }
-            EndList();
-        }
-
-        public void Bytes(ArraySegment<Byte> x)
+        public void Value(ArraySegment<Byte> x)
         {
             CommaCheck();
             m_w.Write('"');
@@ -359,15 +266,281 @@ namespace UniJSON
             m_w.Write('"');
         }
 
-        public void Bytes(IEnumerable<byte> raw, int count)
+        // ISO-8601: YYYY-MM-DD“T”hh:mm:ss“Z”
+        public void Value(DateTimeOffset x)
         {
-            Bytes(new ArraySegment<byte>(raw.Take(count).ToArray()));
+            Value(x.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         }
 
-        public void Dump(ArraySegment<Byte> formated)
+        public void Value(ListTreeNode<JsonValue> node)
         {
             CommaCheck();
-            m_w.Write(formated);
+            m_w.Write(node.Value.Bytes);
         }
+
+        #region IRpc
+        int m_nextRequestId = 1;
+
+        static Utf8String s_jsonrpc = Utf8String.From("jsonrpc");
+        static Utf8String s_20 = Utf8String.From("2.0");
+        static Utf8String s_method = Utf8String.From("method");
+        static Utf8String s_params = Utf8String.From("params");
+
+        public void Notify(Utf8String method)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Notify<A0>(Utf8String method, A0 a0)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Notify<A0, A1>(Utf8String method, A0 a0, A1 a1)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Notify<A0, A1, A2>(Utf8String method, A0 a0, A1 a1, A2 a2)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Notify<A0, A1, A2, A3>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+                this.Serialize(a3);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Notify<A0, A1, A2, A3, A4>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+                this.Serialize(a3);
+                this.Serialize(a4);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Notify<A0, A1, A2, A3, A4, A5>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+                this.Serialize(a3);
+                this.Serialize(a4);
+                this.Serialize(a5);
+            }
+            EndList();
+            EndMap();
+        }
+
+        static Utf8String s_id = Utf8String.From("id");
+
+        public void Request(Utf8String method)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Request<A0>(Utf8String method,
+            A0 a0)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Request<A0, A1>(Utf8String method,
+            A0 a0, A1 a1)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Request<A0, A1, A2>(Utf8String method,
+            A0 a0, A1 a1, A2 a2)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Request<A0, A1, A2, A3>(Utf8String method,
+            A0 a0, A1 a1, A2 a2, A3 a3)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+                this.Serialize(a3);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Request<A0, A1, A2, A3, A4>(Utf8String method,
+            A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+                this.Serialize(a3);
+                this.Serialize(a4);
+            }
+            EndList();
+            EndMap();
+        }
+
+        public void Request<A0, A1, A2, A3, A4, A5>(Utf8String method,
+            A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(m_nextRequestId++);
+            Key(s_method); Value(method);
+            Key(s_params); BeginList();
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+                this.Serialize(a2);
+                this.Serialize(a3);
+                this.Serialize(a4);
+                this.Serialize(a5);
+            }
+            EndList();
+            EndMap();
+        }
+
+        static Utf8String s_error = Utf8String.From("error");
+
+        public void ResponseError(int id, Exception error)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(id);
+            Key(s_error); this.Serialize(error);
+            EndMap();
+        }
+
+        static Utf8String s_result = Utf8String.From("result");
+
+        public void ResponseSuccess(int id)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(id);
+            Key(s_result); Null();
+            EndMap();
+        }
+
+        public void ResponseSuccess<T>(int id, T result)
+        {
+            BeginMap();
+            Key(s_jsonrpc); Value(s_20);
+            Key(s_id); Value(id);
+            Key(s_result); this.Serialize(result);
+            EndMap();
+        }
+        #endregion
     }
 }

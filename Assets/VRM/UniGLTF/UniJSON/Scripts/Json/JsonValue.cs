@@ -1,103 +1,111 @@
 ﻿using System;
-using System.Globalization;
 
 
 namespace UniJSON
 {
-    public enum JsonValueType
+    public struct JsonValue : IListTreeItem, IValue<JsonValue>
     {
-        Unknown,
+        public Utf8String Segment;
+        public ArraySegment<Byte> Bytes { get { return Segment.Bytes; } }
 
-        Null,
-        Boolean,
+        public ValueNodeType ValueType
+        {
+            get;
+            private set;
+        }
 
-        Number,
-        String,
+        public int ParentIndex
+        {
+            get;
+            private set;
+        }
 
-        Object,
-        Array,
-
-        Integer, // JsonSchema
-
-        //Close, // internal use
-    }
-
-    public struct JsonValue
-    {
-        public StringSegment Segment;
-        public JsonValueType ValueType;
-        public int ParentIndex;
-
-        public JsonValue(StringSegment segment, JsonValueType valueType, int parentIndex)
+        public JsonValue(Utf8String segment, ValueNodeType valueType, int parentIndex) : this()
         {
             Segment = segment;
             ValueType = valueType;
             ParentIndex = parentIndex;
-            //UnityEngine.Debug.LogFormat("{0}", this.ToString());
         }
 
-        public static readonly JsonValue Empty = new JsonValue
+        public JsonValue New(ArraySegment<byte> bytes, ValueNodeType valueType, int parentIndex)
         {
-            ParentIndex = -1
-        };
+            return new JsonValue(new Utf8String(bytes), valueType, parentIndex);
+        }
+
+        public JsonValue Key(Utf8String key, int parentIndex)
+        {
+            return new JsonValue(JsonString.Quote(key), ValueNodeType.String, parentIndex);
+        }
 
         public override string ToString()
         {
-            //return "[" + ParentIndex + "]" + ValueType + ": " + Segment.ToString();
             switch (ValueType)
             {
-                case JsonValueType.Null: 
-                case JsonValueType.Boolean:
-                case JsonValueType.Integer:
-                case JsonValueType.Number:
-                case JsonValueType.Array:
-                case JsonValueType.Object:
+                case ValueNodeType.Null:
+                case ValueNodeType.Boolean:
+                case ValueNodeType.Integer:
+                case ValueNodeType.Number:
+                case ValueNodeType.Array:
+                case ValueNodeType.Object:
+                case ValueNodeType.String:
+                case ValueNodeType.NaN:
+                case ValueNodeType.Infinity:
+                case ValueNodeType.MinusInfinity:
                     return Segment.ToString();
-
-                case JsonValueType.String:
-                    return GetString();
 
                 default:
                     throw new NotImplementedException();
             }
         }
 
+        static Utf8String s_true = Utf8String.From("true");
+        static Utf8String s_false = Utf8String.From("false");
+
         public Boolean GetBoolean()
         {
-            var s = Segment.ToString();
-            if (s == "true")
+            if (Segment == s_true)
             {
                 return true;
             }
-            else if (s == "false")
+            else if (Segment == s_false)
             {
                 return false;
             }
             else
             {
-                throw new JsonValueException("invalid boolean: " + s);
+                throw new DeserializationException("invalid boolean: " + Segment.ToString());
             }
         }
 
-        public Int32 GetInt32()
-        {
-            return Int32.Parse(Segment.ToString());
-        }
+        public SByte GetSByte() { return Segment.ToSByte(); }
+        public Int16 GetInt16() { return Segment.ToInt16(); }
+        public Int32 GetInt32() { return Segment.ToInt32(); }
+        public Int64 GetInt64() { return Segment.ToInt64(); }
+        public Byte GetByte() { return Segment.ToByte(); }
+        public UInt16 GetUInt16() { return Segment.ToUInt16(); }
+        public UInt32 GetUInt32() { return Segment.ToUInt32(); }
+        public UInt64 GetUInt64() { return Segment.ToUInt64(); }
+        public Single GetSingle() { return Segment.ToSingle(); }
+        public Double GetDouble() { return Segment.ToDouble(); }
+        public String GetString() { return JsonString.Unquote(Segment.ToString()); }
+        public Utf8String GetUtf8String() { return JsonString.Unquote(Segment); }
 
-        public Single GetSingle()
+        public T GetValue<T>()
         {
-            return Single.Parse(Segment.ToString(), CultureInfo.InvariantCulture);
-        }
+            switch (ValueType)
+            {
+                case ValueNodeType.Null: return GenericCast<object, T>.Null();
+                case ValueNodeType.Boolean: return GenericCast<bool, T>.Cast(GetBoolean());
+                case ValueNodeType.Integer: return GenericCast<int, T>.Cast(GetInt32());
+                case ValueNodeType.Number:
+                case ValueNodeType.NaN:
+                case ValueNodeType.Infinity:
+                case ValueNodeType.MinusInfinity:
+                    return GenericCast<double, T>.Cast(GetDouble());
+                case ValueNodeType.String: return GenericCast<string, T>.Cast(GetString());
+            }
 
-        public Double GetDouble()
-        {
-            return Double.Parse(Segment.ToString(), CultureInfo.InvariantCulture);
-        }
-
-        public String GetString()
-        {
-            var quoted = Segment.ToString();
-            return JsonString.Unquote(quoted);
+            throw new NotImplementedException();
         }
     }
 }

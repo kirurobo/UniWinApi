@@ -45,14 +45,14 @@ namespace VRM
             AssetDatabase.Refresh();
         }
 
-        static string GetTitle(JsonNode node)
+        static string GetTitle(ListTreeNode<JsonValue> node)
         {
             try
             {
                 var titleNode = node["title"];
-                if (titleNode.Value.ValueType == JsonValueType.String)
+                if (titleNode.IsString())
                 {
-                    return titleNode.Value.GetString();
+                    return titleNode.GetString();
                 }
             }
             catch(Exception)
@@ -61,7 +61,7 @@ namespace VRM
             return "";
         }
 
-        static void TraverseItem(JsonNode node, JsonFormatter f, UnityPath dir)
+        static void TraverseItem(ListTreeNode<JsonValue> node, JsonFormatter f, UnityPath dir)
         {
             var title = GetTitle(node);
             if (string.IsNullOrEmpty(title))
@@ -82,9 +82,9 @@ namespace VRM
                     var subFormatter = new JsonFormatter(4);
 
                     subFormatter.BeginMap();
-                    foreach (var _kv in node.ObjectItems)
+                    foreach (var _kv in node.ObjectItems())
                     {
-                        subFormatter.Key(_kv.Key);
+                        subFormatter.Key(_kv.Key.GetUtf8String());
                         Traverse(_kv.Value, subFormatter, dir);
                     }
                     subFormatter.EndMap();
@@ -96,39 +96,34 @@ namespace VRM
             }
         }
 
-        static void Traverse(JsonNode node, JsonFormatter f, UnityPath dir)
+        static void Traverse(ListTreeNode<JsonValue> node, JsonFormatter f, UnityPath dir)
         {
-            switch(node.Value.ValueType)
+            if (node.IsArray())
             {
-                case JsonValueType.Array:
-                    f.BeginList();
-                    foreach(var x in node.ArrayItems)
-                    {
-                        TraverseItem(x, f, dir);
-                    }
-                    f.EndList();
-                    break;
-
-                case JsonValueType.Object:
-                    //Debug.LogFormat("title: {0}", title);
-                    {
-                        f.BeginMap();
-                        foreach (var kv in node.ObjectItems)
-                        {
-                            f.Key(kv.Key);
-                            TraverseItem(kv.Value, f, dir);
-                        }
-                        f.EndMap();
-                    }
-                    break;
-
-                default:
-                    f.Value(node);
-                    break;
+                f.BeginList();
+                foreach (var x in node.ArrayItems())
+                {
+                    TraverseItem(x, f, dir);
+                }
+                f.EndList();
+            }
+            else if (node.IsMap())
+            {
+                f.BeginMap();
+                foreach (var kv in node.ObjectItems())
+                {
+                    f.Key(kv.Key.GetUtf8String());
+                    TraverseItem(kv.Value, f, dir);
+                }
+                f.EndMap();
+            }
+            else
+            {
+                f.Value(node);
             }
         }
 
-        static UnityPath SplitAndWriteJson(JsonNode parsed, UnityPath dir)
+        static UnityPath SplitAndWriteJson(ListTreeNode<JsonValue> parsed, UnityPath dir)
         {
             var f = new JsonFormatter(4);
             Traverse(parsed, f, dir);

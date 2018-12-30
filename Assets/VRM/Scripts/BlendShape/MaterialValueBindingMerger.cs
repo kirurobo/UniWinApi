@@ -28,11 +28,11 @@ namespace VRM
 
         Dictionary<MaterialValueBinding, Setter> m_materialSetterMap = new Dictionary<MaterialValueBinding, Setter>();
 
-        BlendShapeClip[] m_clips;
+        //BlendShapeClip[] m_clips;
 
         public MaterialValueBindingMerger(Dictionary<BlendShapeKey, BlendShapeClip> clipMap, Transform root)
         {
-            m_clips = clipMap.Values.ToArray();
+            //m_clips = clipMap.Values.ToArray();
 
             foreach (var x in root.Traverse())
             {
@@ -173,14 +173,87 @@ namespace VRM
             }
         }
 
+        struct MaterialTarget : IEquatable<MaterialTarget>
+        {
+            public string MaterialName;
+            public string ValueName;
+
+            public bool Equals(MaterialTarget other)
+            {
+                return MaterialName == other.MaterialName
+                    && ValueName == other.ValueName;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is MaterialTarget)
+                {
+                    return Equals((MaterialTarget)obj);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            public override int GetHashCode()
+            {
+                if (MaterialName == null || ValueName == null)
+                {
+                    return 0;
+                }
+                return MaterialName.GetHashCode() + ValueName.GetHashCode();
+            }
+
+            public static MaterialTarget Create(MaterialValueBinding binding)
+            {
+                return new MaterialTarget
+                {
+                    MaterialName=binding.MaterialName,
+                    ValueName=binding.ValueName
+                };
+            }
+        }
+
+        HashSet<MaterialTarget> m_used = new HashSet<MaterialTarget>();
+
         public void Apply()
         {
             // clear
-            RestoreMaterialInitialValues(m_clips);
+            //RestoreMaterialInitialValues(m_clips);
+            m_used.Clear();
 
             // (binding.Value-Base) * weight を足す
             foreach (var kv in m_materialValueMap)
             {
+                var key = MaterialTarget.Create(kv.Key);
+                if (!m_used.Contains(key))
+                {
+                    // restore value
+                    Material material;
+                    if (m_materialMap.TryGetValue(key.MaterialName, out material))
+                    {
+                        var value = kv.Key.BaseValue;
+                        var valueName = key.ValueName;
+                        if (valueName.EndsWith("_ST_S"))
+                        {
+                            valueName = valueName.Substring(0, valueName.Length - 2);
+                            var v=material.GetVector(valueName);
+                            value.y = v.y;
+                            value.w = v.w;
+                        }
+                        else if (valueName.EndsWith("_ST_T"))
+                        {
+                            valueName = valueName.Substring(0, valueName.Length - 2);
+                            var v = material.GetVector(valueName);
+                            value.x = v.x;
+                            value.z = v.z;
+                        }
+                        material.SetColor(valueName, value);
+                    }
+                    m_used.Add(key);
+                }
+
                 Setter setter;
                 if (m_materialSetterMap.TryGetValue(kv.Key, out setter))
                 {

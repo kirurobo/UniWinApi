@@ -90,7 +90,7 @@ namespace UniJSON
             return true;
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             switch (key)
             {
@@ -118,7 +118,20 @@ namespace UniJSON
             return false;
         }
 
-        public void Assign(IJsonSchemaValidator obj)
+        public void ToJsonScheama(IFormatter f)
+        {
+            f.Key("type"); f.Value("integer");
+            if (Minimum.HasValue)
+            {
+                f.Key("minimum"); f.Value(Minimum.Value);
+            }
+            if (Maximum.HasValue)
+            {
+                f.Key("maximum"); f.Value(Maximum.Value);
+            }
+        }
+
+        public void Merge(IJsonSchemaValidator obj)
         {
             var rhs = obj as JsonIntValidator;
             if (rhs == null)
@@ -133,11 +146,11 @@ namespace UniJSON
             ExclusiveMinimum = rhs.ExclusiveMinimum;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
+        public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
         {
             try
             {
-                var value = (int)o;
+                var value = GenericCast<T, int>.Cast(o);
 
                 if (Minimum.HasValue)
                 {
@@ -191,7 +204,7 @@ namespace UniJSON
                     }
                 }
 
-                if(MultipleOf.HasValue && value % MultipleOf.Value != 0)
+                if (MultipleOf.HasValue && value % MultipleOf.Value != 0)
                 {
                     return new JsonSchemaValidationException(c, string.Format("multipleOf: {0}%{1}", value, MultipleOf.Value));
                 }
@@ -204,14 +217,15 @@ namespace UniJSON
             }
         }
 
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, object o)
+        public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T o)
         {
-            f.Value((int)o);
+            f.Serialize(GenericCast<T, int>.Cast(o));
         }
 
-        public void ToJson(JsonFormatter f)
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+            where T : IListTreeItem, IValue<T>
         {
-            f.Key("type"); f.Value("integer");
+            dst = GenericCast<int, U>.Cast(src.GetInt32());
         }
     }
 
@@ -279,12 +293,12 @@ namespace UniJSON
             return true;
         }
 
-        public void Assign(IJsonSchemaValidator rhs)
+        public void Merge(IJsonSchemaValidator rhs)
         {
             throw new NotImplementedException();
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             switch (key)
             {
@@ -312,7 +326,20 @@ namespace UniJSON
             return false;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
+        public void ToJsonScheama(IFormatter f)
+        {
+            f.Key("type"); f.Value("number");
+            if (Minimum.HasValue)
+            {
+                f.Key("minimum"); f.Value(Minimum.Value);
+            }
+            if (Maximum.HasValue)
+            {
+                f.Key("maximum"); f.Value(Maximum.Value);
+            }
+        }
+
+        public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
         {
             try
             {
@@ -383,20 +410,21 @@ namespace UniJSON
 
                 return null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new JsonSchemaValidationException(c, ex);
             }
         }
 
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, object o)
-        {           
-            f.Value(Convert.ToDouble(o));
+        public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T o)
+        {
+            f.Serialize(o);
         }
 
-        public void ToJson(JsonFormatter f)
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+            where T : IListTreeItem, IValue<T>
         {
-            f.Key("type"); f.Value("number");
+            dst = GenericCast<double, U>.Cast(src.GetDouble());
         }
     }
 }

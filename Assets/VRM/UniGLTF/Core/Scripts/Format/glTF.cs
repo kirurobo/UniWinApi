@@ -328,10 +328,7 @@ namespace UniGLTF
         public List<glTFCamera> cameras = new List<glTFCamera>();
 
         [JsonSchema(MinItems = 1)]
-        public List<string> extensionsUsed = new List<string>
-        {
-            glTF_KHR_materials_unlit.ExtensionName,
-        };
+        public List<string> extensionsUsed = new List<string>();
 
         [JsonSchema(MinItems = 1)]
         public List<string> extensionsRequired = new List<string>();
@@ -446,7 +443,62 @@ namespace UniGLTF
                 ;
         }
 
-        public byte[] ToGlbBytes(bool UseUniJSONSerializer=false)
+        bool UsedExtension(string key)
+        {
+            if (extensionsUsed.Contains(key))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        static Utf8String s_extensions = Utf8String.From("extensions");
+
+        void Traverse(ListTreeNode<JsonValue> node, JsonFormatter f, Utf8String parentKey)
+        {
+            if(node.IsMap())
+            {
+                f.BeginMap();
+                foreach(var kv in node.ObjectItems())
+                {
+                    if (parentKey == s_extensions)
+                    {
+                        if (!UsedExtension(kv.Key.GetString()))
+                        {
+                            continue;
+                        }
+                    }
+                    f.Key(kv.Key.GetUtf8String());
+                    Traverse(kv.Value, f, kv.Key.GetUtf8String());
+                }
+                f.EndMap();
+            }
+            else if(node.IsArray())
+            {
+                f.BeginList();
+                foreach(var x in node.ArrayItems())
+                {
+                    Traverse(x, f, default(Utf8String));
+                }
+                f.EndList();
+            }
+            else
+            {
+                f.Value(node);
+            }
+        }
+
+        string RemoveUnusedExtensions(string json)
+        {
+            var f = new JsonFormatter();
+
+            Traverse(JsonParser.Parse(json), f, default(Utf8String));
+
+            return f.ToString();
+        }
+
+        public byte[] ToGlbBytes(bool UseUniJSONSerializer = false)
         {
             string json;
             if (UseUniJSONSerializer)
@@ -458,31 +510,9 @@ namespace UniGLTF
                 json = ToJson();
             }
 
-            var buffer = buffers[0];
-            using (var s = new MemoryStream())
-            {
-                GlbHeader.WriteTo(s);
+            RemoveUnusedExtensions(json);
 
-                var pos = s.Position;
-                s.Position += 4; // skip total size
-
-                int size = 12;
-
-                {
-                    var chunk = new GlbChunk(json);
-                    size += chunk.WriteTo(s);
-                }
-                {
-                    var chunk = new GlbChunk(buffer.GetBytes());
-                    size += chunk.WriteTo(s);
-                }
-
-                s.Position = pos;
-                var bytes = BitConverter.GetBytes(size);
-                s.Write(bytes, 0, bytes.Length);
-
-                return s.ToArray();
-            }
+            return Glb.ToBytes(json, buffers[0].GetBytes());
         }
     }
 }

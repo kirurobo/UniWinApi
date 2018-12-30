@@ -9,7 +9,7 @@ using DepthFirstScheduler;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-#if (NET_4_6 && UNITY_2017_1_OR_NEWER)
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
 using System.Threading.Tasks;
 #endif
 
@@ -19,9 +19,19 @@ namespace UniGLTF
     /// <summary>
     /// GLTF importer
     /// </summary>
-    public class ImporterContext
+    public class ImporterContext: IDisposable
     {
         #region MeasureTime
+        bool m_showSpeedLog
+#if UNIGLTF_DEVELOP
+            = true
+#endif
+            ;
+        public bool ShowSpeedLog
+        {
+            set { m_showSpeedLog = value; }
+        }
+
         public struct KeyElapsed
         {
             public string Key;
@@ -273,14 +283,14 @@ namespace UniGLTF
 
         void RestoreOlderVersionValues()
         {
-            var parsed = UniJSON.JSON.Parse(Json);
+            var parsed = UniJSON.JsonParser.Parse(Json);
             for (int i = 0; i < GLTF.images.Count; ++i)
             {
                 if (string.IsNullOrEmpty(GLTF.images[i].name))
                 {
                     try
                     {
-                        var extraName = parsed["images"][i]["extra"]["name"].Value;
+                        var extraName = parsed["images"][i]["extra"]["name"].Value.GetString();
                         if (!string.IsNullOrEmpty(extraName))
                         {
                             //Debug.LogFormat("restore texturename: {0}", extraName);
@@ -303,7 +313,7 @@ namespace UniGLTF
                         var primitive = mesh.primitives[j];
                         for (int k = 0; k < primitive.targets.Count; ++k)
                         {
-                            var extraName = parsed["meshes"][i]["primitives"][j]["targets"][k]["extra"]["name"].Value;
+                            var extraName = parsed["meshes"][i]["primitives"][j]["targets"][k]["extra"]["name"].Value.GetString();
                             //Debug.LogFormat("restore morphName: {0}", extraName);
                             primitive.extras.targetNames.Add(extraName);
                         }
@@ -400,11 +410,22 @@ namespace UniGLTF
             schedulable.ExecuteAll();
         }
 
-        public IEnumerator LoadCoroutine(Action<Unit> onLoaded = null, Action<Exception> onError = null)
+        [Obsolete("Action<Unit> to Action")]
+        public IEnumerator LoadCoroutine(Action<Unit> onLoaded, Action<Exception> onError = null)
+        {
+            return LoadCoroutine(() => onLoaded(Unit.Default), onError);
+        }
+
+        public IEnumerator LoadCoroutine(Action<Exception> onError = null)
+        {
+            return LoadCoroutine(() => { }, onError);
+        }
+
+        public IEnumerator LoadCoroutine(Action onLoaded, Action<Exception> onError = null)
         {
             if (onLoaded == null)
             {
-                onLoaded = _ => { };
+                onLoaded = () => { };
             }
 
             if (onError == null)
@@ -425,9 +446,17 @@ namespace UniGLTF
                     yield return null;
                 }
             }
+
+            onLoaded();
         }
 
+        [Obsolete("Action<Unit> to Action")]
         public void LoadAsync(Action<Unit> onLoaded, Action<Exception> onError = null)
+        {
+            LoadAsync(() => onLoaded(Unit.Default), onError);
+        }
+
+        public void LoadAsync(Action onLoaded, Action<Exception> onError = null)
         {
             if (onError == null)
             {
@@ -436,15 +465,16 @@ namespace UniGLTF
 
             LoadAsync()
                 .Subscribe(Scheduler.MainThread,
-                onLoaded,
+                _ => onLoaded(),
                 onError
                 );
         }
 
-#if (NET_4_6 && UNITY_2017_1_OR_NEWER)
-        public Task<Unit> LoadAsyncTask()
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
+        public async Task<GameObject> LoadAsyncTask()
         {
-            return LoadAsync().ToTask();
+            await LoadAsync().ToTask();
+            return Root;
         }
 #endif
 
@@ -532,7 +562,10 @@ namespace UniGLTF
                     _ =>
                     {
                         OnLoadModel();
-                        Debug.Log(GetSpeedLog());
+                        if (m_showSpeedLog)
+                        {
+                            Debug.Log(GetSpeedLog());
+                        }
                         return Unit.Default;
                     });
         }
@@ -717,11 +750,9 @@ namespace UniGLTF
             }
         }
 
-        public AnimationClip Animation;
-#endregion
+        public List<AnimationClip> AnimationClips = new List<AnimationClip>();
+        #endregion
 
-#if UNITY_EDITOR
-#region Assets
         protected virtual IEnumerable<UnityEngine.Object> ObjectsForSubAsset()
         {
             HashSet<Texture2D> textures = new HashSet<Texture2D>();
@@ -735,9 +766,11 @@ namespace UniGLTF
             foreach (var x in textures) { yield return x; }
             foreach (var x in m_materials) { yield return x; }
             foreach (var x in Meshes) { yield return x.Mesh; }
-            if (Animation != null) yield return Animation;
+            foreach (var x in AnimationClips) { yield return x; }
         }
 
+#if UNITY_EDITOR
+        #region Assets
         public bool MeshAsSubAsset = false;
 
         protected virtual UnityPath GetAssetPath(UnityPath prefabPath, UnityEngine.Object o)
@@ -764,6 +797,16 @@ namespace UniGLTF
             {
                 return default(UnityPath);
             }
+        }
+
+        public virtual bool IsOverwrite(UnityEngine.Object o)
+        {
+            if(o is Material)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public void SaveAsAsset(UnityPath prefabPath)
@@ -793,6 +836,15 @@ namespace UniGLTF
                 var assetPath = GetAssetPath(prefabPath, o);
                 if (!assetPath.IsNull)
                 {
+                    if (assetPath.IsFileExists)
+                    {
+                        if (!IsOverwrite(o))
+                        {
+                            // 上書きしない
+                            Debug.LogWarningFormat("already exists. skip {0}", assetPath);
+                            continue;
+                        }
+                    }
                     assetPath.Parent.EnsureFolder();
                     assetPath.CreateAsset(o);
                     paths.Add(assetPath);
@@ -872,9 +924,14 @@ namespace UniGLTF
 
             CreateTextureItems(prefabParentDir);
         }
-#endregion
+        #endregion
 #endif
 
+        /// <summary>
+        /// This function is used for clean up after create assets.
+        /// </summary>
+        /// <param name="destroySubAssets">Ambiguous arguments</param>
+        [Obsolete("Use Dispose for runtime loader resource management")]
         public void Destroy(bool destroySubAssets)
         {
             if (Root != null) GameObject.DestroyImmediate(Root);
@@ -888,5 +945,55 @@ namespace UniGLTF
 #endif
             }
         }
+
+        public void Dispose()
+        {
+            DestroyRootAndResources();
+        }
+
+        /// <summary>
+        /// Destroy resources that created ImporterContext for runtime load.
+        /// </summary>
+        public void DestroyRootAndResources()
+        { 
+            if (!Application.isPlaying)
+            {
+                Debug.LogWarningFormat("Dispose called in editor mode. This function is for runtime");
+            }
+
+            // Remove hierarchy
+            if (Root != null) GameObject.Destroy(Root);
+
+            // Remove resources. materials, textures meshes etc...
+            foreach (var o in ObjectsForSubAsset())
+            {
+                UnityEngine.Object.DestroyImmediate(o, true);
+            }
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Destroy the GameObject that became the basis of Prefab
+        /// </summary>
+        public void EditorDestroyRoot()
+        {
+            if (Root != null) GameObject.DestroyImmediate(Root);
+        }
+
+        /// <summary>
+        /// Destroy assets that created ImporterContext. This function is clean up for imoprter error.
+        /// </summary>
+        public void EditorDestroyRootAndAssets()
+        {
+            // Remove hierarchy
+            if (Root != null) GameObject.DestroyImmediate(Root);
+
+            // Remove resources. materials, textures meshes etc...
+            foreach (var o in ObjectsForSubAsset())
+            {
+                UnityEngine.Object.DestroyImmediate(o, true);
+            }
+        }
+#endif
     }
 }

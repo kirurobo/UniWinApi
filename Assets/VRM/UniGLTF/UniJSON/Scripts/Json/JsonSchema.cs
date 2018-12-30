@@ -153,7 +153,14 @@ namespace UniJSON
 
             if (a.EnumValues != null)
             {
-                validator = JsonEnumValidator.Create(a.EnumValues);
+                try
+                {
+                    validator = JsonEnumValidator.Create(a.EnumValues, a.EnumSerializationType);
+                }
+                catch (Exception)
+                {
+                    throw new Exception(String.Join(", ", a.EnumValues.Select(x => x.ToString()).ToArray()));
+                }
             }
             else if (t.IsEnum)
             {
@@ -177,11 +184,11 @@ namespace UniJSON
         #endregion
 
         #region FromJson
-        static JsonValueType ParseValueType(string type)
+        static ValueNodeType ParseValueType(string type)
         {
             try
             {
-                return (JsonValueType)Enum.Parse(typeof(JsonValueType), type, true);
+                return (ValueNodeType)Enum.Parse(typeof(ValueNodeType), type, true);
             }
             catch (ArgumentException)
             {
@@ -191,16 +198,17 @@ namespace UniJSON
 
         Stack<string> m_context = new Stack<string>();
 
-        public void Parse(IFileSystemAccessor fs, JsonNode root, string Key)
+        static Utf8String s_ref = Utf8String.From("$ref");
+
+        public void Parse(IFileSystemAccessor fs, ListTreeNode<JsonValue> root, string Key)
         {
             m_context.Push(Key);
 
             var compositionType = default(CompositionType);
             var composition = new List<JsonSchema>();
-            foreach (var kv in root.ObjectItems)
+            foreach (var kv in root.ObjectItems())
             {
-                //Console.WriteLine(kv.Key);
-                switch (kv.Key)
+                switch (kv.Key.GetString())
                 {
                     case "$schema":
                         Schema = kv.Value.GetString();
@@ -228,14 +236,17 @@ namespace UniJSON
                         break;
 
                     case "default":
-                        Default = kv.Value.Value.Segment;
+                        Default = kv.Value;
                         break;
                     #endregion
 
                     #region Validation
                     // http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.1
                     case "type":
-                        Validator = JsonSchemaValidatorFactory.Create(kv.Value.GetString());
+                        if (Validator == null)
+                        {
+                            Validator = JsonSchemaValidatorFactory.Create(kv.Value.GetString());
+                        }
                         break;
 
                     case "enum":
@@ -257,12 +268,12 @@ namespace UniJSON
                     case "anyOf": // composition
                     case "allOf": // composition
                         {
-                            compositionType = (CompositionType)Enum.Parse(typeof(CompositionType), kv.Key, true);
-                            foreach (var item in kv.Value.ArrayItems)
+                            compositionType = (CompositionType)Enum.Parse(typeof(CompositionType), kv.Key.GetString(), true);
+                            foreach (var item in kv.Value.ArrayItems())
                             {
-                                if (item.ContainsKey("$ref"))
+                                if (item.ContainsKey(s_ref))
                                 {
-                                    var sub = JsonSchema.ParseFromPath(fs.Get(item["$ref"].GetString()));
+                                    var sub = JsonSchema.ParseFromPath(fs.Get(item[s_ref].GetString()));
                                     composition.Add(sub);
                                 }
                                 else
@@ -296,7 +307,7 @@ namespace UniJSON
                         {
                             if (Validator != null)
                             {
-                                if (Validator.Parse(fs, kv.Key, kv.Value))
+                                if (Validator.FromJsonSchema(fs, kv.Key.GetString(), kv.Value))
                                 {
                                     continue;
                                 }
@@ -323,12 +334,12 @@ namespace UniJSON
                         // inheritance
                         if (Validator == null)
                         {
-                            //Validator = JsonSchemaValidatorFactory.Create(composition[0].Validator.JsonValueType);
+                            //Validator = JsonSchemaValidatorFactory.Create(composition[0].Validator.ValueNodeType);
                             Validator = composition[0].Validator;
                         }
                         else
                         {
-                            Validator.Assign(composition[0].Validator);
+                            Validator.Merge(composition[0].Validator);
                         }
                     }
                     else
@@ -349,7 +360,7 @@ namespace UniJSON
                         {
                             // extend enum
                             // enum, enum..., type
-                            Validator = JsonEnumValidator.Create(composition);
+                            Validator = JsonEnumValidator.Create(composition, EnumSerializationType.AsString);
                         }
                     }
                     //throw new NotImplementedException();
@@ -373,7 +384,7 @@ namespace UniJSON
         }
         #endregion
 
-        public string Serialize(Object o)
+        public void Serialize<T>(IFormatter f, T o)
         {
             var c = new JsonSchemaValidationContext(o);
 
@@ -383,18 +394,26 @@ namespace UniJSON
                 throw ex;
             }
 
-            var f = new JsonFormatter();
             Validator.Serialize(f, c, o);
-            return f.ToString();
         }
 
-        public void ToJson(JsonFormatter f)
+        public void ToJson(IFormatter f)
         {
-            f.BeginMap();
+            f.BeginMap(2);
             if (!string.IsNullOrEmpty(Title)) { f.Key("title"); f.Value(Title); }
             if (!string.IsNullOrEmpty(Description)) { f.Key("description"); f.Value(Description); }
-            Validator.ToJson(f);
+            Validator.ToJsonScheama(f);
             f.EndMap();
+        }
+    }
+
+    public static class JsonSchemaExtensions
+    {
+        public static string Serialize<T>(this JsonSchema s, T o)
+        {
+            var f = new JsonFormatter();
+            s.Serialize(f, o);
+            return f.ToString();
         }
     }
 }

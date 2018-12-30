@@ -21,12 +21,24 @@ namespace Kirurobo
 		public Button quitButton;
 		public Text titleText;
 
+		public Dropdown languageDropdown;
+
+		public Button tabButtonModel;
+		public Button tabButtonControl;
+		public RectTransform modelPanel;
+		public RectTransform controlPanel;
+
 		private float mouseMoveSS = 0f;             // Sum of mouse trajectory squares. [px^2]
 		private float mouseMoveSSThreshold = 16f;   // Threshold to be regarded as not moving. [px^2]
 		private Vector3 lastMousePosition;
 
 		private bool isDebugMode = false;   // Show debug Info.
 
+		private VRMLoader.VRMPreviewLocale locale;
+		private VRMLoader.VRMPreviewUI vrmLoaderUI;
+
+		private static readonly Color UnfocusedTabColor = new Color(0.75f, 0.75f, 0.75f, 1f);
+		private static readonly Color FocusedTabColor = Color.white;
 
 		/// <summary>
 		/// Use this for initialization
@@ -35,29 +47,43 @@ namespace Kirurobo
 		{
 
 			windowController = FindObjectOfType<WindowController>();
-			windowController.OnStateChange += windowController_OnStateChanged;
+			windowController.OnStateChanged += windowController_OnStateChanged;
 
-			if (!panel)
-			{
-				panel = GetComponentInChildren<RectTransform>();
-			}
-			if (!informationText)
-			{
-				informationText = GetComponentInChildren<Text>();
-			}
+			locale = this.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
+			vrmLoaderUI = this.GetComponentInChildren<VRMLoader.VRMPreviewUI>();
 
 			// Initialize toggles.
 			UpdateUI();
 
 			// Set event listeners.
-			if (closeButton) { closeButton.onClick.AddListener(Close); }
+			if (closeButton) { closeButton.onClick.AddListener(Close);  }
 			if (quitButton) { quitButton.onClick.AddListener(Quit); }
 			if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
 			if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
 			if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
+			if (tabButtonModel) { tabButtonModel.onClick.AddListener(ShowModelTab); }
+			if (tabButtonControl) { tabButtonControl.onClick.AddListener(ShowControlTab); }
+			if (languageDropdown) { languageDropdown.onValueChanged.AddListener(val => SetLanguage(val)); }
+
+			ShowModelTab();
 
 			// Show menu on startup.
 			Show(null);
+		}
+
+		private void SetLanguage(int no)
+		{
+			if (!locale) return;
+
+			switch (no)
+			{
+				case 0:
+					locale.SetLocale("en");
+					break;
+				case 1:
+					locale.SetLocale("ja");
+					break;
+			}
 		}
 
 		private void windowController_OnStateChanged()
@@ -98,6 +124,24 @@ namespace Kirurobo
 		// Quit application for the standalone player
 		Application.Quit();
 #endif
+		}
+
+		private void ShowModelTab()
+		{
+			if (modelPanel) { modelPanel.gameObject.SetActive(true); }
+			if (controlPanel) { controlPanel.gameObject.SetActive(false); }
+
+			if (tabButtonControl) { tabButtonControl.image.color = UnfocusedTabColor; }
+			if (tabButtonModel) { tabButtonModel.image.color = FocusedTabColor; }
+		}
+
+		private void ShowControlTab()
+		{
+			if (controlPanel) { controlPanel.gameObject.SetActive(true); }
+			if (modelPanel) { modelPanel.gameObject.SetActive(false); }
+
+			if (tabButtonControl) { tabButtonControl.image.color = FocusedTabColor; }
+			if (tabButtonModel) { tabButtonModel.image.color = UnfocusedTabColor; }
 		}
 
 		/// <summary>
@@ -181,39 +225,7 @@ namespace Kirurobo
 		{
 			if (meta)
 			{
-				if (informationText)
-				{
-					string text = string.Format(
-						"Title:{0}\nVer.:{1}\nAuthor:{2}\nAllowedUser:{3}\nLicense:{4} {5}\n",
-						meta.Title,
-						meta.Version,
-						meta.Author,
-						meta.AllowedUser,
-						meta.LicenseType,
-						meta.OtherLicenseUrl
-						);
-					informationText.text = text;
-				}
-				else
-				{
-					informationText.text = "Drop a VRM file here!";
-				}
-
-				if (warningText)
-				{
-					if (meta.AllowedUser == VRM.AllowedUser.Everyone)
-					{
-						warningText.text = "";
-					}
-					else if (meta.AllowedUser == VRM.AllowedUser.OnlyAuthor)
-					{
-						warningText.text = "Only the author is permitted to perform.";
-					}
-					else
-					{
-						warningText.text = "Only the explicitly licensed person is permitted to perform.";
-					}
-				}
+				if (vrmLoaderUI) vrmLoaderUI.setMeta(meta);
 			}
 
 			Show();

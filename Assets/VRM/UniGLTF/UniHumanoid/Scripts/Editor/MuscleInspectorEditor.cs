@@ -41,11 +41,11 @@ namespace UniHumanoid
 
     class BoneTreeViewItem : TreeViewItem
     {
-        HumanBodyBones m_bone;
+        //HumanBodyBones m_bone;
 
         public BoneTreeViewItem(int id, int depth, HumanBodyBones bone) : base(id, depth, bone.ToString())
         {
-            m_bone = bone;
+            //m_bone = bone;
         }
     }
 

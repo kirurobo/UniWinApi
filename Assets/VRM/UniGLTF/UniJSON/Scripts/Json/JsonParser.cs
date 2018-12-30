@@ -11,18 +11,32 @@ namespace UniJSON
 
     public static class JsonParser
     {
-        static JsonValueType GetValueType(StringSegment segment)
+        static ValueNodeType GetValueType(Utf8String segment)
         {
-            switch (segment[0])
+            switch (Char.ToLower((char)segment[0]))
             {
-                case '{': return JsonValueType.Object;
-                case '[': return JsonValueType.Array;
-                case '"': return JsonValueType.String;
-                case 't': return JsonValueType.Boolean;
-                case 'f': return JsonValueType.Boolean;
-                case 'n': return JsonValueType.Null;
+                case '{': return ValueNodeType.Object;
+                case '[': return ValueNodeType.Array;
+                case '"': return ValueNodeType.String;
+                case 't': return ValueNodeType.Boolean;
+                case 'f': return ValueNodeType.Boolean;
+                case 'n':
+                    if (segment.ByteLength >= 2 && Char.ToLower((char) segment[1]) == 'a')
+                    {
+                        return ValueNodeType.NaN;
+                    }
 
-                case '-': // fall through
+                    return ValueNodeType.Null;
+
+                case 'i':
+                    return ValueNodeType.Infinity;
+
+                case '-':
+                    if (segment.ByteLength >= 2 && Char.ToLower((char) segment[1]) == 'i')
+                    {
+                        return ValueNodeType.MinusInfinity;
+                    }
+                    goto case '0';// fall through
                 case '0': // fall through
                 case '1': // fall through
                 case '2': // fall through
@@ -36,25 +50,32 @@ namespace UniJSON
                     {
                         if (segment.IsInt)
                         {
-                            return JsonValueType.Integer;
+                            return ValueNodeType.Integer;
                         }
                         else
                         {
-                            return JsonValueType.Number;
+                            return ValueNodeType.Number;
                         }
                     }
 
                 default:
-                    throw new JsonParseException(segment + " is not valid json start");
+                    throw new ParserException(segment + " is not valid json start");
             }
         }
 
-        static JsonValue ParsePrimitive(StringSegment segment, JsonValueType valueType, int parentIndex)
+        /// <summary>
+        /// Expected null, boolean, integer, number
+        /// </summary>
+        /// <param name="segment"></param>
+        /// <param name="valueType"></param>
+        /// <param name="parentIndex"></param>
+        /// <returns></returns>
+        static JsonValue ParsePrimitive(Utf8String segment, ValueNodeType valueType, int parentIndex)
         {
             int i = 1;
-            for (; i < segment.Count; ++i)
+            for (; i < segment.ByteLength; ++i)
             {
-                if (Char.IsWhiteSpace(segment[i])
+                if (Char.IsWhiteSpace((char)segment[i])
                     || segment[i] == '}'
                     || segment[i] == ']'
                     || segment[i] == ','
@@ -64,63 +85,37 @@ namespace UniJSON
                     break;
                 }
             }
-            return new JsonValue(segment.Take(i), valueType, parentIndex);
+            return new JsonValue(segment.Subbytes(0, i), valueType, parentIndex);
         }
 
-        static JsonValue ParseString(StringSegment segment, int parentIndex)
+        static JsonValue ParseString(Utf8String segment, int parentIndex)
         {
-            int i = 1;
-            for (; i < segment.Count; ++i)
+            int pos;
+            if (segment.TrySearchAscii((Byte)'"', 1, out pos))
             {
-                if (segment[i] == '\"')
-                {
-                    return new JsonValue(segment.Take(i + 1), JsonValueType.String, parentIndex);
-                }
-                else if (segment[i] == '\\')
-                {
-                    switch (segment[i + 1])
-                    {
-                        case '"': // fall through
-                        case '\\': // fall through
-                        case '/': // fall through
-                        case 'b': // fall through
-                        case 'f': // fall through
-                        case 'n': // fall through
-                        case 'r': // fall through
-                        case 't': // fall through
-                                  // skip next
-                            i += 1;
-                            break;
-
-                        case 'u': // unicode
-                                  // skip next 4
-                            i += 4;
-                            break;
-
-                        default:
-                            // unkonw escape
-                            throw new JsonParseException("unknown escape: " + segment.Skip(i));
-                    }
-                }
+                return new JsonValue(segment.Subbytes(0, pos + 1), ValueNodeType.String, parentIndex);
             }
-            throw new JsonParseException("no close string: " + segment.Skip(i));
+            else
+            {
+                throw new ParserException("no close string: " + segment);
+            }
         }
 
-        static StringSegment ParseArray(StringSegment segment, List<JsonValue> values, int parentIndex)
+        static Utf8String ParseArray(Utf8String segment, List<JsonValue> values, int parentIndex)
         {
             var closeChar = ']';
             bool isFirst = true;
-            var current = segment.Skip(1);
+            var current = segment.Subbytes(1);
             while (true)
             {
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearch(x => !Char.IsWhiteSpace(x), out nextToken))
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
                     {
-                        throw new JsonParseException("no white space expected");
+                        throw new ParserException("no white space expected");
                     }
-                    current = current.Skip(nextToken);
+                    current = current.Subbytes(nextToken);
                 }
 
                 {
@@ -139,46 +134,46 @@ namespace UniJSON
                 {
                     // search ',' or closeChar
                     int keyPos;
-                    if (!current.TrySearch(x => x == ',', out keyPos))
+                    if (!current.TrySearchByte(x => x == ',', out keyPos))
                     {
-                        throw new JsonParseException("',' expected");
+                        throw new ParserException("',' expected");
                     }
-                    current = current.Skip(keyPos + 1);
+                    current = current.Subbytes(keyPos + 1);
                 }
 
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearch(x => !Char.IsWhiteSpace(x), out nextToken))
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
                     {
-                        throw new JsonParseException("not whitespace expected");
+                        throw new ParserException("not whitespace expected");
                     }
-                    current = current.Skip(nextToken);
+                    current = current.Subbytes(nextToken);
                 }
 
                 // value
                 var value = Parse(current, values, parentIndex);
-                current = current.Skip(value.Segment.Count);
+                current = current.Subbytes(value.Segment.ByteLength);
             }
 
             return current;
         }
 
-        static StringSegment ParseObject(StringSegment segment, List<JsonValue> values, int parentIndex)
+        static Utf8String ParseObject(Utf8String segment, List<JsonValue> values, int parentIndex)
         {
             var closeChar = '}';
             bool isFirst = true;
-            var current = segment.Skip(1);
+            var current = segment.Subbytes(1);
             while (true)
             {
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearch(x => !Char.IsWhiteSpace(x), out nextToken))
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
                     {
-                        throw new JsonParseException("no white space expected");
+                        throw new ParserException("no white space expected");
                     }
-                    current = current.Skip(nextToken);
+                    current = current.Subbytes(nextToken);
                 }
 
                 {
@@ -196,104 +191,107 @@ namespace UniJSON
                 {
                     // search ',' or closeChar
                     int keyPos;
-                    if (!current.TrySearch(x => x == ',', out keyPos))
+                    if (!current.TrySearchByte(x => x == ',', out keyPos))
                     {
-                        throw new JsonParseException("',' expected");
+                        throw new ParserException("',' expected");
                     }
-                    current = current.Skip(keyPos + 1);
+                    current = current.Subbytes(keyPos + 1);
                 }
 
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearch(x => !Char.IsWhiteSpace(x), out nextToken))
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
                     {
-                        throw new JsonParseException("not whitespace expected");
+                        throw new ParserException("not whitespace expected");
                     }
-                    current = current.Skip(nextToken);
+                    current = current.Subbytes(nextToken);
                 }
 
                 // key
                 var key = Parse(current, values, parentIndex);
-                if (key.ValueType != JsonValueType.String)
+                if (key.ValueType != ValueNodeType.String)
                 {
-                    throw new JsonParseException("object key must string: " + key.Segment);
+                    throw new ParserException("object key must string: " + key.Segment);
                 }
-                current = current.Skip(key.Segment.Count);
+                current = current.Subbytes(key.Segment.ByteLength);
 
                 // search ':'
                 int valuePos;
-                if (!current.TrySearch(x => x == ':', out valuePos))
+                if (!current.TrySearchByte(x => x == ':', out valuePos))
                 {
-                    throw new JsonParseException(": is not found");
+                    throw new ParserException(": is not found");
                 }
-                current = current.Skip(valuePos + 1);
+                current = current.Subbytes(valuePos + 1);
 
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearch(x => !Char.IsWhiteSpace(x), out nextToken))
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
                     {
-                        throw new JsonParseException("not whitespace expected");
+                        throw new ParserException("not whitespace expected");
                     }
-                    current = current.Skip(nextToken);
+                    current = current.Subbytes(nextToken);
                 }
 
                 // value
                 var value = Parse(current, values, parentIndex);
-                current = current.Skip(value.Segment.Count);
+                current = current.Subbytes(value.Segment.ByteLength);
             }
 
             return current;
         }
 
-        public static JsonValue Parse(StringSegment segment, List<JsonValue> values, int parentIndex)
+        static JsonValue Parse(Utf8String segment, List<JsonValue> values, int parentIndex)
         {
             // skip white space
             int pos;
-            if (!segment.TrySearch(x => !char.IsWhiteSpace(x), out pos))
+            if (!segment.TrySearchByte(x => !char.IsWhiteSpace((char)x), out pos))
             {
-                throw new JsonParseException("only whitespace");
+                throw new ParserException("only whitespace");
             }
-            segment = segment.Skip(pos);
+            segment = segment.Subbytes(pos);
 
             var valueType = GetValueType(segment);
             switch (valueType)
             {
-                case JsonValueType.Boolean:
-                case JsonValueType.Integer:
-                case JsonValueType.Number:
-                case JsonValueType.Null:
+                case ValueNodeType.Boolean:
+                case ValueNodeType.Integer:
+                case ValueNodeType.Number:
+                case ValueNodeType.Null:
+                case ValueNodeType.NaN:
+                case ValueNodeType.Infinity:
+                case ValueNodeType.MinusInfinity:
                     {
                         var value= ParsePrimitive(segment, valueType, parentIndex);
                         values.Add(value);
                         return value;
                     }
 
-                case JsonValueType.String:
+                case ValueNodeType.String:
                     {
                         var value= ParseString(segment, parentIndex);
                         values.Add(value);
                         return value;
                     }
 
-                case JsonValueType.Array: // fall through
+                case ValueNodeType.Array: // fall through
                     {
                         var index = values.Count;
                         values.Add(new JsonValue()); // placeholder
                         var current = ParseArray(segment, values, index);
-                        values[index] = new JsonValue(new StringSegment(segment.Value, segment.Offset, current.Offset + 1 - segment.Offset),
-                            JsonValueType.Array, parentIndex);
+                        values[index] = new JsonValue(segment.Subbytes(0, current.Bytes.Offset + 1 - segment.Bytes.Offset),
+                            ValueNodeType.Array, parentIndex);
                         return values[index];
                     }
 
-                case JsonValueType.Object: // fall through
+                case ValueNodeType.Object: // fall through
                     {
                         var index = values.Count;
                         values.Add(new JsonValue()); // placeholder
                         var current=ParseObject(segment, values, index);
-                        values[index] = new JsonValue(new StringSegment(segment.Value, segment.Offset, current.Offset + 1 - segment.Offset),
-                            JsonValueType.Object, parentIndex);
+                        values[index] = new JsonValue(segment.Subbytes(0, current.Bytes.Offset + 1 - segment.Bytes.Offset),
+                            ValueNodeType.Object, parentIndex);
                         return values[index];
                     }
 
@@ -302,18 +300,23 @@ namespace UniJSON
             }
         }
 
-        public static JsonNode Parse(String json)
+        public static ListTreeNode<JsonValue> Parse(String json)
+        {
+            return Parse(Utf8String.From(json));
+        }
+
+        public static ListTreeNode<JsonValue> Parse(Utf8String json)
         {
             var result = new List<JsonValue>();
-            var value = Parse(new StringSegment(json), result, -1);
-            if (value.ValueType != JsonValueType.Array && value.ValueType != JsonValueType.Object)
+            var value = Parse(json, result, -1);
+            if (value.ValueType != ValueNodeType.Array && value.ValueType != ValueNodeType.Object)
             {
                 result.Add(value);
-                return new JsonNode(result);
+                return new ListTreeNode<JsonValue>(result);
             }
             else
             {
-                return new JsonNode(result);
+                return new ListTreeNode<JsonValue>(result);
             }
         }
     }

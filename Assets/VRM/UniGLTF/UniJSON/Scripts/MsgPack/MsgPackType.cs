@@ -1,4 +1,4 @@
-﻿namespace UniJSON.MsgPack
+﻿namespace UniJSON
 {
     public enum MsgPackType : byte
     {

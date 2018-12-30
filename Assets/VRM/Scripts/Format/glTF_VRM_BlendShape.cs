@@ -27,8 +27,13 @@ namespace VRM
     [JsonSchema(Title = "vrm.blendshape.bind")]
     public class glTF_VRM_BlendShapeBind : UniGLTF.JsonSerializableBase
     {
+        [JsonSchema(Required = true, Minimum = 0)]
         public int mesh = -1;
+
+        [JsonSchema(Required = true, Minimum = 0)]
         public int index = -1;
+
+        [JsonSchema(Required =true, Minimum = 0, Maximum = 100, Description = @"SkinnedMeshRenderer.SetBlendShapeWeight")]
         public float weight = 0;
 
         protected override void SerializeMembers(GLTFJsonFormatter f)
@@ -110,7 +115,7 @@ namespace VRM
             "lookright",
             "blink_l",
             "blink_r",
-        })]
+        }, EnumSerializationType = EnumSerializationType.AsString)]
         public string presetName;
 
         [JsonSchema(Description = "Low level blendshape references. ")]

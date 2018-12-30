@@ -5,8 +5,26 @@ using System.Collections.Generic;
 
 namespace UniJSON
 {
-    public static partial class ArraySegmentExtensions
+    public static class ArraySegmentExtensions
     {
+        public static T[] ArrayOrCopy<T>(this ArraySegment<T> self)
+        {
+            if (self.Array == null || self.Count==0)
+            {
+                return new T[] { };
+            }
+            else if(self.Offset==0 && self.Count==self.Array.Length)
+            {
+                return self.Array;
+            }
+            else
+            {
+                var array = new T[self.Count];
+                Array.Copy(self.Array, self.Offset, array, 0, self.Count);
+                return array;
+            }
+        }
+
         public static IEnumerable<T> ToEnumerable<T>(this ArraySegment<T> self)
         {
             return self.Array.Skip(self.Offset).Take(self.Count);
@@ -50,12 +68,18 @@ namespace UniJSON
             }
             return array;
         }
-    }
 
-    public static partial class ArraySegmentExtensions
-    {
-        #region JSON
+        public static byte[] Concat(this byte[] lhs, ArraySegment<byte> rhs)
+        {
+            return new ArraySegment<byte>(lhs).Concat(rhs);
+        }
 
-        #endregion
+        public static byte[] Concat(this ArraySegment<byte> lhs, ArraySegment<byte> rhs)
+        {
+            var bytes = new byte[lhs.Count + rhs.Count];
+            Buffer.BlockCopy(lhs.Array, lhs.Offset, bytes, 0, lhs.Count);
+            Buffer.BlockCopy(rhs.Array, rhs.Offset, bytes, lhs.Count, rhs.Count);
+            return bytes;
+        }
     }
 }

@@ -11,12 +11,13 @@ namespace UniJSON.MsgPack
         [Test]
         public void fix_map()
         {
-            var bytes = new MsgPackFormatter()
-            .BeginMap(2)
-            .Key("0").Value(1)
-            .Key("2").Value(3)
-            .EndMap()
-            .GetStore().Bytes;
+            var f = new MsgPackFormatter();
+            f.BeginMap(2);
+            f.Key("0"); f.Value(1);
+            f.Key("2"); f.Value(3);
+            f.EndMap();
+            var bytes =
+            f.GetStoreBytes();
             ;
 
             Assert.AreEqual(new Byte[]{
@@ -31,7 +32,7 @@ namespace UniJSON.MsgPack
 
             var value = MsgPackParser.Parse(bytes);
 
-            Assert.AreEqual(2, value.Count);
+            Assert.AreEqual(2, value.GetObjectCount());
             Assert.AreEqual(1, value["0"].GetValue());
             Assert.AreEqual(3, value["2"].GetValue());
         }
@@ -47,7 +48,7 @@ namespace UniJSON.MsgPack
                 w.Value(i.ToString());
                 w.Value(i + 5);
             }
-            var bytes = w.GetStore().Bytes.ToEnumerable().ToArray();
+            var bytes = w.GetStoreBytes().ToEnumerable().ToArray();
 
 
             var expected = new Byte[]{

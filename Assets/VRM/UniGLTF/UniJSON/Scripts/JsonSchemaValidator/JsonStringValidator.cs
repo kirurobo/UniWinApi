@@ -65,7 +65,7 @@ namespace UniJSON
             return true;
         }
 
-        public void Assign(IJsonSchemaValidator obj)
+        public void Merge(IJsonSchemaValidator obj)
         {
             var rhs = obj as JsonStringValidator;
             if (rhs == null)
@@ -78,7 +78,7 @@ namespace UniJSON
             Pattern = rhs.Pattern;
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             switch (key)
             {
@@ -98,7 +98,12 @@ namespace UniJSON
             return false;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
+        public void ToJsonScheama(IFormatter f)
+        {
+            f.Key("type"); f.Value("string");
+        }
+
+        public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
         {
             if (o == null)
             {
@@ -120,7 +125,7 @@ namespace UniJSON
                 return new JsonSchemaValidationException(c, string.Format("maxlength: {0}>{1}", value.Length, MaxLength.Value));
             }
 
-            if(Pattern!=null && !Pattern.IsMatch(value))
+            if (Pattern != null && !Pattern.IsMatch(value))
             {
                 return new JsonSchemaValidationException(c, string.Format("pattern: {0} not match {1}", Pattern, value));
             }
@@ -128,14 +133,15 @@ namespace UniJSON
             return null;
         }
 
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, object o)
+        public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T o)
         {
-            f.Value((string)o);
+            f.Value(GenericCast<T, string>.Cast(o));
         }
 
-        public void ToJson(JsonFormatter f)
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst)
+            where T: IListTreeItem, IValue<T>
         {
-            f.Key("type"); f.Value("string");
+            dst = GenericCast<string, U>.Cast(src.GetString());
         }
     }
 }

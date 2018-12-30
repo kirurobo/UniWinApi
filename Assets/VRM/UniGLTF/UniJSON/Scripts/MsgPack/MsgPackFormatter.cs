@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 
 
-namespace UniJSON.MsgPack
+namespace UniJSON
 {
-    public class MsgPackFormatter : IFormatter
+    public class MsgPackFormatter : IFormatter, IRpc
     {
         IStore m_store;
         public MsgPackFormatter(IStore store)
@@ -19,13 +15,6 @@ namespace UniJSON.MsgPack
         public MsgPackFormatter() : this(new BytesStore())
         {
         }
-
-        /*
-        public MessagePackFormatter (MemoryStream s)
-        {
-            m_store = new StreamStore(s);
-        }
-        */
 
 #if false
         public bool MsgPack_Ext(IList list)
@@ -94,7 +83,7 @@ namespace UniJSON.MsgPack
         }
 #endif
 
-        public IFormatter BeginList(int n)
+        public void BeginList(int n)
         {
             if (n < 0x0F)
             {
@@ -110,15 +99,13 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.ARRAY32);
                 m_store.WriteBigEndian(n);
             }
-            return this;
         }
 
-        public IFormatter EndList()
+        public void EndList()
         {
-            return this;
         }
 
-        public IFormatter BeginMap(int n)
+        public void BeginMap(int n)
         {
             if (n < 0x0F)
             {
@@ -134,30 +121,31 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.MAP32);
                 m_store.WriteBigEndian(n.ToNetworkByteOrder());
             }
-            return this;
         }
 
-        public IFormatter EndMap()
+        public void EndMap()
         {
-            return this;
         }
 
-        public IFormatter Null()
+        public void Null()
         {
             m_store.Write((Byte)MsgPackType.NIL);
-            return this;
         }
 
-        public IFormatter Key(string key)
+        public void Key(Utf8String key)
         {
             Value(key);
-            return this;
         }
 
-        public IFormatter Value(string s)
+        public void Value(String s)
         {
-            var bytes = Encoding.UTF8.GetBytes(s);
-            int size = bytes.Length;
+            Value(Utf8String.From(s));
+        }
+
+        public void Value(Utf8String s)
+        {
+            var bytes = s.Bytes;
+            int size = bytes.Count;
             if (size < 32)
             {
                 m_store.Write((Byte)((Byte)MsgPackType.FIX_STR | size));
@@ -181,10 +169,9 @@ namespace UniJSON.MsgPack
                 m_store.WriteBigEndian(size);
                 m_store.Write(bytes);
             }
-            return this;
         }
 
-        public IFormatter Value(bool value)
+        public void Value(bool value)
         {
             if (value)
             {
@@ -194,11 +181,10 @@ namespace UniJSON.MsgPack
             {
                 m_store.Write((Byte)MsgPackType.FALSE);
             }
-            return this;
         }
 
         #region Singed
-        public IFormatter Value(sbyte n)
+        public void Value(sbyte n)
         {
             if (n >= 0)
             {
@@ -215,10 +201,9 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.INT8);
                 m_store.Write((Byte)n);
             }
-            return this;
         }
 
-        public IFormatter Value(short n)
+        public void Value(short n)
         {
             if (n >= 0)
             {
@@ -245,10 +230,9 @@ namespace UniJSON.MsgPack
                     m_store.WriteBigEndian(n);
                 }
             }
-            return this;
         }
 
-        public IFormatter Value(int n)
+        public void Value(int n)
         {
             if (n >= 0)
             {
@@ -283,10 +267,9 @@ namespace UniJSON.MsgPack
                     m_store.WriteBigEndian(n);
                 }
             }
-            return this;
         }
 
-        public IFormatter Value(long n)
+        public void Value(long n)
         {
             if (n >= 0)
             {
@@ -329,12 +312,11 @@ namespace UniJSON.MsgPack
                     m_store.WriteBigEndian(n);
                 }
             }
-            return this;
         }
         #endregion
 
         #region Unsigned
-        public IFormatter Value(byte n)
+        public void Value(byte n)
         {
             if (n <= 0x7F)
             {
@@ -346,10 +328,9 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.UINT8);
                 m_store.Write(n);
             }
-            return this;
         }
 
-        public IFormatter Value(ushort n)
+        public void Value(ushort n)
         {
             if (n <= 0xFF)
             {
@@ -360,10 +341,9 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.UINT16);
                 m_store.WriteBigEndian(n);
             }
-            return this;
         }
 
-        public IFormatter Value(uint n)
+        public void Value(uint n)
         {
             if (n <= 0xFF)
             {
@@ -378,10 +358,9 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.UINT32);
                 m_store.WriteBigEndian(n);
             }
-            return this;
         }
 
-        public IFormatter Value(ulong n)
+        public void Value(ulong n)
         {
             if (n <= 0xFF)
             {
@@ -400,25 +379,22 @@ namespace UniJSON.MsgPack
                 m_store.Write((Byte)MsgPackType.UINT64);
                 m_store.WriteBigEndian(n);
             }
-            return this;
         }
         #endregion
 
-        public IFormatter Value(float value)
+        public void Value(float value)
         {
             m_store.Write((Byte)MsgPackType.FLOAT);
             m_store.WriteBigEndian(value);
-            return this;
         }
 
-        public IFormatter Value(double value)
+        public void Value(double value)
         {
             m_store.Write((Byte)MsgPackType.DOUBLE);
             m_store.WriteBigEndian(value);
-            return this;
         }
 
-        public IFormatter Value(ArraySegment<byte> bytes)
+        public void Value(ArraySegment<byte> bytes)
         {
             if (bytes.Count < 0xFF)
             {
@@ -438,29 +414,187 @@ namespace UniJSON.MsgPack
                 m_store.WriteBigEndian(bytes.Count);
                 m_store.Write(bytes);
             }
-            return this;
         }
 
-        /*
-                public void Bytes(IEnumerable<byte> raw, int count)
-                {
-                    Value(new ArraySegment<byte>(raw.Take(count).ToArray()));
-                }
-                */
-
-        public void Dump(ArraySegment<byte> formatted)
+        public void TimeStamp32(DateTimeOffset time)
         {
-            m_store.Write(formatted);
+            m_store.Write((Byte)MsgPackType.FIX_EXT_4);
+            m_store.Write((SByte)(-1));
+            m_store.WriteBigEndian((uint)time.ToUnixTimeSeconds());
         }
 
-        public void Clear()
+        public void Value(DateTimeOffset time)
         {
-            m_store.Clear();
+            TimeStamp32(time);
+        }
+
+        public void Value(ListTreeNode<MsgPackValue> node)
+        {
+            m_store.Write(node.Value.Bytes);
         }
 
         public IStore GetStore()
         {
             return m_store;
         }
+
+        #region IRpc
+        public const int REQUEST_TYPE = 0;
+        public const int RESPONSE_TYPE = 1;
+        public const int NOTIFY_TYPE = 2;
+
+        int m_msgId = 1;
+
+        public void Request(Utf8String method)
+        {
+            BeginList(4);
+            Value(REQUEST_TYPE);
+            Value(m_msgId++);
+            Value(method);
+            BeginList(0); // params
+            {
+            }
+            EndList();
+            EndList();
+        }
+
+        public void Request<A0>(Utf8String method, A0 a0)
+        {
+            BeginList(4);
+            Value(REQUEST_TYPE);
+            Value(m_msgId++);
+            Value(method);
+            BeginList(1); // params
+            {
+                this.Serialize(a0);
+            }
+            EndList();
+            EndList();
+        }
+
+        public void Request<A0, A1>(Utf8String method, A0 a0, A1 a1)
+        {
+            BeginList(4);
+            Value(REQUEST_TYPE);
+            Value(m_msgId++);
+            Value(method);
+            BeginList(2); // params
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+            }
+            EndList();
+            EndList();
+        }
+
+        public void Request<A0, A1, A2>(Utf8String method, A0 a0, A1 a1, A2 a2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Request<A0, A1, A2, A3>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Request<A0, A1, A2, A3, A4>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Request<A0, A1, A2, A3, A4, A5>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ResponseSuccess(int id)
+        {
+            BeginList(4);
+            Value(RESPONSE_TYPE);
+            Value(id);
+            Null();
+            Null();
+            EndList();
+        }
+
+        public void ResponseSuccess<T>(int id, T result)
+        {
+            BeginList(4);
+            Value(RESPONSE_TYPE);
+            Value(id);
+            Null();
+            this.Serialize(result);
+            EndList();
+        }
+
+        public void ResponseError(int id, Exception error)
+        {
+            BeginList(4);
+            Value(RESPONSE_TYPE);
+            Value(id);
+            this.Serialize(error);
+            Null();
+            EndList();
+        }
+
+        public void Notify(Utf8String method)
+        {
+            BeginList(3);
+            Value(NOTIFY_TYPE);
+            Value(method);
+            BeginList(0); // params
+            {
+            }
+            EndList();
+            EndList();
+        }
+
+        public void Notify<A0>(Utf8String method, A0 a0)
+        {
+            BeginList(3);
+            Value(NOTIFY_TYPE);
+            Value(method);
+            BeginList(1); // params
+            {
+                this.Serialize(a0);
+            }
+            EndList();
+            EndList();
+        }
+
+        public void Notify<A0, A1>(Utf8String method, A0 a0, A1 a1)
+        {
+            BeginList(3);
+            Value(NOTIFY_TYPE);
+            Value(method);
+            BeginList(2); // params
+            {
+                this.Serialize(a0);
+                this.Serialize(a1);
+            }
+            EndList();
+            EndList();
+        }
+
+        public void Notify<A0, A1, A2>(Utf8String method, A0 a0, A1 a1, A2 a2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Notify<A0, A1, A2, A3>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Notify<A0, A1, A2, A3, A4>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Notify<A0, A1, A2, A3, A4, A5>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
     }
 }

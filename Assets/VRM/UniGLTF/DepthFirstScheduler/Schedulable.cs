@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-#if (NET_4_6 && UNITY_2017_1_OR_NEWER) 
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
 using System.Threading.Tasks;
 #endif
 
@@ -223,7 +223,7 @@ namespace DepthFirstScheduler
             TaskChain.Schedule(schedulable.GetRoot(), onError);
         }
 
-#if (NET_4_6 && UNITY_2017_1_OR_NEWER)
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
         public static Task<T> ToTask<T>(this Schedulable<T> schedulable)
         {
             return ToTask(schedulable, Scheduler.MainThread);
