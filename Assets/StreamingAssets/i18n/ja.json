@@ -1,0 +1,20 @@
+﻿{
+  "labels": {
+    "Motion": "モーション",
+    "Transparent": "透明化",
+    "Topmost": "最前面",
+    "Maximize": "最大化",
+    "Language": "言語",
+    "None": "なし",
+    "Random": "ランダム",
+    "Repeat": "繰り返し"
+  },
+  "buttons": {
+    "Quit": "終了",
+    "Back": "前",
+    "Next": "次",
+    "TabButtonModel": "モデル",
+    "TabButtonMotion": "動き",
+    "TabButtonConfig": "設定"
+  }
+}

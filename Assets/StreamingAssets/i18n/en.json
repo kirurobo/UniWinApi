@@ -1,0 +1,21 @@
+﻿{
+  "labels": {
+    "Motion": "Motion",
+    "Transparent": "Transparent",
+    "Topmost": "Topmost",
+    "Maximize": "Maximize",
+    "Language": "Language",
+    "None": "None",
+    "Random": "Random",
+    "Repeat": "Repeat"
+  },
+  "buttons": {
+    "Quit": "Quit",
+    "Back": "Back",
+    "Next": "Next",
+    "TabButtonModel": "Model",
+    "TabButtonMotion": "Motion",
+    "TabButtonConfig": "Config"
+  }
+  }
+}
