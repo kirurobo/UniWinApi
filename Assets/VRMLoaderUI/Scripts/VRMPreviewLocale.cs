@@ -61,7 +61,6 @@ namespace VRMLoader
         {
             if (localeText == null) return;
 
-            //var labelsParent = transform.Find("LoadConfirmPanel/Label");
             var labelsParent = transform.Find("Label");
             labelsParent.Find("Headline").GetComponent<Text>().text = localeText.labels.Headline;
             labelsParent.Find("Title").GetComponent<Text>().text = localeText.labels.Title;
@@ -76,9 +75,6 @@ namespace VRMLoader
             labelsParent.Find("PermissionOther").GetComponent<Text>().text = localeText.labels.PermissionOther;
             labelsParent.Find("DistributionLicense").GetComponent<Text>().text = localeText.labels.DistributionLicense;
             labelsParent.Find("DistributionOther").GetComponent<Text>().text = localeText.labels.DistributionOther;
-
-            //transform.Find("LoadConfirmPanel/BtnLoad/Text").GetComponent<Text>().text = localeText.buttons.BtnLoad;
-            //transform.Find("LoadConfirmPanel/BtnCancel/Text").GetComponent<Text>().text = localeText.buttons.BtnCancel;
 
             var ui = gameObject.GetComponent<VRMPreviewUI>();
             ui.SetSelectionText(localeText.selections);

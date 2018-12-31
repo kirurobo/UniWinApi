@@ -37,8 +37,8 @@ namespace Kirurobo
         private VRMLoader.VRMPreviewLocale locale;
         private VRMLoader.VRMPreviewUI vrmLoaderUI;
 
-        private static readonly Color UnfocusedTabColor = new Color(0.75f, 0.75f, 0.75f, 1f);
-        private static readonly Color FocusedTabColor = Color.white;
+        private TabPanelManager tabPanelManager;
+
 
         /// <summary>
         /// Use this for initialization
@@ -51,6 +51,7 @@ namespace Kirurobo
 
             locale = this.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
             vrmLoaderUI = this.GetComponentInChildren<VRMLoader.VRMPreviewUI>();
+            tabPanelManager = this.GetComponentInChildren<TabPanelManager>();
 
             // Initialize toggles.
             UpdateUI();
@@ -61,14 +62,10 @@ namespace Kirurobo
             if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
             if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
             if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
-            if (tabButtonModel) { tabButtonModel.onClick.AddListener(ShowModelTab); }
-            if (tabButtonControl) { tabButtonControl.onClick.AddListener(ShowControlTab); }
             if (languageDropdown) {
                 languageDropdown.onValueChanged.AddListener(val => SetLanguage(val));
                 languageDropdown.value = 1;
             }
-
-            ShowModelTab();
 
             // Show menu on startup.
             Show(null);
@@ -129,29 +126,6 @@ namespace Kirurobo
 #endif
         }
 
-        private void ShowModelTab()
-        {
-            if (modelPanel) {
-                modelPanel.gameObject.SetActive(true);
-                modelPanel.GetComponent<Image>().color = FocusedTabColor;
-            }
-            if (controlPanel) { controlPanel.gameObject.SetActive(false); }
-
-            if (tabButtonControl) { tabButtonControl.image.color = UnfocusedTabColor; }
-            if (tabButtonModel) { tabButtonModel.image.color = FocusedTabColor; }
-        }
-
-        private void ShowControlTab()
-        {
-            if (controlPanel) {
-                controlPanel.gameObject.SetActive(true);
-                controlPanel.GetComponent<Image>().color = FocusedTabColor;
-            }
-            if (modelPanel) { modelPanel.gameObject.SetActive(false); }
-
-            if (tabButtonControl) { tabButtonControl.image.color = FocusedTabColor; }
-            if (tabButtonModel) { tabButtonModel.image.color = UnfocusedTabColor; }
-        }
 
         /// <summary>
         /// Update is called once per frame
@@ -235,6 +209,7 @@ namespace Kirurobo
             if (meta)
             {
                 if (vrmLoaderUI) vrmLoaderUI.setMeta(meta);
+                if (tabPanelManager) tabPanelManager.Select(0); // 0番がモデル情報のパネルという前提
             }
 
             Show();

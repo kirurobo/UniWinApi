@@ -1,150 +1,309 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using VRM;
 
 public class CharacterBehaviour : MonoBehaviour
 {
 
-	public float LookAtSpeed = 10.0f;   // 頭の追従速度係数 [1/s]
-	private float BlinkTime = 0.1f; // まばたきで閉じるまたは開く時間 [s]
+    public float LookAtSpeed = 10.0f;   // 頭の追従速度係数 [1/s]
+    private float BlinkTime = 0.1f; // まばたきで閉じるまたは開く時間 [s]
 
-	private float lastBlinkTime = 0f;
-	private float nextBlinkTime = 0f;
-	private int blinkState = 0; // まばたきの状態管理。 0:なし, 1:閉じ中, 2:開き中
+    private float lastBlinkTime = 0f;
+    private float nextBlinkTime = 0f;
+    private int blinkState = 0; // まばたきの状態管理。 0:なし, 1:閉じ中, 2:開き中
 
-	private VRMLookAtHead lookAtHead;
-	private VRMBlendShapeProxy blendShapeProxy;
+    private BlendShapePreset[] emotionPresets =
+    {
+        BlendShapePreset.Neutral,
+        BlendShapePreset.Joy,
+        BlendShapePreset.Sorrow,
+        BlendShapePreset.Angry,
+        BlendShapePreset.Fun,
+    };
 
-	private GameObject targetObject;    // 視線目標オブジェクト
-	private Transform headTransform;    // Head transform
-	private bool isNewTargetObject = false;	// 新規に目標オブジェクトを作成したらtrue
+    private int emotionIndex = 0;  // 表情の状態
+    private float emotionRate = 0f; // その表情になっている程度 0～1
+    private float emotionSpeed = 0f;  // 表情を発生させる方向なら 1、戻す方向なら -1、維持なら 0
+    private float lastEmotionTime = 0f;   // 前回表情を変化させた時刻
+    private float nextEmotionTime = 0f;   // 次に表情を変化させる時刻
+    public float emotionInterval = 2f;     // 表情を変化させる間隔
+    public float emotionIntervalRandamRange = 5f;  // 表情変化間隔のランダム要素
+    private float emotionPromoteTime = 0.5f;  // 表情が変化しきるまでの時間 [s]
+ 
+    private VRMLookAtHead lookAtHead;
+    private VRMBlendShapeProxy blendShapeProxy;
 
-	// Use this for initialization
-	void Start()
-	{
-		if (!targetObject)
-		{
-			targetObject = new GameObject("LookAtTarget");
-			isNewTargetObject = true;
-		}
+    private GameObject targetObject;    // 視線目標オブジェクト
+    private Transform headTransform;    // Head transform
+    private bool isNewTargetObject = false;	// 新規に目標オブジェクトを作成したらtrue
 
-		lookAtHead = GetComponent<VRMLookAtHead>();
-		blendShapeProxy = GetComponent<VRMBlendShapeProxy>();
+    private Animator animator;
+    private AnimatorStateInfo currentState;     // 現在のステート状態を保存する参照
+    private AnimatorStateInfo previousState;    // ひとつ前のステート状態を保存する参照
+    public bool _random = true;                // ランダム判定スタートスイッチ
+    public float _threshold = 0.5f;             // ランダム判定の閾値
+    public float _interval = 10f;				// ランダム判定のインターバル
 
-		if (lookAtHead)
-		{
-			lookAtHead.Target = targetObject.transform;
-			lookAtHead.UpdateType = UpdateType.LateUpdate;
 
-			headTransform = lookAtHead.Head;
-		}
-		if (!headTransform)
-		{
-			headTransform = this.transform;
-		}
-	}
+    // Use this for initialization
+    void Start()
+    {
+        if (!targetObject)
+        {
+            targetObject = new GameObject("LookAtTarget");
+            isNewTargetObject = true;
+        }
 
-	/// <summary>
-	/// Destroy created target object
-	/// </summary>
-	void OnDestroy()
-	{
-		if (isNewTargetObject)
-		{
-			GameObject.Destroy(targetObject);
-		}
-	}
+        lookAtHead = GetComponent<VRMLookAtHead>();
+        blendShapeProxy = GetComponent<VRMBlendShapeProxy>();
 
-	/// <summary>
-	/// 毎フレーム呼ばれる
-	/// </summary>
-	void Update()
-	{
-		UpdateLookAtTarget();
-		Blink();
-	}
+        if (lookAtHead)
+        {
+            lookAtHead.Target = targetObject.transform;
+            lookAtHead.UpdateType = UpdateType.LateUpdate;
 
-	/// <summary>
-	/// Update()より後で呼ばれる
-	/// </summary>
-	void LateUpdate()
-	{
-		UpdateHead();
-	}
+            headTransform = lookAtHead.Head;
+        }
+        if (!headTransform)
+        {
+            headTransform = this.transform;
+        }
 
-	/// <summary>
-	/// 目線目標座標を更新
-	/// </summary>
-	private void UpdateLookAtTarget()
-	{
-		Vector3 mousePos = Input.mousePosition;
-		// モデル座標から 1[m] 手前に設定
-		mousePos.z = (Camera.main.transform.position - headTransform.position).magnitude - 1f;
-		Vector3 pos = Camera.main.ScreenToWorldPoint(mousePos);
-		targetObject.transform.position = pos;
-	}
+        animator = GetComponent<Animator>();
+        currentState = animator.GetCurrentAnimatorStateInfo(0);
+        previousState = currentState;
+        // ランダム判定用関数をスタートする
+        StartCoroutine("RandomChange");
+    }
 
-	/// <summary>
-	/// マウスカーソルの方を見る動作
-	/// </summary>
-	private void UpdateHead()
-	{
-		Quaternion rot = Quaternion.Euler(-lookAtHead.Pitch, lookAtHead.Yaw, 0f);
-		headTransform.rotation = Quaternion.Slerp(headTransform.rotation, rot, 0.2f);
-		
-	}
+    /// <summary>
+    /// Destroy created target object
+    /// </summary>
+    void OnDestroy()
+    {
+        if (isNewTargetObject)
+        {
+            GameObject.Destroy(targetObject);
+        }
+    }
 
-	/// <summary>
-	/// 
-	/// </summary>
-	private void Blink()
-	{
-		if (!blendShapeProxy) return;
+    /// <summary>
+    /// 毎フレーム呼ばれる
+    /// </summary>
+    void Update()
+    {
+        UpdateLookAtTarget();
+        Blink();
+        RandomFace();
+        UpdateMotion();
+    }
 
-		float now = Time.timeSinceLevelLoad;
-		float span;
+    /// <summary>
+    /// Update()より後で呼ばれる
+    /// </summary>
+    void LateUpdate()
+    {
+        UpdateHead();
+    }
 
-		switch (blinkState)
-		{
-			case 1:
-				span = now - lastBlinkTime;
-				if (span > BlinkTime)
-				{
-					blinkState = 2;
-					blendShapeProxy.SetValue(BlendShapePreset.Blink, 1f);
-				}
-				else
-				{
-					blendShapeProxy.SetValue(BlendShapePreset.Blink, (span / BlinkTime));
-				}
-				break;
-			case 2:
-				span = now - lastBlinkTime - BlinkTime;
-				if (span > BlinkTime)
-				{
-					blinkState = 0;
-					blendShapeProxy.SetValue(BlendShapePreset.Blink, 0f);
-				}
-				else
-				{
-					blendShapeProxy.SetValue(BlendShapePreset.Blink, (1f - span) / BlinkTime);
-				}
-				break;
-			default:
-				if (now >= nextBlinkTime)
-				{
-					lastBlinkTime = now;
-					if (Random.value < 0.2f)
-					{
-						nextBlinkTime = now;    // 20%の確率で連続まばたき
-					}
-					else
-					{
-						nextBlinkTime = now + Random.Range(1f, 10f);
-					}
-					blinkState = 1;
-				}
-				break;
-		}
-	}
+    /// <summary>
+    /// 目線目標座標を更新
+    /// </summary>
+    private void UpdateLookAtTarget()
+    {
+        Vector3 mousePos = Input.mousePosition;
+        // モデル座標から 1[m] 手前に設定
+        mousePos.z = (Camera.main.transform.position - headTransform.position).magnitude - 1f;
+        Vector3 pos = Camera.main.ScreenToWorldPoint(mousePos);
+        targetObject.transform.position = pos;
+    }
+
+    /// <summary>
+    /// マウスカーソルの方を見る動作
+    /// </summary>
+    private void UpdateHead()
+    {
+        Quaternion rot = Quaternion.Euler(-lookAtHead.Pitch, lookAtHead.Yaw, 0f);
+        headTransform.rotation = Quaternion.Slerp(headTransform.rotation, rot, 0.2f);
+        
+    }
+
+    /// <summary>
+    /// まばたき
+    /// </summary>
+    private void Blink()
+    {
+        if (!blendShapeProxy) return;
+
+        float now = Time.timeSinceLevelLoad;
+        float span;
+
+        switch (blinkState)
+        {
+            case 1:
+                span = now - lastBlinkTime;
+                if (span > BlinkTime)
+                {
+                    blinkState = 2;
+                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, 1f);
+                }
+                else
+                {
+                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, (span / BlinkTime));
+                }
+                break;
+            case 2:
+                span = now - lastBlinkTime - BlinkTime;
+                if (span > BlinkTime)
+                {
+                    blinkState = 0;
+                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, 0f);
+                }
+                else
+                {
+                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, (1f - span) / BlinkTime);
+                }
+                break;
+            default:
+                if (now >= nextBlinkTime)
+                {
+                    lastBlinkTime = now;
+                    if (Random.value < 0.2f)
+                    {
+                        nextBlinkTime = now;    // 20%の確率で連続まばたき
+                    }
+                    else
+                    {
+                        nextBlinkTime = now + Random.Range(1f, 10f);
+                    }
+                    blinkState = 1;
+                }
+                break;
+        }
+    }
+
+    public void RandomFace()
+    {
+        float now = Time.timeSinceLevelLoad;
+
+        if (now >= nextEmotionTime)
+        {
+            // 待ち時間を越えた場合の処理
+            nextEmotionTime = now + emotionInterval + Random.value * emotionIntervalRandamRange;
+            emotionSpeed = (emotionSpeed > 0 ? -1f : emotionSpeed < 0 ? 0 : 1f);    // 表情を与えるか戻すか、次の方向を決定
+            lastEmotionTime = now;
+
+            // 表情を与えるなら、ランダムで次の表情を決定
+            if (emotionSpeed > 0)
+            {
+                emotionIndex = Random.Range(0, emotionPresets.Length - 1);
+            }
+        }
+        else
+        {
+            // 待ち時間に達していなければ、変化を処理
+            float dt = Time.deltaTime;
+            emotionRate = Mathf.Min(1f, Mathf.Max(0f, emotionRate + emotionSpeed * (dt / emotionPromoteTime)));
+
+            UpdateEmotion();
+        }
+
+    }
+
+    private void UpdateEmotion()
+    {
+        if (!blendShapeProxy) return;
+
+        var blendShapes = new List<KeyValuePair<BlendShapeKey, float>>();
+
+        int index = 0;
+        foreach (var shape in emotionPresets)
+        {
+            float val = 0f;
+            // 現在選ばれている表情のみ値を入れ、他はゼロとする
+            if (index == emotionIndex) val = emotionRate;
+            blendShapes.Add(new KeyValuePair<BlendShapeKey, float>(new BlendShapeKey(shape), val));
+            index++;
+        }
+        blendShapeProxy.SetValues(blendShapes);
+    }
+
+    public void ForwardMotion()
+    {
+            // ブーリアンNextをtrueにする
+            animator.SetBool("Next", true);
+    }
+
+    public void BackwardMotion()
+    {
+            // ブーリアンBackをtrueにする
+            animator.SetBool("Back", true);
+    }
+
+    private void UpdateMotion()
+    {
+        // ↑キー/スペースが押されたら、ステートを次に送る処理
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            ForwardMotion();
+        }
+
+        // ↓キーが押されたら、ステートを前に戻す処理
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            BackwardMotion();
+        }
+
+        // "Next"フラグがtrueの時の処理
+        if (animator.GetBool("Next"))
+        {
+            // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
+            currentState = animator.GetCurrentAnimatorStateInfo(0);
+            if (previousState.fullPathHash != currentState.fullPathHash)
+            {
+                animator.SetBool("Next", false);
+                previousState = currentState;
+            }
+        }
+
+        // "Back"フラグがtrueの時の処理
+        if (animator.GetBool("Back"))
+        {
+            // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
+            currentState = animator.GetCurrentAnimatorStateInfo(0);
+            if (previousState.fullPathHash != currentState.fullPathHash)
+            {
+                animator.SetBool("Back", false);
+                previousState = currentState;
+            }
+        }
+    }
+
+    // ランダム判定用関数
+    IEnumerator RandomChange()
+    {
+        // 無限ループ開始
+        while (true)
+        {
+            //ランダム判定スイッチオンの場合
+            if (_random)
+            {
+                // ランダムシードを取り出し、その大きさによってフラグ設定をする
+                float _seed = Random.Range(0.0f, 1.0f);
+                if (_seed < _threshold)
+                {
+                    animator.SetBool("Back", true);
+                }
+                else if (_seed >= _threshold)
+                {
+                    animator.SetBool("Next", true);
+                }
+            }
+            // 次の判定までインターバルを置く
+            yield return new WaitForSeconds(_interval);
+        }
+
+    }
 
 }
