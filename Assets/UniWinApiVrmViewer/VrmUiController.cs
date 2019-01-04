@@ -18,6 +18,7 @@ namespace Kirurobo
         public Toggle transparentToggle;
         public Toggle topmostToggle;
         public Toggle maximizeToggle;
+        public Button openButton;
         public Button quitButton;
         public Text titleText;
 

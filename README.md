@@ -17,9 +17,13 @@
 * [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
 
 
-## License
+## Credit
 
-[![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png "CC0")](http://creativecommons.org/publicdomain/zero/1.0/deed.ja)
+* MIT License
+    * DWANGO Co., Ltd. [UniVRM](https://github.com/dwango/UniVRM/)
+    * [えむにわ @m2wasabi](https://twitter.com/m2wasabi) [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
+    * [@setch](https://twitter.com/setchi) [uGUI-Hypertext](https://github.com/setchi/uGUI-Hypertext)
+
 
 ## System requirements
 
@@ -29,28 +33,7 @@
 
 ## Usage
 
-Gitのソースコードの他
+Unityプロジェクトとして開くには、本リポジトリのソースコードの他に下記が必要です。
+
 * ["Unity-chan!" Model](https://assetstore.unity.com/packages/3d/characters/unity-chan-model-18705) をアセットストアからインポート
     * 必要なのは Animations 以下です。
-
-
-## Configuration
-
-本体は Assets/UniWinApi 以下です。  
-このリポジトリには使用例として DWANGO Co., Ltd. による UniVRM を含んでいます。
-
-<br />
-<br />
-
----
-
-# About [UniVRM](https://github.com/dwango/UniVRM/releases) 
-
-## License
-
-* [MIT License](Assets/VRM/LICENSE.txt)
-
-## About [VRM](https://dwango.github.io/vrm/)
-###
-"VRM" is a file format for using 3d humanoid avatars (and models) in VR applications.  
-VRM is based on glTF2.0. And if you comply with the MIT license, you are free to use it.  

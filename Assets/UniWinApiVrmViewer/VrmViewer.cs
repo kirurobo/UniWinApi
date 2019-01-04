@@ -91,6 +91,15 @@ namespace Kirurobo
             {
                 // Add a file drop handler.
                 windowController.OnFilesDropped += Window_OnFilesDropped;
+
+                if (uiController && uiController.openButton)
+                {
+                    uiController.openButton.onClick.AddListener(() =>
+                    {
+                        string path = windowController.ShowOpenFileDialog("VRM file|*.vrm|Motion file|*.bvh|Audio file|*.wav;*.ogg|All file|*.*");
+                        LoadFile(path);
+                    });
+                }
             }
         }
 
@@ -143,31 +152,45 @@ namespace Kirurobo
         {
             foreach (string path in files)
             {
-                string ext = path.Substring(path.Length - 4).ToLower();
+                LoadFile(path);
+            }
+        }
 
-                // Open the VRM file if its extension is ".vrm".
-                if (ext == ".vrm")
-                {
-                    LoadModel(path);
-                    continue;
-                }
+        /// <summary>
+        /// ファイルを一つ読み込み
+        /// VRM, BVH, 音声 に対応
+        /// </summary>
+        /// <param name="path"></param>
+        private void LoadFile(string path)
+        {
+            // パスがnullなら何もしない
+            if (path == null) return;
 
-                // Open the motion file if its extension is ".bvh" or ".txt".
-                if (ext == ".bvh" || ext == ".txt")
-                {
-                    LoadMotion(path);
-                    continue;
-                }
+            // 拡張子を小文字で取得
+            string ext = path.Substring(path.Length - 4).ToLower();
 
-                // Open the audio file.
-                // mp3はライセンスの関係でWindowsスタンドアローンでは読み込めないよう。
-                // 参考 https://docs.unity3d.com/jp/460/ScriptReference/WWW.GetAudioClip.html
-                // 参考 https://answers.unity.com/questions/433428/load-mp3-from-harddrive-on-pc-again.html
-                if (ext == ".ogg" || ext == ".wav")
-                {
-                    LoadAudio(path);
-                    continue;
-                }
+            // Open the VRM file if its extension is ".vrm".
+            if (ext == ".vrm")
+            {
+                LoadModel(path);
+                return;
+            }
+
+            // Open the motion file if its extension is ".bvh" or ".txt".
+            if (ext == ".bvh" || ext == ".txt")
+            {
+                LoadMotion(path);
+                return;
+            }
+
+            // Open the audio file.
+            // mp3はライセンスの関係でWindowsスタンドアローンでは読み込めないよう。
+            // 参考 https://docs.unity3d.com/jp/460/ScriptReference/WWW.GetAudioClip.html
+            // 参考 https://answers.unity.com/questions/433428/load-mp3-from-harddrive-on-pc-again.html
+            if (ext == ".ogg" || ext == ".wav")
+            {
+                LoadAudio(path);
+                return;
             }
         }
 
