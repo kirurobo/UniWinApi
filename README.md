@@ -1,17 +1,7 @@
-# UniWinApi & Example project
+# UniWinApi VRM viewer
 
-Unityでは本来行えない操作を Windows API 経由で行うものです。  
-以下のようなことができます。  
+ウィンドウ周りの操作を Windows API 経由で行う UniWinApi のサンプルとして作成した VRM ビューアです。
 
-* ウィンドウの移動
-* ウィンドウサイズ変更
-* ウィンドウの最大化、最小化
-* **ウィンドウの透過** （枠なしで、四角形でないウィンドウにします） 
-* **ファイルのドロップを受け付ける**
-* マウスポインタを移動させる
-* マウスのボタン操作を送出する
-
-主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
 [![VRM viewer sample](https://j.gifs.com/2v56qj.gif)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
 
 ## Download
@@ -36,9 +26,13 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 * Unity 5.6 or newer
 * Windows 7 or newer
 
+
 ## Usage
 
-[日本語版のチュートリアルはこちら](docs/index_jp.md)
+Gitのソースコードの他
+* ["Unity-chan!" Model](https://assetstore.unity.com/packages/3d/characters/unity-chan-model-18705) をアセットストアからインポート
+    * 必要なのは Animations 以下です。
+
 
 ## Configuration
 
