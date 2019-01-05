@@ -15,8 +15,8 @@ public class TabPanelManager : MonoBehaviour {
     [SerializeField]
     public TabPanel[] tabPanels;
 
-    public Color FocusedTabColor = Color.white;
-    public Color UnfocusedTabColor = new Color(0.75f, 0.75f, 0.75f, 1f);
+    public Color FocusedTabColor = new Color(1f, 1f, 1f, 0.75f);
+    public Color UnfocusedTabColor = new Color(0.75f, 0.75f, 0.75f, 0.75f);
 
     private Vector2 panelPosition = Vector2.zero;
 

@@ -1,16 +1,19 @@
 ﻿{
   "labels": {
     "Motion": "モーション",
+    "Face": "表情",
     "Transparent": "透明化",
     "Topmost": "最前面",
     "Maximize": "最大化",
     "Language": "言語",
+    "ZoomMode":  "ズーム方法",
     "None": "なし",
     "Random": "ランダム",
     "Repeat": "繰り返し"
   },
   "buttons": {
     "Quit": "終了",
+    "Open": "開く",
     "Back": "前",
     "Next": "次",
     "TabButtonModel": "モデル",

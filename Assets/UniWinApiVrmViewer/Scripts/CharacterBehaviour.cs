@@ -45,6 +45,7 @@ public class CharacterBehaviour : MonoBehaviour
     public float _threshold = 0.5f;             // ランダム判定の閾値
     public float _interval = 10f;				// ランダム判定のインターバル
 
+    private Camera currentCamera;
 
     // Use this for initialization
     void Start()
@@ -68,6 +69,12 @@ public class CharacterBehaviour : MonoBehaviour
         if (!headTransform)
         {
             headTransform = this.transform;
+        }
+
+        // マウスカーソルとの奥行きに反映させるためカメラを取得
+        if (!currentCamera)
+        {
+            currentCamera = Camera.main;
         }
 
         animator = GetComponent<Animator>();
@@ -113,9 +120,11 @@ public class CharacterBehaviour : MonoBehaviour
     private void UpdateLookAtTarget()
     {
         Vector3 mousePos = Input.mousePosition;
-        // モデル座標から 1[m] 手前に設定
-        mousePos.z = (Camera.main.transform.position - headTransform.position).magnitude - 1f;
-        Vector3 pos = Camera.main.ScreenToWorldPoint(mousePos);
+        //// 奥行きはモデル座標から 1[m] 手前に設定
+        //mousePos.z = (currentCamera.transform.position - headTransform.position).magnitude - 1f;
+        // 奥行きはモデル座標とカメラ間の90%と設定
+        mousePos.z = (currentCamera.transform.position - headTransform.position).magnitude * 0.90f;
+        Vector3 pos = currentCamera.ScreenToWorldPoint(mousePos);
         targetObject.transform.position = pos;
     }
 

@@ -1,21 +1,23 @@
 ﻿{
   "labels": {
     "Motion": "Motion",
+    "Face": "Emotion",
     "Transparent": "Transparent",
     "Topmost": "Topmost",
     "Maximize": "Maximize",
     "Language": "Language",
+    "ZoomMode": "Zoom mode",
     "None": "None",
     "Random": "Random",
     "Repeat": "Repeat"
   },
   "buttons": {
     "Quit": "Quit",
+    "Open": "Open",
     "Back": "Back",
     "Next": "Next",
     "TabButtonModel": "Model",
     "TabButtonMotion": "Motion",
     "TabButtonConfig": "Config"
-  }
   }
 }

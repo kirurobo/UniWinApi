@@ -112,6 +112,7 @@ namespace Kirurobo
                 bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
                 if (!windowController.isClickThrough && inScreen)
                 {
+                    if (uiController) originalWheelMode = uiController.zoomMode;
                     cameraController.zoomMode = originalWheelMode;
                 }
                 else

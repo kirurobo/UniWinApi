@@ -22,6 +22,8 @@ namespace Kirurobo
         public Button quitButton;
         public Text titleText;
 
+        public CameraController.ZoomMode zoomMode { get; set; }
+        public Dropdown zoomModeDropdown;
         public Dropdown languageDropdown;
 
         public Button tabButtonModel;
@@ -35,10 +37,12 @@ namespace Kirurobo
 
         private bool isDebugMode = false;   // Show debug Info.
 
-        private VRMLoader.VRMPreviewLocale locale;
+        private VRMLoader.VRMPreviewLocale vrmLoaderLocale;
         private VRMLoader.VRMPreviewUI vrmLoaderUI;
+        private VrmUiLocale uiLocale;
 
         private TabPanelManager tabPanelManager;
+
 
 
         /// <summary>
@@ -50,8 +54,11 @@ namespace Kirurobo
             windowController = FindObjectOfType<WindowController>();
             windowController.OnStateChanged += windowController_OnStateChanged;
 
-            locale = this.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
+            zoomMode = CameraController.ZoomMode.Zoom;
+
+            vrmLoaderLocale = this.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
             vrmLoaderUI = this.GetComponentInChildren<VRMLoader.VRMPreviewUI>();
+            uiLocale = this.GetComponentInChildren<VrmUiLocale>();
             tabPanelManager = this.GetComponentInChildren<TabPanelManager>();
 
             // Initialize toggles.
@@ -63,6 +70,11 @@ namespace Kirurobo
             if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
             if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
             if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
+            if (zoomModeDropdown)
+            {
+                zoomModeDropdown.onValueChanged.AddListener(val => SetZoomMode(val));
+                zoomModeDropdown.value = 0;
+            }
             if (languageDropdown) {
                 languageDropdown.onValueChanged.AddListener(val => SetLanguage(val));
                 languageDropdown.value = 1;
@@ -72,19 +84,44 @@ namespace Kirurobo
             Show(null);
         }
 
+        /// <summary>
+        /// マウスホイールでのズーム方法を選択
+        /// </summary>
+        /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
+        private void SetZoomMode(int no)
+        {
+            if (no == 1)
+            {
+                zoomMode = CameraController.ZoomMode.Dolly;
+            }
+            else
+            {
+                zoomMode = CameraController.ZoomMode.Zoom;
+            }
+        }
+
+        /// <summary>
+        /// UI言語選択
+        /// </summary>
+        /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
         private void SetLanguage(int no)
         {
-            if (!locale) return;
-
+            string lang;
             switch (no)
             {
                 case 0:
-                    locale.SetLocale("en");
+                    lang = "en";
                     break;
                 case 1:
-                    locale.SetLocale("ja");
+                    lang = "ja";
+                    break;
+                default:
+                    lang = "en";
                     break;
             }
+
+            if (vrmLoaderLocale) vrmLoaderLocale.SetLocale(lang);
+            if (uiLocale) uiLocale.SetLocale(lang);
         }
 
         private void windowController_OnStateChanged()
