@@ -6,5 +6,5 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UniWinApiVrmViewer/VrmViewerSample.unity
+    path: Assets/UniWinApiVrmViewer/VrmViewerScene.unity
     guid: b72d9529f2c0bfa4babc510f63e1a3ed

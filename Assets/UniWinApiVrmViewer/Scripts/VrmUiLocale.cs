@@ -1,13 +1,14 @@
-// UI internationalization
-//
-// Author: Kirurobo
-//
-// Original author: m2wasabi, https://github.com/m2wasabi/VRMLoaderUI
-// Original license: MIT License https://github.com/m2wasabi/VRMLoaderUI/blob/master/LICENSE
-
+/**
+ * UI internationalization
+ *
+ * Author: Kirurobo
+ *
+ * Original author: m2wasabi, https://github.com/m2wasabi/VRMLoaderUI 
+ * Original license: MIT License https://github.com/m2wasabi/VRMLoaderUI/blob/master/LICENSE 
+ * 
+ */
 using System.Collections;
 using System.Collections.Generic;
-using System;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,26 +16,8 @@ using UnityEngine.UI;
 /// <summary>
 /// UI要素の多言語対応
 /// </summary>
-public class VrmUiLocale : MonoBehaviour {
-
-    [Serializable]
-    public struct Labels
-    {
-        public string Motion, Face, Transparent, Topmost, Maximize, Language, ZoomMode, None, Random, Repeat;
-    }
-
-    [Serializable]
-    public struct Buttons
-    {
-        public string Quit, Open, Back, Next, TabButtonModel, TabButtonMotion, TabButtonConfig;
-    }
-
-    [Serializable]
-    public class LocaleText
-    {
-        public Labels labels;
-        public Buttons buttons;
-    }
+public class VrmUiLocale : MonoBehaviour
+{
 
     private LocaleText _localeText;
 
@@ -58,7 +41,7 @@ public class VrmUiLocale : MonoBehaviour {
     /// <summary>
     /// 開始時の処理
     /// </summary>
-    private void Start()
+    void Awake()
     {
         // 親要素指定がなければ自分自身の子にUI要素があるものとする
         if (!targetTransform)
@@ -83,8 +66,10 @@ public class VrmUiLocale : MonoBehaviour {
         SetText(ref transforms, "ZoomModeDropdown", localeText.labels.ZoomMode);
         SetText(ref transforms, "LanguageDropdown", localeText.labels.Language);
         SetText(ref transforms, "MotionDropdown", localeText.labels.Motion);
+        SetText(ref transforms, "MotionModeText", localeText.labels.Motion);
         SetText(ref transforms, "MotionToggleRandom", localeText.labels.Random);
         SetText(ref transforms, "FaceDropdown", localeText.labels.Face);
+        SetText(ref transforms, "FaceModeText", localeText.labels.Face);
         SetText(ref transforms, "FaceToggleRandom", localeText.labels.Random);
 
         SetText(ref transforms, "OpenButton", localeText.buttons.Open);
@@ -129,5 +114,24 @@ public class VrmUiLocale : MonoBehaviour {
                 break;
             }
         }
+    }
+
+    [System.Serializable]
+    public struct Labels
+    {
+        public string Motion, Face, Transparent, Topmost, Maximize, Language, ZoomMode, None, Random, Repeat;
+    }
+
+    [System.Serializable]
+    public struct Buttons
+    {
+        public string Quit, Open, Back, Next, TabButtonModel, TabButtonMotion, TabButtonConfig;
+    }
+
+    [System.Serializable]
+    public class LocaleText
+    {
+        public Labels labels;
+        public Buttons buttons;
     }
 }

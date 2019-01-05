@@ -20,6 +20,7 @@ public class CharacterBehaviour : MonoBehaviour
         BlendShapePreset.Sorrow,
         BlendShapePreset.Angry,
         BlendShapePreset.Fun,
+        BlendShapePreset.Unknown,
     };
 
     private int emotionIndex = 0;  // 表情の状態
@@ -41,9 +42,11 @@ public class CharacterBehaviour : MonoBehaviour
     private Animator animator;
     private AnimatorStateInfo currentState;     // 現在のステート状態を保存する参照
     private AnimatorStateInfo previousState;    // ひとつ前のステート状態を保存する参照
-    public bool _random = true;                // ランダム判定スタートスイッチ
-    public float _threshold = 0.5f;             // ランダム判定の閾値
-    public float _interval = 10f;				// ランダム判定のインターバル
+    public bool randomMotion = true;                // ランダム判定スタートスイッチ
+    private float randomMotionThreshold = 0.5f;             // ランダム判定の閾値
+    private float randomMotionInterval = 5f;				// ランダム判定のインターバル
+
+    public bool randomEmotion = true;
 
     private Camera currentCamera;
 
@@ -220,9 +223,14 @@ public class CharacterBehaviour : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// 現在の表情を適用
+    /// </summary>
     private void UpdateEmotion()
     {
         if (!blendShapeProxy) return;
+
+        if (!randomEmotion) return;     // 現状、ランダムが解除されていたら何もしない（戻さない）
 
         var blendShapes = new List<KeyValuePair<BlendShapeKey, float>>();
 
@@ -252,39 +260,42 @@ public class CharacterBehaviour : MonoBehaviour
 
     private void UpdateMotion()
     {
-        // ↑キー/スペースが押されたら、ステートを次に送る処理
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (randomMotion)
         {
-            ForwardMotion();
-        }
-
-        // ↓キーが押されたら、ステートを前に戻す処理
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            BackwardMotion();
-        }
-
-        // "Next"フラグがtrueの時の処理
-        if (animator.GetBool("Next"))
-        {
-            // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
-            currentState = animator.GetCurrentAnimatorStateInfo(0);
-            if (previousState.fullPathHash != currentState.fullPathHash)
+            // ↑キー/スペースが押されたら、ステートを次に送る処理
+            if (Input.GetKeyDown(KeyCode.UpArrow))
             {
-                animator.SetBool("Next", false);
-                previousState = currentState;
+                ForwardMotion();
             }
-        }
 
-        // "Back"フラグがtrueの時の処理
-        if (animator.GetBool("Back"))
-        {
-            // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
-            currentState = animator.GetCurrentAnimatorStateInfo(0);
-            if (previousState.fullPathHash != currentState.fullPathHash)
+            // ↓キーが押されたら、ステートを前に戻す処理
+            if (Input.GetKeyDown(KeyCode.DownArrow))
             {
-                animator.SetBool("Back", false);
-                previousState = currentState;
+                BackwardMotion();
+            }
+
+            // "Next"フラグがtrueの時の処理
+            if (animator.GetBool("Next"))
+            {
+                // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
+                currentState = animator.GetCurrentAnimatorStateInfo(0);
+                if (previousState.fullPathHash != currentState.fullPathHash)
+                {
+                    animator.SetBool("Next", false);
+                    previousState = currentState;
+                }
+            }
+
+            // "Back"フラグがtrueの時の処理
+            if (animator.GetBool("Back"))
+            {
+                // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
+                currentState = animator.GetCurrentAnimatorStateInfo(0);
+                if (previousState.fullPathHash != currentState.fullPathHash)
+                {
+                    animator.SetBool("Back", false);
+                    previousState = currentState;
+                }
             }
         }
     }
@@ -296,21 +307,21 @@ public class CharacterBehaviour : MonoBehaviour
         while (true)
         {
             //ランダム判定スイッチオンの場合
-            if (_random)
+            if (randomMotion)
             {
                 // ランダムシードを取り出し、その大きさによってフラグ設定をする
                 float _seed = Random.Range(0.0f, 1.0f);
-                if (_seed < _threshold)
+                if (_seed < randomMotionThreshold)
                 {
                     animator.SetBool("Back", true);
                 }
-                else if (_seed >= _threshold)
+                else if (_seed >= randomMotionThreshold)
                 {
                     animator.SetBool("Next", true);
                 }
             }
             // 次の判定までインターバルを置く
-            yield return new WaitForSeconds(_interval);
+            yield return new WaitForSeconds(randomMotionInterval);
         }
 
     }
