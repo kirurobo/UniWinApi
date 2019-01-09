@@ -1,6 +1,6 @@
-# UniWinApi & Example project
+# UniWinApi Example project
 
-Unityでは本来行えない操作を Windows API 経由で行うものです。  
+UniWinApi は Unityでは本来行えない操作を Windows API 経由で行うものです。  
 以下のようなことができます。  
 
 * ウィンドウの移動
@@ -13,7 +13,10 @@ Unityでは本来行えない操作を Windows API 経由で行うものです�
 * マウスのボタン操作を送出する
 
 主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
-[![VRM viewer sample](https://j.gifs.com/2v56qj.gif)](http://www.youtube.com/watch?v=EETQxzzv4uY "UniWinApi VRM viewer sample")
+
+このリポジトリではそれらの機能を利用したデスクトップマスコット風のVRMビューアーのプロジェクトを置いてあります。  
+[![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.4.0 beta")
+
 
 ## Download
 
