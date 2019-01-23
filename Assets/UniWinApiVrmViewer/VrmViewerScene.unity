@@ -5664,8 +5664,8 @@ MonoBehaviour:
     panel: {fileID: 171511614}
   - button: {fileID: 1866818129}
     panel: {fileID: 339774397}
-  FocusedTabColor: {r: 1, g: 1, b: 1, a: 0.8666667}
-  UnfocusedTabColor: {r: 0.75, g: 0.75, b: 0.75, a: 0.8666667}
+  FocusedTabColor: {r: 1, g: 1, b: 1, a: 0.93333334}
+  UnfocusedTabColor: {r: 0.7490196, g: 0.7490196, b: 0.7490196, a: 0.93333334}
 --- !u!1 &1074306227
 GameObject:
   m_ObjectHideFlags: 0
