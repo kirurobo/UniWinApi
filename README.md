@@ -17,10 +17,10 @@ UniWinApi は Unityでは本来行えない操作を Windows API 経由で行う
 このリポジトリではそれらの機能を利用したデスクトップマスコット風のVRMビューアーのプロジェクトを置いてあります。  
 [![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.4.0 beta")
 
-
 ## Download
 
 ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版と32ビット版(x86)があります。
+* [Ver.0.4.0 UniWinApi本体もリリース](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0)
 * [Ver.0.4.0-beta 色々改造](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0beta)
 * [Ver.0.3.3 UniVRM 0.44に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.3)
 * [Ver.0.3.2 マウスを追う](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.2)
@@ -32,37 +32,22 @@ UniWinApi は Unityでは本来行えない操作を Windows API 経由で行う
 * [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
 
 
-## License
+## Credit
 
-UniWinApi本体は [![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png "CC0")](http://creativecommons.org/publicdomain/zero/1.0/deed.ja) です。  
-ただしVRMビューアはそれ以外のコードを含みます。
+* MIT License
+    * DWANGO Co., Ltd. [UniVRM](https://github.com/dwango/UniVRM/)
+    * [えむにわ @m2wasabi](https://twitter.com/m2wasabi) [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
+    * [@setch](https://twitter.com/setchi) [uGUI-Hypertext](https://github.com/setchi/uGUI-Hypertext)
 
 ## System requirements
 
 * Unity 5.6 or newer
 * Windows 7 or newer
 
+
 ## Usage
 
-[日本語版のチュートリアルはこちら](docs/index_jp.md)
+Unityプロジェクトとして開くには、本リポジトリのソースコードの他に下記が必要です。
 
-## Configuration
-
-本体は Assets/UniWinApi 以下です。  
-このリポジトリには使用例として DWANGO Co., Ltd. による UniVRM を含んでいます。
-
-<br />
-<br />
-
----
-
-# About [UniVRM](https://github.com/dwango/UniVRM/releases) 
-
-## License
-
-* [MIT License](Assets/VRM/LICENSE.txt)
-
-## About [VRM](https://dwango.github.io/vrm/)
-###
-"VRM" is a file format for using 3d humanoid avatars (and models) in VR applications.  
-VRM is based on glTF2.0. And if you comply with the MIT license, you are free to use it.  
+* ["Unity-chan!" Model](https://assetstore.unity.com/packages/3d/characters/unity-chan-model-18705) をアセットストアからインポート
+    * 必要なのは Animations 以下です。

@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Linq;
-using System.Collections;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
+
 
 namespace UniJSON
 {
@@ -56,17 +58,17 @@ namespace UniJSON
             return true;
         }
 
-        public void Assign(IJsonSchemaValidator rhs)
+        public void Merge(IJsonSchemaValidator rhs)
         {
             throw new NotImplementedException();
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             switch (key)
             {
                 case "items":
-                    if (value.Value.ValueType == JsonValueType.Array)
+                    if (value.IsArray())
                     {
                         throw new NotImplementedException();
                     }
@@ -99,14 +101,50 @@ namespace UniJSON
             return false;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext context, object o)
+        static class GenericCounter<T>
+        {
+            delegate int Counter(T value);
+
+            static Counter s_counter;
+
+            public static int Count(T value)
+            {
+                if (s_counter == null)
+                {
+                    var t = typeof(T);
+                    if (t.IsArray)
+                    {
+                        var pi = t.GetProperty("Length");
+                        var v = Expression.Parameter(t, "value");
+                        var call = Expression.Property(v, pi);
+                        var compiled = (Func<T, int>)Expression.Lambda(call, v).Compile();
+                        s_counter = new Counter(compiled);
+                    }
+                    else if (t.GetIsGenericList())
+                    {
+                        var pi = t.GetProperty("Count");
+                        var v = Expression.Parameter(t, "value");
+                        var call = Expression.Property(v, pi);
+                        var compiled = (Func<T, int>)Expression.Lambda(call, v).Compile();
+                        s_counter = new Counter(compiled);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+                return s_counter(value);
+            }
+        }
+
+        public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext context, T o)
         {
             if (o == null)
             {
                 return new JsonSchemaValidationException(context, "null");
             }
 
-            var count = o.GetCount();
+            var count = GenericCounter<T>.Count(o);
             if (count == 0)
             {
                 return new JsonSchemaValidationException(context, "empty");
@@ -125,24 +163,85 @@ namespace UniJSON
             return null;
         }
 
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, object o)
+        static void ArraySerializer<U>(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, U[] array)
         {
-            var array = o as IEnumerable;
-
-            using (f.BeginListDisposable())
+            f.BeginList(array.Length);
             {
-                int i = 0;
+                //int i = 0;
                 foreach (var x in array)
                 {
-                    using (c.Push(i++))
+                    //using (c.Push(i++))
                     {
-                        Items.Validator.Serialize(f, c, x);
+                        v.Serialize(f, c, x);
                     }
                 }
             }
+            f.EndList();
         }
 
-        public void ToJson(JsonFormatter f)
+        static void ListSerializer<U>(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, List<U> list)
+        {
+            f.BeginList(list.Count);
+            {
+                //int i = 0;
+                foreach (var x in list)
+                {
+                    //using (c.Push(i++))
+                    {
+                        v.Serialize(f, c, x);
+                    }
+                }
+            }
+            f.EndList();
+        }
+
+        static class GenericSerializer<T>
+        {
+            delegate void Serializer(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, T o);
+
+            static Serializer s_serializer;
+
+            public static void Serialize(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, T o)
+            {
+                if (s_serializer == null)
+                {
+                    var t = typeof(T);
+                    MethodInfo g = null;
+                    if (t.IsArray)
+                    {
+                        var mi = typeof(JsonArrayValidator).GetMethod("ArraySerializer",
+                            BindingFlags.Static | BindingFlags.NonPublic);
+                        g = mi.MakeGenericMethod(t.GetElementType());
+                    }
+                    else if (t.GetIsGenericList())
+                    {
+                        // ToDo: IList
+                        var mi = typeof(JsonArrayValidator).GetMethod("ListSerializer",
+                            BindingFlags.Static | BindingFlags.NonPublic);
+                        g = mi.MakeGenericMethod(t.GetGenericArguments());
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                    var vv = Expression.Parameter(typeof(IJsonSchemaValidator), "v");
+                    var ff = Expression.Parameter(typeof(IFormatter), "f");
+                    var cc = Expression.Parameter(typeof(JsonSchemaValidationContext), "c");
+                    var oo = Expression.Parameter(typeof(T), "o");
+                    var call = Expression.Call(g, vv, ff, cc, oo);
+                    var compiled = (Action<IJsonSchemaValidator, IFormatter, JsonSchemaValidationContext, T>)Expression.Lambda(call, vv, ff, cc, oo).Compile();
+                    s_serializer = new Serializer(compiled);
+                }
+                s_serializer(v, f, c, o);
+            }
+        }
+
+        public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T o)
+        {
+            GenericSerializer<T>.Serialize(Items.Validator, f, c, o);
+        }
+
+        public void ToJsonScheama(IFormatter f)
         {
             f.Key("type"); f.Value("array");
 
@@ -151,6 +250,12 @@ namespace UniJSON
                 f.Key("items");
                 Items.ToJson(f);
             }
+        }
+
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+            where T : IListTreeItem, IValue<T>
+        {
+            src.Deserialize(ref dst);
         }
     }
 }

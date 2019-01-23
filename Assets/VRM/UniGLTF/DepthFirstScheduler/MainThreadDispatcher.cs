@@ -89,7 +89,7 @@ namespace DepthFirstScheduler
                 if (dispatcher == null)
                 {
                     // awake call immediately from UnityEngine
-                    new GameObject("MainThreadDispatcher").AddComponent<MainThreadDispatcher>();
+                    new GameObject("DepthFirstScheduler").AddComponent<MainThreadDispatcher>();
                 }
                 else
                 {

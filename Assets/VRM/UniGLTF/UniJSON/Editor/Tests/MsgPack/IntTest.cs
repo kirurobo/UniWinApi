@@ -12,7 +12,9 @@ namespace UniJSON.MsgPack
         {
             for (Byte i = 0; i < 128; ++i)
             {
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
                 Assert.AreEqual(new Byte[] { i }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
@@ -25,7 +27,9 @@ namespace UniJSON.MsgPack
         {
             for (SByte i = -32; i < 0; ++i)
             {
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -38,7 +42,9 @@ namespace UniJSON.MsgPack
             {
                 Byte i = 0x7F + 20;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
                 Assert.AreEqual(new Byte[]{
                         0xcc, 0x93,
                         }, bytes.ToEnumerable());
@@ -54,7 +60,9 @@ namespace UniJSON.MsgPack
             {
                 Byte i = 0x7F + 20;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
                 Assert.AreEqual(new Byte[]{
                         0xcc, 0x93,
                         }, bytes.ToEnumerable());
@@ -70,7 +78,9 @@ namespace UniJSON.MsgPack
             {
                 UInt16 i = 0xFF + 20;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
                 Assert.AreEqual(new Byte[]{
                         0xcd, 0x01, 0x13
                         }, bytes.ToEnumerable());
@@ -86,7 +96,9 @@ namespace UniJSON.MsgPack
             {
                 UInt32 i = 0xFFFF + 20;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
                 Assert.AreEqual(new Byte[]{
                         0xce, 0x00, 0x01, 0x00, 0x13
                         }, bytes.ToEnumerable());
@@ -103,7 +115,9 @@ namespace UniJSON.MsgPack
                 UInt64 i = 0xFFFFFFFF;
                 i += 20;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
                 Assert.AreEqual(new Byte[]{
                         0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x13
                         }, bytes.ToEnumerable());
@@ -119,7 +133,9 @@ namespace UniJSON.MsgPack
             {
                 SByte i = -64;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
 
                 Assert.AreEqual(new Byte[]{
                         0xd0, 0xc0,
@@ -134,7 +150,9 @@ namespace UniJSON.MsgPack
         public void int128Test()
         {
             int i = 128;
-            var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+            var f = new MsgPackFormatter();
+            f.Value(i);
+            var bytes = f.GetStoreBytes();
             Assert.AreEqual(new Byte[]{
                         0xcc, 0x80,
                         }, bytes.ToEnumerable());
@@ -148,7 +166,9 @@ namespace UniJSON.MsgPack
             {
                 Int16 i = -150;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
 
                 Assert.AreEqual(new Byte[]{
                         0xd1, 0xFF, 0x6a
@@ -165,7 +185,9 @@ namespace UniJSON.MsgPack
             {
                 Int32 i = -35000;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
 
                 Assert.AreEqual(new Byte[]{
                         0xd2, 0xff, 0xff, 0x77, 0x48
@@ -182,7 +204,9 @@ namespace UniJSON.MsgPack
             {
                 Int64 i = -2147483650;
 
-                var bytes = new MsgPackFormatter().Value(i).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(i);
+                var bytes = f.GetStoreBytes();
 
                 Assert.AreEqual(new Byte[]{
                         0xd3, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xfe

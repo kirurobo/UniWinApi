@@ -1,0 +1,3 @@
+[submodule "Assets/UniWinApi"]
+	path = Assets/UniWinApi
+	url = https://github.com/kirurobo/UniWinApiAsset.git

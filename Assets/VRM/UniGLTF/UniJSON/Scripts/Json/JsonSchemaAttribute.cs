@@ -6,7 +6,9 @@ namespace UniJSON
     public enum EnumSerializationType
     {
         AsInt,
+        AsString,
         AsLowerString,
+        AsUpperString,
     }
 
     public class BaseJsonSchemaAttribute : Attribute
@@ -34,7 +36,7 @@ namespace UniJSON
         #endregion
 
         #region object
-        public JsonValueType ValueType;
+        public ValueNodeType ValueType;
         public int MinProperties;
         public bool Required;
         public string[] Dependencies;

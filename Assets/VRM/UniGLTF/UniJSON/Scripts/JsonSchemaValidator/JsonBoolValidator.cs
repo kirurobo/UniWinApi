@@ -17,29 +17,35 @@ namespace UniJSON
             return true;
         }
 
-        public void Assign(IJsonSchemaValidator obj)
+        public void Merge(IJsonSchemaValidator obj)
         {
             throw new NotImplementedException();
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             return false;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
+        public void ToJsonScheama(IFormatter f)
+        {
+            f.Key("type"); f.Value("boolean");
+        }
+
+        public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T value)
         {
             return null;
         }
 
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, object o)
+        public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T value)
         {
-            f.Value((bool)o);
+            f.Serialize(value);
         }
 
-        public void ToJson(JsonFormatter f)
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+            where T : IListTreeItem, IValue<T>
         {
-            f.Key("type"); f.Value("boolean");
+            dst = GenericCast<bool, U>.Cast(src.GetBoolean());
         }
     }
 }

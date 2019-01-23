@@ -1,4 +1,4 @@
-﻿namespace UniJSON.MsgPack
+﻿namespace UniJSON
 {
     public static class MsgPackTypeExtensions
     {
@@ -241,6 +241,19 @@
                 case MsgPackType.UINT16:
                 case MsgPackType.UINT32:
                 case MsgPackType.UINT64:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsFloat(this MsgPackType formatType)
+        {
+            switch (formatType)
+            {
+                case MsgPackType.FLOAT:
+                case MsgPackType.DOUBLE:
                     return true;
 
                 default:

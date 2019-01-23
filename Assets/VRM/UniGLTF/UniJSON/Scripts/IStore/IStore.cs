@@ -54,5 +54,10 @@ namespace UniJSON
         {
             s.Write(new ArraySegment<Byte>(bytes.ToArray()));
         }
+
+        public static Utf8String ToUtf8String(this IStore s)
+        {
+            return new Utf8String(s.Bytes);
+        }
     }
 }

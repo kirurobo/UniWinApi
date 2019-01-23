@@ -36,7 +36,8 @@ namespace UniJSON
 
         public void Write(ArraySegment<byte> bytes)
         {
-            throw new NotImplementedException();
+            var text = Encoding.UTF8.GetString(bytes.Array, bytes.Offset, bytes.Count);
+            Write(text);
         }
 
         public void Write(byte value)

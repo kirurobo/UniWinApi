@@ -183,7 +183,7 @@ namespace UniGLTF
         [JsonSchema(Minimum = 0, Dependencies = new string[] { "bufferView" })]
         public int byteOffset;
 
-        [JsonSchema(Required = true, EnumValues = new object[] { "SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4" })]
+        [JsonSchema(Required = true, EnumValues = new object[] { "SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4" }, EnumSerializationType = EnumSerializationType.AsString)]
         public string type;
 
         public int TypeCount

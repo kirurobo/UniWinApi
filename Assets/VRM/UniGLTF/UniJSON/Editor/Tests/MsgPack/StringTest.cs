@@ -10,7 +10,9 @@ namespace UniJSON.MsgPack
         [Test]
         public void str()
         {
-            var bytes = new MsgPackFormatter().Value("文字列").GetStore().Bytes;
+            var f = new MsgPackFormatter();
+            f.Value("文字列");
+            var bytes = f.GetStoreBytes();
 
             var v = MsgPackParser.Parse(bytes).GetValue();
             Assert.AreEqual("文字列", v);
@@ -22,7 +24,9 @@ namespace UniJSON.MsgPack
             for (int i = 1; i < 32; ++i)
             {
                 var str = String.Join("", Enumerable.Range(0, i).Select(_ => "0").ToArray());
-                var bytes = new MsgPackFormatter().Value(str).GetStore().Bytes;
+                var f = new MsgPackFormatter();
+                f.Value(str);
+                var bytes = f.GetStoreBytes();
 
                 var value = MsgPackParser.Parse(bytes);
                 Assert.AreEqual(i, ((String)value.GetValue()).Length);

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UniJSON;
 using UnityEngine;
 
 
@@ -51,24 +52,31 @@ namespace UniGLTF
             {
                 // export
                 var gltf = new glTF();
+
+                string json = null;
                 using (var exporter = new gltfExporter(gltf))
                 {
                     exporter.Prepare(go);
                     exporter.Export();
 
-                    // import
-                    context.ParseJson(gltf.ToJson(), new SimpleStorage(new ArraySegment<byte>()));
-                    //Debug.LogFormat("{0}", context.Json);
-                    context.Load();
+                    // remove empty buffer
+                    gltf.buffers.Clear();
 
-                    AssertAreEqual(go.transform, context.Root.transform);
+                    json = gltf.ToJson();
                 }
+
+                // import
+                context.ParseJson(json, new SimpleStorage(new ArraySegment<byte>()));
+                //Debug.LogFormat("{0}", context.Json);
+                context.Load();
+
+                AssertAreEqual(go.transform, context.Root.transform);
             }
             finally
             {
                 //Debug.LogFormat("Destory, {0}", go.name);
                 GameObject.DestroyImmediate(go);
-                context.Destroy(true);
+                context.EditorDestroyRootAndAssets();
             }
         }
 
@@ -138,5 +146,50 @@ namespace UniGLTF
             Assert.True(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF-0.16", 1, 16));
             Assert.True(ImporterContext.IsGeneratedUniGLTFAndOlderThan("UniGLTF", 1, 16));
         }
+
+        [Test]
+        public void MeshTest()
+        {
+            var mesh = new glTFMesh("mesh")
+            {
+                primitives = new List<glTFPrimitives>
+                {
+                    new glTFPrimitives
+                    {
+                        attributes=new glTFAttributes
+                        {
+                            POSITION=0,
+                        }
+                    }
+                }
+            };
+
+            var f = new JsonFormatter();
+            f.Serialize(mesh);
+
+            var json = new Utf8String(f.GetStoreBytes()).ToString();
+            Debug.Log(json);
+        }
+
+        [Test]
+        public void PrimitiveTest()
+        {
+            var prims = new List<glTFPrimitives> {
+                new glTFPrimitives
+                {
+                    attributes = new glTFAttributes
+                    {
+                        POSITION = 0,
+                    }
+                }
+            };
+
+            var f = new JsonFormatter();
+            f.Serialize(prims);
+
+            var json = new Utf8String(f.GetStoreBytes()).ToString();
+            Debug.Log(json);
+        }
+
     }
 }

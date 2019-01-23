@@ -1,6 +1,6 @@
 using System;
 
-namespace UniJSON.MsgPack
+namespace UniJSON
 {
 
     public class MsgPackTypeException : Exception

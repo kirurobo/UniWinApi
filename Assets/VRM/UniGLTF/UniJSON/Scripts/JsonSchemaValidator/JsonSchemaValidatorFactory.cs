@@ -28,11 +28,15 @@ namespace UniJSON
                 var a = fi.GetCustomAttributes(typeof(JsonSchemaAttribute), true).FirstOrDefault() as JsonSchemaAttribute;
                 if (a == null)
                 {
-                    // default
-                    if (!fi.IsStatic && fi.IsPublic)
+                    a = fi.FieldType.GetCustomAttributes(typeof(JsonSchemaAttribute), true).FirstOrDefault() as JsonSchemaAttribute;
+                    if (a == null)
                     {
-                        // only public instance field
-                        a = new JsonSchemaAttribute();
+                        // default
+                        if (!fi.IsStatic && fi.IsPublic)
+                        {
+                            // only public instance field
+                            a = new JsonSchemaAttribute();
+                        }
                     }
                 }
 
@@ -76,14 +80,14 @@ namespace UniJSON
             }
         }
 
-        public static IJsonSchemaValidator Create(JsonValueType valueType,
+        public static IJsonSchemaValidator Create(ValueNodeType valueType,
             Type t = null,
             BaseJsonSchemaAttribute a = null,
             ItemJsonSchemaAttribute ia = null)
         {
             switch (valueType)
             {
-                case JsonValueType.Integer:
+                case ValueNodeType.Integer:
                     {
                         var v = new JsonIntValidator();
                         if (a != null)
@@ -112,7 +116,7 @@ namespace UniJSON
                         return v;
                     }
 
-                case JsonValueType.Number:
+                case ValueNodeType.Number:
                     {
                         var v = new JsonNumberValidator();
                         if (a != null)
@@ -141,7 +145,7 @@ namespace UniJSON
                         return v;
                     }
 
-                case JsonValueType.String:
+                case ValueNodeType.String:
                     {
                         var v = new JsonStringValidator();
                         if (a != null)
@@ -154,10 +158,10 @@ namespace UniJSON
                         return v;
                     }
 
-                case JsonValueType.Boolean:
+                case ValueNodeType.Boolean:
                     return new JsonBoolValidator();
 
-                case JsonValueType.Array:
+                case ValueNodeType.Array:
                     {
                         var v = new JsonArrayValidator();
                         if (a != null)
@@ -205,7 +209,7 @@ namespace UniJSON
                         return v;
                     }
 
-                case JsonValueType.Object:
+                case ValueNodeType.Object:
                     {
                         if (t.GetIsGenericDictionary())
                         {
@@ -261,23 +265,31 @@ namespace UniJSON
 
         public static IJsonSchemaValidator Create(string t)
         {
-            return Create((JsonValueType)Enum.Parse(typeof(JsonValueType), t, true));
+            return Create((ValueNodeType)Enum.Parse(typeof(ValueNodeType), t, true));
         }
 
-        static Dictionary<Type, JsonValueType> s_typeMap = new Dictionary<Type, JsonValueType>
+        static Dictionary<Type, ValueNodeType> s_typeMap = new Dictionary<Type, ValueNodeType>
         {
-            {typeof(int), JsonValueType.Integer },
-            {typeof(float), JsonValueType.Number },
-            {typeof(string), JsonValueType.String },
-            {typeof(bool), JsonValueType.Boolean },
+            {typeof(byte), ValueNodeType.Integer },
+            {typeof(short), ValueNodeType.Integer },
+            {typeof(int), ValueNodeType.Integer },
+            {typeof(long), ValueNodeType.Integer },
+            {typeof(sbyte), ValueNodeType.Integer },
+            {typeof(ushort), ValueNodeType.Integer },
+            {typeof(uint), ValueNodeType.Integer },
+            {typeof(ulong), ValueNodeType.Integer },
+            {typeof(float), ValueNodeType.Number },
+            {typeof(double), ValueNodeType.Number },
+            {typeof(string), ValueNodeType.String },
+            {typeof(bool), ValueNodeType.Boolean },
 
             // Unity types
-            {typeof(Vector3), JsonValueType.Object },
+            {typeof(Vector3), ValueNodeType.Object },
         };
 
-        static JsonValueType ToJsonType(Type t)
+        static ValueNodeType ToJsonType(Type t)
         {
-            JsonValueType jsonValueType;
+            ValueNodeType jsonValueType;
             if (s_typeMap.TryGetValue(t, out jsonValueType))
             {
                 return jsonValueType;
@@ -285,19 +297,19 @@ namespace UniJSON
 
             if (t.IsArray)
             {
-                return JsonValueType.Array;
+                return ValueNodeType.Array;
             }
             if (t.GetIsGenericList())
             {
-                return JsonValueType.Array;
+                return ValueNodeType.Array;
             }
 
-            if (t.IsClass)
+            //if (t.IsClass)
             {
-                return JsonValueType.Object;
+                return ValueNodeType.Object;
             }
 
-            throw new NotImplementedException(string.Format("No JsonType for {0}", t));
+            //throw new NotImplementedException(string.Format("No JsonType for {0}", t));
         }
 
         public static IJsonSchemaValidator Create(Type t, BaseJsonSchemaAttribute a, ItemJsonSchemaAttribute ia)

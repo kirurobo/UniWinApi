@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 
 namespace UniJSON
@@ -83,7 +85,7 @@ namespace UniJSON
             }
         }
 
-        public void AddProperty(IFileSystemAccessor fs, string key, JsonNode value)
+        public void AddProperty(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             var sub = new JsonSchema();
             sub.Parse(fs, value, key);
@@ -92,7 +94,7 @@ namespace UniJSON
             {
                 if (sub.Validator != null)
                 {
-                    Properties[key].Validator.Assign(sub.Validator);
+                    Properties[key].Validator.Merge(sub.Validator);
                 }
             }
             else
@@ -187,7 +189,7 @@ namespace UniJSON
             return true;
         }
 
-        public void Assign(IJsonSchemaValidator obj)
+        public void Merge(IJsonSchemaValidator obj)
         {
             var rhs = obj as JsonObjectValidator;
             if (rhs == null)
@@ -222,7 +224,7 @@ namespace UniJSON
             }
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             switch (key)
             {
@@ -236,7 +238,7 @@ namespace UniJSON
 
                 case "required":
                     {
-                        foreach (var req in value.ArrayItems)
+                        foreach (var req in value.ArrayItems())
                         {
                             m_required.Add(req.GetString());
                         }
@@ -245,9 +247,9 @@ namespace UniJSON
 
                 case "properties":
                     {
-                        foreach (var prop in value.ObjectItems)
+                        foreach (var prop in value.ObjectItems())
                         {
-                            AddProperty(fs, prop.Key, prop.Value);
+                            AddProperty(fs, prop.Key.GetString(), prop.Value);
                         }
                     }
                     return true;
@@ -266,9 +268,9 @@ namespace UniJSON
 
                 case "dependencies":
                     {
-                        foreach (var kv in value.ObjectItems)
+                        foreach (var kv in value.ObjectItems())
                         {
-                            Dependencies.Add(kv.Key, kv.Value.ArrayItems.Select(x => x.GetString()).ToArray());
+                            Dependencies.Add(kv.Key.GetString(), kv.Value.ArrayItems().Select(x => x.GetString()).ToArray());
                         }
                     }
                     return true;
@@ -280,104 +282,13 @@ namespace UniJSON
             return false;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
-        {
-            if (o == null)
-            {
-                return new JsonSchemaValidationException(c, "null");
-            }
-
-            if (Properties.Count == 0)
-            {
-                return new JsonSchemaValidationException(c, "no properties");
-            }
-
-            if (Required != null)
-            {
-                foreach (var x in Required)
-                {
-                    using (c.Push(x))
-                    {
-                        var value = o.GetValueByKey(x);
-                        var ex = Properties[x].Validator.Validate(c, value);
-                        if (ex != null)
-                        {
-                            return ex;
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        Dictionary<string, object> m_validValueMap = new Dictionary<string, object>();
-
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, Object o)
-        {
-            // validate properties
-            m_validValueMap.Clear();
-            foreach (var kv in Properties)
-            {
-                var value = o.GetValueByKey(kv.Key);
-                var v = kv.Value.Validator;
-                using (c.Push(kv.Key))
-                {
-                    if (v != null && v.Validate(c, value) == null)
-                    {
-                        m_validValueMap.Add(kv.Key, value);
-                    }
-                }
-            }
-
-            using (f.BeginMapDisposable())
-            {
-                foreach (var kv in Properties)
-                {
-                    object value;
-                    if (!m_validValueMap.TryGetValue(kv.Key, out value))
-                    {
-                        continue;
-                    }
-
-                    string[] dependencies;
-                    if (Dependencies.TryGetValue(kv.Key, out dependencies))
-                    {
-                        // check dependencies
-                        bool hasDependencies = true;
-                        foreach (var x in dependencies)
-                        {
-                            if (!m_validValueMap.ContainsKey(x))
-                            {
-                                hasDependencies = false;
-                                break;
-                            }
-                        }
-                        if (!hasDependencies)
-                        {
-                            continue;
-                        }
-                    }
-
-                    // key
-                    f.Key(kv.Key);
-
-                    // value
-                    using (c.Push(kv.Key))
-                    {
-                        kv.Value.Validator.Serialize(f, c, value);
-                    }
-                }
-            }
-        }
-
-        public void ToJson(JsonFormatter f)
+        public void ToJsonScheama(IFormatter f)
         {
             f.Key("type"); f.Value("object");
             if (Properties.Count > 0)
             {
                 f.Key("properties");
-                f.BeginMap();
+                f.BeginMap(Properties.Count);
                 foreach (var kv in Properties)
                 {
                     f.Key(kv.Key);
@@ -385,6 +296,310 @@ namespace UniJSON
                 }
                 f.EndMap();
             }
+        }
+
+        public static class GenericValidator<T>
+        {
+            class ObjectValidator
+            {
+                delegate JsonSchemaValidationException FieldValidator(IJsonSchemaValidator v, 
+                    JsonSchemaValidationContext c, T o);
+
+                Dictionary<string, FieldValidator> m_validators = new Dictionary<string, FieldValidator>();
+
+                static FieldValidator CreteFieldValidator<U>(Func<T, U> getter, string name)
+                {
+                    return (v, c, o) =>
+                    {
+                        //using (c.Push(name))
+                        {
+                            return v.Validate(c, getter(o));
+                        }
+                    };
+                }
+
+                public ObjectValidator()
+                {
+                    var mi = typeof(ObjectValidator).GetMethod("CreteFieldValidator",
+                        BindingFlags.Static|BindingFlags.NonPublic);
+
+                    var t = typeof(T);
+                    foreach(var fi in t.GetFields(
+                        BindingFlags.Instance|BindingFlags.Public))
+                    {
+                        var value = Expression.Parameter(typeof(T), "value");
+                        var fieldValue = Expression.Field(value, fi);
+                        var compileld = Expression.Lambda(fieldValue, value).Compile();
+
+                        var getter = Expression.Constant(compileld);
+                        var name = Expression.Constant(fi.Name);
+                        var g = mi.MakeGenericMethod(fi.FieldType);
+                        var call = Expression.Call(g, getter, name);
+                        var lambda = (Func<FieldValidator>)Expression.Lambda(call).Compile();
+
+                        m_validators.Add(fi.Name, lambda());
+                    }
+                }
+
+                public JsonSchemaValidationException Validate(List<string> required, Dictionary<string, JsonSchema> properties,
+                    JsonSchemaValidationContext c, T o)
+                {
+                    foreach (var x in required)
+                    {
+                        JsonSchema s;
+                        if(properties.TryGetValue(x, out s))
+                        {
+                            FieldValidator fv;
+                            if (m_validators.TryGetValue(x, out fv))
+                            {
+                                var ex = fv(s.Validator, c, o);
+                                if (ex != null)
+                                {
+                                    return ex;
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                }
+            }
+
+            static ObjectValidator s_validator;
+
+            public static JsonSchemaValidationException Validate(List<string> required,
+                Dictionary<string, JsonSchema> properties,
+                JsonSchemaValidationContext c, T o)
+            {
+                if (s_validator == null)
+                {
+                    s_validator = new ObjectValidator();
+                }
+                return s_validator.Validate(required, properties, c, o);
+            }
+        }
+
+        public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
+        {
+            if (o == null)
+            {
+                return new JsonSchemaValidationException(c, "null");
+            }
+
+            if (Properties.Count < MinProperties)
+            {
+                return new JsonSchemaValidationException(c, "no properties");
+            }
+
+            if (Required != null)
+            {
+                var ex = GenericValidator<T>.Validate(Required, Properties, c, o);
+                if (ex != null)
+                {
+                    return ex;
+                }
+            }
+
+            return null;
+        }
+
+        static class GenericSerializer<T>
+        {
+            class Serializer
+            {
+                delegate void FieldSerializer(JsonObjectValidator v, IFormatter f, JsonSchemaValidationContext c, T src);
+
+                List<FieldSerializer> m_fieldSerializers = new List<FieldSerializer>();
+
+                static FieldSerializer CreateSerializer<U>(FieldInfo fi)
+                {
+                    var src = Expression.Parameter(typeof(T), "src");
+                    var getter = Expression.Field(src, fi);
+                    var compiled = (Func<T, U>)Expression.Lambda(getter, src).Compile();
+                    var name = fi.Name;
+                    return (v, f, c, s) =>
+                    {
+                        //c.Push(name);
+
+                        var validator = v.Properties[name].Validator;
+
+                        var value = compiled(s);
+
+                        // validate
+                        if (validator.Validate(c, value) != null)
+                        {
+                            return;
+                        }
+
+                        /*
+                        // depencencies
+                        string[] dependencies;
+                        if (validator.Dependencies.TryGetValue(name, out dependencies))
+                        {
+                            // check dependencies
+                            bool hasDependencies = true;
+                            foreach (var x in dependencies)
+                            {
+                                if (!map.ContainsKey(x))
+                                {
+                                    hasDependencies = false;
+                                    break;
+                                }
+                            }
+                            if (!hasDependencies)
+                            {
+                                continue;
+                            }
+                        }
+                        */
+
+                        f.Key(name);
+                        validator.Serialize(f, c, value);
+                        //f.Serialize(value);
+
+                        //c.Pop();
+                    };
+                }
+
+                public void AddField(FieldInfo fi)
+                {
+                    var mi = typeof(Serializer).GetMethod("CreateSerializer",
+                        BindingFlags.Static | BindingFlags.NonPublic);
+                    var g = mi.MakeGenericMethod(fi.FieldType);
+                    var f = Expression.Constant(fi);
+                    var call = Expression.Call(g, f);
+                    var compiled = (Func<FieldSerializer>)Expression.Lambda(call).Compile();
+                    m_fieldSerializers.Add(compiled());
+                }
+
+                public void Serialize(JsonObjectValidator v, IFormatter f, JsonSchemaValidationContext c, T value)
+                {
+                    f.BeginMap(m_fieldSerializers.Count);
+                    foreach (var s in m_fieldSerializers)
+                    {
+                        s(v, f, c, value);
+                    }
+                    f.EndMap();
+                }
+            }
+
+            static Serializer s_serializer;
+
+            public static void Serialize(JsonObjectValidator validator,
+                    IFormatter f, JsonSchemaValidationContext c, T value)
+            {
+                if (s_serializer == null)
+                {
+                    var t = typeof(T);
+                    if (t == typeof(object))
+                    {
+                        throw new ArgumentException("object cannot serialize");
+                    }
+                    var serializer = new Serializer();
+                    var fields = t.GetFields(BindingFlags.Instance | BindingFlags.Public);
+                    foreach (var fi in fields)
+                    {
+                        serializer.AddField(fi);
+                    }
+                    s_serializer = serializer;
+                }
+                s_serializer.Serialize(validator, f, c, value);
+            }
+        }
+
+        public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T value)
+        {
+            GenericSerializer<T>.Serialize(this, f, c, value);
+        }
+
+        static class GenericDeserializer<S, T> 
+            where S : IListTreeItem, IValue<S>
+        {
+            delegate T Deserializer(ListTreeNode<S> src);
+
+            static Deserializer s_d;
+
+            delegate void FieldSetter(ListTreeNode<S> s, object o);
+            static FieldSetter GetFieldDeserializer<U>(FieldInfo fi)
+            {
+                return (s, o) =>
+                {
+                    var u = default(U);
+                    s.Deserialize(ref u);
+                    fi.SetValue(o, u);
+                };
+            }
+
+            static U DeserializeField<U>(JsonSchema prop, ListTreeNode<S> s)
+            {
+                var u = default(U);
+                prop.Validator.Deserialize(s, ref u);
+                return u;
+            }
+
+            public static void Deserialize(ListTreeNode<S> src, ref T dst, Dictionary<string, JsonSchema> props)
+            {
+                if (s_d == null)
+                {
+                    var target = typeof(T);
+
+                    var fields = target.GetFields(BindingFlags.Instance | BindingFlags.Public);
+                    var fieldDeserializers = fields.ToDictionary(x => Utf8String.From(x.Name), x =>
+                    {
+                        /*
+                        var mi = typeof(GenericDeserializer<T>).GetMethod("GetFieldDeserializer",
+                            BindingFlags.Static | BindingFlags.NonPublic);
+                        var g = mi.MakeGenericMethod(x.FieldType);
+                        return (FieldSetter)g.Invoke(null, new object[] { x });
+                        */
+                        JsonSchema prop;
+                        if (!props.TryGetValue(x.Name, out prop))
+                        {
+                            return null;
+                        }
+
+                        var mi = typeof(GenericDeserializer<S, T>).GetMethod("DeserializeField",
+                            BindingFlags.Static | BindingFlags.NonPublic);
+                        var g = mi.MakeGenericMethod(x.FieldType);
+
+                        return (FieldSetter)((s, o) =>
+                        {
+                            var f = g.Invoke(null, new object[] { prop, s });
+                            x.SetValue(o, f);
+                        });
+                    });
+
+                    s_d = (ListTreeNode<S> s) =>
+                    {
+                        if (!s.IsMap())
+                        {
+                            throw new ArgumentException(s.Value.ValueType.ToString());
+                        }
+
+                        // boxing
+                        var t = (object)Activator.CreateInstance<T>();
+                        foreach (var kv in s.ObjectItems())
+                        {
+                            FieldSetter setter;
+                            if (fieldDeserializers.TryGetValue(kv.Key.GetUtf8String(), out setter))
+                            {
+                                if (setter != null)
+                                {
+                                    setter(kv.Value, t);
+                                }
+                            }
+                        }
+                        return (T)t;
+                    };
+
+                }
+                dst = s_d(src);
+            }
+        }
+
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+            where T : IListTreeItem, IValue<T>
+        {
+            GenericDeserializer<T, U>.Deserialize(src, ref dst, Properties);
         }
     }
 }

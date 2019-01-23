@@ -130,7 +130,7 @@ namespace UniJSON
             return true;
         }
 
-        public void Assign(IJsonSchemaValidator obj)
+        public void Merge(IJsonSchemaValidator obj)
         {
             var rhs = obj as JsonObjectValidator;
             if (rhs == null)
@@ -153,7 +153,7 @@ namespace UniJSON
             }
         }
 
-        public bool Parse(IFileSystemAccessor fs, string key, JsonNode value)
+        public bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value)
         {
             switch (key)
             {
@@ -167,7 +167,7 @@ namespace UniJSON
 
                 case "required":
                     {
-                        foreach (var req in value.ArrayItems)
+                        foreach (var req in value.ArrayItems())
                         {
                             m_required.Add(req.GetString());
                         }
@@ -188,9 +188,9 @@ namespace UniJSON
 
                 case "dependencies":
                     {
-                        foreach (var kv in value.ObjectItems)
+                        foreach (var kv in value.ObjectItems())
                         {
-                            Dependencies.Add(kv.Key, kv.Value.ArrayItems.Select(x => x.GetString()).ToArray());
+                            Dependencies.Add(kv.Key.GetString(), kv.Value.ArrayItems().Select(x => x.GetString()).ToArray());
                         }
                     }
                     return true;
@@ -202,21 +202,46 @@ namespace UniJSON
             return false;
         }
 
-        public JsonSchemaValidationException Validate(JsonSchemaValidationContext c, object o)
+        public void ToJsonScheama(IFormatter f)
+        {
+            f.Key("type"); f.Value("object");
+        }
+
+        public JsonSchemaValidationException Validate<S>(JsonSchemaValidationContext c, S o)
         {
             if (o == null)
             {
                 return new JsonSchemaValidationException(c, "null");
             }
 
+            var d = o as IDictionary<string, T>;
+            if (d == null)
+            {
+                return new JsonSchemaValidationException(c, "not dictionary");
+            }
+
             if (Required != null)
             {
+                /*
                 foreach (var x in Required)
                 {
                     using (c.Push(x))
                     {
-                        /*var value =*/
-                        o.GetValueByKey(x);
+                        // ToDo
+                    }
+                }
+                */
+            }
+
+            if (AdditionalProperties != null)
+            {
+                foreach (var kv in d)
+                {
+                    c.Push(kv.Key);
+                    var result = AdditionalProperties.Validator.Validate(c, kv.Value);
+                    if (result != null)
+                    {
+                        return result;
                     }
                 }
             }
@@ -226,31 +251,33 @@ namespace UniJSON
 
         Dictionary<string, object> m_validValueMap = new Dictionary<string, object>();
 
-        public void Serialize(JsonFormatter f, JsonSchemaValidationContext c, Object o)
+        public void Serialize<S>(IFormatter f, JsonSchemaValidationContext c, S o)
         {
             // validate properties
             m_validValueMap.Clear();
 
-            using (f.BeginMapDisposable())
+            var dict = o as Dictionary<string, T>;
+            f.BeginMap(dict.Count);
             {
-                var dict = o as Dictionary<string, T>;
                 foreach (var kv in dict)
                 {
                     // key
                     f.Key(kv.Key);
 
                     // value
-                    using (c.Push(kv.Key))
+                    //using (c.Push(kv.Key))
                     {
                         AdditionalProperties.Validator.Serialize(f, c, kv.Value);
                     }
                 }
             }
+            f.EndMap();
         }
 
-        public void ToJson(JsonFormatter f)
+        public void Deserialize<U, V>(ListTreeNode<U> src, ref V dst) 
+            where U : IListTreeItem, IValue<U>
         {
-            f.Key("type"); f.Value("object");
+            throw new NotImplementedException();
         }
     }
 
