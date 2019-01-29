@@ -26,7 +26,6 @@ public class CharacterBehaviour : MonoBehaviour
     private int emotionIndex = 0;  // 表情の状態
     private float emotionRate = 0f; // その表情になっている程度 0～1
     private float emotionSpeed = 0f;  // 表情を発生させる方向なら 1、戻す方向なら -1、維持なら 0
-    private float lastEmotionTime = 0f;   // 前回表情を変化させた時刻
     private float nextEmotionTime = 0f;   // 次に表情を変化させる時刻
     public float emotionInterval = 2f;     // 表情を変化させる間隔
     public float emotionIntervalRandamRange = 5f;  // 表情変化間隔のランダム要素
@@ -204,7 +203,6 @@ public class CharacterBehaviour : MonoBehaviour
             // 待ち時間を越えた場合の処理
             nextEmotionTime = now + emotionInterval + Random.value * emotionIntervalRandamRange;
             emotionSpeed = (emotionSpeed > 0 ? -1f : emotionSpeed < 0 ? 0 : 1f);    // 表情を与えるか戻すか、次の方向を決定
-            lastEmotionTime = now;
 
             // 表情を与えるなら、ランダムで次の表情を決定
             if (emotionSpeed > 0)
