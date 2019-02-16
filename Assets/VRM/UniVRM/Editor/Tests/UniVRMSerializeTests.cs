@@ -237,10 +237,17 @@ namespace VRM
         [Test]
         public void MetaTest()
         {
-            var model = new glTF_VRM_Meta();
+            var model = new glTF_VRM_Meta()
+            {
+                allowedUserName = "OnlyAuthor",
+                violentUssageName = "Disallow",
+                sexualUssageName = "Disallow",
+                commercialUssageName = "Disallow",
+                licenseName = "CC0",
+            };
 
             var json = model.ToJson();
-            Assert.AreEqual(@"{""texture"":-1}", json);
+            Assert.AreEqual(@"{""texture"":-1,""allowedUserName"":""OnlyAuthor"",""violentUssageName"":""Disallow"",""sexualUssageName"":""Disallow"",""commercialUssageName"":""Disallow"",""licenseName"":""CC0""}", json);
             Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
@@ -249,7 +256,235 @@ namespace VRM
             };
             var json2 = JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c);
             // NOTE: New serializer outputs values which will not be used...
-            Assert.AreEqual(@"{}",json2);
+            Assert.AreEqual(@"{""allowedUserName"":""OnlyAuthor"",""violentUssageName"":""Disallow"",""sexualUssageName"":""Disallow"",""commercialUssageName"":""Disallow"",""licenseName"":""CC0""}",json2);
+        }
+
+        [Test]
+        public void MetaTestError()
+        {
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = null,
+                    violentUssageName = null,
+                    sexualUssageName = null,
+                    commercialUssageName = null,
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[allowedUserName.String] null", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "Disallow",
+                    //licenseName = "CC0",
+                    licenseName = null,
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[licenseName.String] null", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "Disallow",
+                    licenseName = "_INVALID_SOME_THING_",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[licenseName.String] _INVALID_SOME_THING_ is not valid enum", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    // allowedUserName = "OnlyAuthor",
+                    allowedUserName = null,
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "Disallow",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[allowedUserName.String] null", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "_INVALID_SOME_THING_",
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "Disallow",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[allowedUserName.String] _INVALID_SOME_THING_ is not valid enum", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    //violentUssageName = "Disallow",
+                    violentUssageName = null,
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "Disallow",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[violentUssageName.String] null", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "_INVALID_SOME_THING_",
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "Disallow",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[violentUssageName.String] _INVALID_SOME_THING_ is not valid enum", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "Disallow",
+                    //sexualUssageName = "Disallow",
+                    sexualUssageName = null,
+                    commercialUssageName = "Disallow",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[sexualUssageName.String] null", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "_INVALID_SOME_THING_",
+                    commercialUssageName = "Disallow",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[sexualUssageName.String] _INVALID_SOME_THING_ is not valid enum", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "Disallow",
+                    //commercialUssageName = "Disallow",
+                    commercialUssageName = null,
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[commercialUssageName.String] null", ex.Message);
+            }
+
+            {
+                var model = new glTF_VRM_Meta()
+                {
+                    allowedUserName = "OnlyAuthor",
+                    violentUssageName = "Disallow",
+                    sexualUssageName = "Disallow",
+                    commercialUssageName = "_INVALID_SOME_THING_",
+                    licenseName = "CC0",
+                };
+
+                var c = new JsonSchemaValidationContext("")
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                var ex = Assert.Throws<JsonSchemaValidationException>(
+                    () => JsonSchema.FromType<glTF_VRM_Meta>().Serialize(model, c)
+                );
+                Assert.AreEqual("[commercialUssageName.String] _INVALID_SOME_THING_ is not valid enum", ex.Message);
+            }
         }
 
         // TODO: Move to another suitable location
@@ -391,6 +626,29 @@ namespace VRM
             var json2 = JsonSchema.FromType<glTF_VRM_SecondaryAnimation>().Serialize(model, c);
             // NOTE: New serializer outputs values which will not be used...
             Assert.AreEqual(json,json2);
+        }
+
+        [Test]
+        public void ExtensionsTest()
+        {
+            var model = new glTF_VRM_extensions()
+            {
+                meta = null,
+                humanoid = null,
+                firstPerson = null,
+                blendShapeMaster = null,
+                secondaryAnimation = null,
+                materialProperties = null,
+            };
+
+            var c = new JsonSchemaValidationContext("")
+            {
+                EnableDiagnosisForNotRequiredFields = true,
+            };
+            var json2 = JsonSchema.FromType<glTF_VRM_extensions>().Serialize(model, c);
+            var expected =
+                String.Format(@"{{""exporterVersion"":""{0}"",""specVersion"":""0.0""}}", VRMVersion.VRM_VERSION);
+            Assert.AreEqual(expected,json2);
         }
 
         // TODO: Move to another suitable location

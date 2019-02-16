@@ -45,21 +45,48 @@ namespace UniJSON
             return method.MakeGenericMethod(typeof(T));
         }
 
+        //
+        // https://stackoverflow.com/questions/238765/given-a-type-expressiontype-memberaccess-how-do-i-get-the-field-value
+        //
         public static void KeyValue<T>(this IFormatter f, Expression<Func<T>> expression)
         {
-            var func = expression.Compile();
-            var value = func();
-            if (value != null)
+            // lambda body
+            var lambdaBody = (MemberExpression)expression.Body;
+
+            if (lambdaBody.Expression.NodeType == ExpressionType.Constant)
             {
-                var body = expression.Body as MemberExpression;
-                if (body == null)
+                // 
+                // KeyValue(() => Field);
+                // 
+                var constant = (ConstantExpression)lambdaBody.Expression;
+                var field = (FieldInfo)lambdaBody.Member;
+                var value = field.GetValue(constant.Value);
+                if (value != null)
                 {
-                    body = ((UnaryExpression)expression.Body).Operand as MemberExpression;
+                    f.Key(lambdaBody.Member.Name);
+                    f.Serialize(value);
                 }
-                f.Key(body.Member.Name);
-                f.Serialize(expression.Compile()());
-                //var method = GetMethod(expression);
-                //method.Invoke(this, new object[] { value });
+            }
+            else
+            {
+                // 
+                // KeyValue(() => p.Field);
+                // 
+                var capture = (MemberExpression)lambdaBody.Expression;
+
+                var captureVariable = (ConstantExpression)capture.Expression;
+                var captureObj = captureVariable.Value;
+                var captureField = (FieldInfo)capture.Member;
+                var captureValue = captureField.GetValue(captureObj);
+
+                var field = (FieldInfo)lambdaBody.Member;
+
+                var value = field.GetValue(captureValue);
+                if (value != null)
+                {
+                    f.Key(field.Name);
+                    f.Serialize(value);
+                }
             }
         }
     }

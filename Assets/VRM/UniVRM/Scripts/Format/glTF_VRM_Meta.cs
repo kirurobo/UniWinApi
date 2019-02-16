@@ -59,12 +59,12 @@ namespace VRM
         public int texture = -1;
 
         #region Ussage Permission
-        [JsonSchema(Description = "A person who can perform with this avatar ", EnumValues = new object[] {
+        [JsonSchema(Required = true, Description = "A person who can perform with this avatar ", EnumValues = new object[] {
             "OnlyAuthor",
             "ExplicitlyLicensedPerson",
             "Everyone",
         }, EnumSerializationType = EnumSerializationType.AsString)]
-        public string allowedUserName;
+        public string allowedUserName = "OnlyAuthor";
         public AllowedUser allowedUser
         {
             get
@@ -77,36 +77,36 @@ namespace VRM
             }
         }
 
-        [JsonSchema(Description = "Permission to perform violent acts with this avatar", EnumValues = new object[]
+        [JsonSchema(Required = true, Description = "Permission to perform violent acts with this avatar", EnumValues = new object[]
         {
         "Disallow",
         "Allow",
         }, EnumSerializationType = EnumSerializationType.AsString)]
-        public string violentUssageName;
+        public string violentUssageName = "Disallow";
         public UssageLicense violentUssage
         {
             get { return FromString(violentUssageName); }
             set { violentUssageName = value.ToString(); }
         }
 
-        [JsonSchema(Description = "Permission to perform sexual acts with this avatar", EnumValues = new object[]
+        [JsonSchema(Required = true, Description = "Permission to perform sexual acts with this avatar", EnumValues = new object[]
         {
         "Disallow",
         "Allow",
         }, EnumSerializationType = EnumSerializationType.AsString)]
-        public string sexualUssageName;
+        public string sexualUssageName = "Disallow";
         public UssageLicense sexualUssage
         {
             get { return FromString(sexualUssageName); }
             set { sexualUssageName = value.ToString(); }
         }
 
-        [JsonSchema(Description = "For commercial use", EnumValues = new object[]
+        [JsonSchema(Required = true, Description = "For commercial use", EnumValues = new object[]
         {
         "Disallow",
         "Allow",
         }, EnumSerializationType = EnumSerializationType.AsString)]
-        public string commercialUssageName;
+        public string commercialUssageName = "Disallow";
         public UssageLicense commercialUssage
         {
             get { return FromString(commercialUssageName); }
@@ -118,7 +118,7 @@ namespace VRM
         #endregion
 
         #region Distribution License
-        [JsonSchema(Description = "License type", EnumValues = new object[]
+        [JsonSchema(Required = true, Description = "License type", EnumValues = new object[]
         {
             "Redistribution_Prohibited",
             "CC0",
@@ -130,7 +130,7 @@ namespace VRM
             "CC_BY_NC_ND",
             "Other"
         }, EnumSerializationType = EnumSerializationType.AsString)]
-        public string licenseName;
+        public string licenseName = "Redistribution_Prohibited";
         public LicenseType licenseType
         {
             get
