@@ -1,6 +1,6 @@
 # UniWinApi Example project
 
-UniWinApi は Unityでは本来行えない操作を Windows API 経由で行うものです。  
+[UniWinApi](https://github.com/kirurobo/UniWinApiAsset) は Unityでは本来行えない操作を Windows API 経由で行うものです。  
 以下のようなことができます。  
 
 * ウィンドウの移動
@@ -14,10 +14,10 @@ UniWinApi は Unityでは本来行えない操作を Windows API 経由で行う
 
 主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
 
-このリポジトリではそれらの機能を利用したデスクトップマスコット風のVRMビューアーのプロジェクトを置いてあります。  
+このリポジトリではそれらの機能を利用した応用例として、デスクトップマスコット風VRMビューアーのプロジェクトを置いてあります。  
 [![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.4.0 beta")
 
-## Download ダウンロード
+## Download (ダウンロード)
 
 ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版と32ビット版(x86)があります。
 * [Ver.0.4.0 UniWinApi本体もリリース](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0)
@@ -36,7 +36,7 @@ UniWinApi は Unityでは本来行えない操作を Windows API 経由で行う
 
 </details>
 
-## License ライセンス
+## License (ライセンス)
 
 * CC0
    * [UniWinApi本体](http://github.com/kirurobo/UniWinApiAsset)
@@ -48,13 +48,13 @@ UniWinApi は Unityでは本来行えない操作を Windows API 経由で行う
     * [えむにわ @m2wasabi](https://twitter.com/m2wasabi) [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
     * [@setch](https://twitter.com/setchi) [uGUI-Hypertext](https://github.com/setchi/uGUI-Hypertext)
 
-## System requirements 動作環境
+## System requirements (動作環境)
 
 * Unity 5.6 or newer
 * Windows 7 or newer
 
 
-## Usage 利用方法
+## Usage (利用方法)
 
 VRMビューアを動かしてみるだけなら、ダウンロードしたビルド済み実行ファイルを展開し、その中の UniWinApiVrmViewer.exe を起動してください。  
 起動後にお手元の VRM ファイルをドロップするとそのモデルが表示されます。
