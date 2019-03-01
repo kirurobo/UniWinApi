@@ -31,23 +31,33 @@ UniWinApi は Unityでは本来行えない操作を Windows API 経由で行う
 * [Ver.0.2.1 シェーダー修正後](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.1/UniWinApiVrmViewer_x64_v0.2.1.zip)
 * [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
 
+## License ライセンス
 
-## Credit
+* CC0
+   * [UniWinApi本体](http://github.com/kirurobo/UniWinApiAsset)
+      * VRMビューア以外の、.unitypackageの中身は CC0 です。
+      * そちらのソースは別リポジトリにて管理しています。
 
 * MIT License
     * DWANGO Co., Ltd. [UniVRM](https://github.com/dwango/UniVRM/)
     * [えむにわ @m2wasabi](https://twitter.com/m2wasabi) [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
     * [@setch](https://twitter.com/setchi) [uGUI-Hypertext](https://github.com/setchi/uGUI-Hypertext)
 
-## System requirements
+## System requirements 動作環境
 
 * Unity 5.6 or newer
 * Windows 7 or newer
 
 
-## Usage
+## Usage 利用方法
 
-Unityプロジェクトとして開くには、本リポジトリのソースコードの他に下記が必要です。
+VRMビューアを動かしてみるだけなら、ダウンロードしたビルド済み実行ファイルを展開し、その中の UniWinApiVrmViewer.exe を起動してください。  
+起動後にお手元の VRM ファイルをドロップするとそのモデルが表示されます。
+
+VRMビューアのプロジェクトではなく、.unitypackage の利用（こちらがUniWinApiの本体）については、
+こちらの [チュートリアル](https://github.com/kirurobo/UniWinApi/blob/master/docs/index_jp.md) をご覧ください。
+
+このVRMビューアのUnityプロジェクトを利用する場合は、本リポジトリのソースコードの他に下記が必要です。
 
 * ["Unity-chan!" Model](https://assetstore.unity.com/packages/3d/characters/unity-chan-model-18705) をアセットストアからインポート
     * 必要なのは Animations 以下です。
