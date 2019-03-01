@@ -97,8 +97,12 @@ void Update () {
 `enableFileDrop` を true にしてあれば、`OnFilesDropped` というイベントでドロップされたファイルに対する処理を行えます。
 
 ```csharp
-myWindowController.OnFilesDropped += FileDropped;
-
+void Start() {
+	...
+	myWindowController.OnFilesDropped += FileDropped;
+}
+```
+```csharp
 private void FileDropped(string[] files) {
 	// ドロップされたファイルに対する処理
 	foreach (var path in files) {
