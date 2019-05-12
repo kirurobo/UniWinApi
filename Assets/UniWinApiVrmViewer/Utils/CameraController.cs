@@ -35,7 +35,10 @@ public class CameraController : MonoBehaviour {
     public Vector2 minimumAngles = new Vector2(-90f, -360f);
     public Vector2 maximumAngles = new Vector2( 90f,  360f);
 
+    [Tooltip("None means to set the parent transform")]
     public Transform centerTransform;   // 回転中心
+
+    private GameObject centerObject = null; // 回転中心Transformが指定されなかった場合に作成される
 
     internal Vector3 rotation;
     internal Vector3 translation;
@@ -55,6 +58,13 @@ public class CameraController : MonoBehaviour {
     void Start()
     {
         Initialize();
+        SetupTransform();
+    }
+
+    void OnDestroy()
+    {
+        // 回転中心を独自に作成していれば、削除
+        if (centerObject) GameObject.Destroy(centerObject);
     }
 
     void Update()
@@ -67,7 +77,7 @@ public class CameraController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Initialize
+    /// 必要なオブジェクトを取得・準備
     /// </summary>
     internal void Initialize()
     {
@@ -76,14 +86,11 @@ public class CameraController : MonoBehaviour {
             centerTransform = this.transform.parent;
             if (!centerTransform || centerTransform == this.transform)
             {
-                centerTransform = new GameObject().transform;
+                centerObject = new GameObject();
                 centerTransform.position = Vector3.zero;
+                centerTransform = centerObject.transform;
             }
         }
-
-        relativePosition = centerTransform.position - transform.position;	// カメラから中心座標へのベクトル
-        relativeRotation = Quaternion.LookRotation(relativePosition, Vector3.up);
-        originalDistance = relativePosition.magnitude;
 
         if (!currentCamera)
         {
@@ -93,6 +100,18 @@ public class CameraController : MonoBehaviour {
         {
             currentCamera = Camera.main;
         }
+    }
+
+    /// <summary>
+    /// 初期位置・姿勢の設定
+    /// 対象となるオブジェクトがそろった後で実行する
+    /// </summary>
+    internal void SetupTransform()
+    {
+        relativePosition = centerTransform.position - transform.position;	// カメラから中心座標へのベクトル
+        relativeRotation = Quaternion.LookRotation(relativePosition, Vector3.up);
+        originalDistance = relativePosition.magnitude;
+
         originalFieldOfView = currentCamera.fieldOfView;
 
         ResetTransform();
