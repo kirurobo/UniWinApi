@@ -8,7 +8,9 @@
     "Language": "言語",
     "ZoomMode":  "ズーム方法",
     "None": "なし",
+    "Preset": "既定",
     "Random": "ランダム",
+    "Bvh": "BVH",
     "Repeat": "繰り返し"
   },
   "buttons": {

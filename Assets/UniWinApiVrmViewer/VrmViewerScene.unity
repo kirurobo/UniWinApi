@@ -6039,9 +6039,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -400, y: 0}
+  m_AnchoredPosition: {x: -140, y: 0}
   m_SizeDelta: {x: 520, y: 580}
-  m_Pivot: {x: 0, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1052724204
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10441,7 +10441,9 @@ MonoBehaviour:
   titleText: {fileID: 73029309}
   zoomModeDropdown: {fileID: 1756576026}
   languageDropdown: {fileID: 1247809434}
+  motionTogglePreset: {fileID: 235421695}
   motionToggleRandom: {fileID: 314904125}
+  motionToggleBvh: {fileID: 1020689045}
   faceToggleRandom: {fileID: 2088522888}
   tabButtonModel: {fileID: 1287452624}
   tabButtonControl: {fileID: 1866818129}
@@ -10459,7 +10461,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiController: {fileID: 0}
-  canvas: {fileID: 0}
   cameraController: {fileID: 0}
   cameraTransform: {fileID: 0}
   audioSource: {fileID: 0}

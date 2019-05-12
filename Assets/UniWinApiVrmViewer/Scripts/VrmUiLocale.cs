@@ -67,7 +67,9 @@ public class VrmUiLocale : MonoBehaviour
         SetText(ref transforms, "LanguageDropdown", localeText.labels.Language);
         SetText(ref transforms, "MotionDropdown", localeText.labels.Motion);
         SetText(ref transforms, "MotionModeText", localeText.labels.Motion);
+        SetText(ref transforms, "MotionTogglePreset", localeText.labels.Preset);
         SetText(ref transforms, "MotionToggleRandom", localeText.labels.Random);
+        SetText(ref transforms, "MotionToggleBvh", localeText.labels.Bvh);
         SetText(ref transforms, "FaceDropdown", localeText.labels.Face);
         SetText(ref transforms, "FaceModeText", localeText.labels.Face);
         SetText(ref transforms, "FaceToggleRandom", localeText.labels.Random);
@@ -119,13 +121,16 @@ public class VrmUiLocale : MonoBehaviour
     [System.Serializable]
     public struct Labels
     {
-        public string Motion, Face, Transparent, Topmost, Maximize, Language, ZoomMode, None, Random, Repeat;
+        public string Motion, Face;
+        public string Transparent, Topmost, Maximize;
+        public string Language, ZoomMode, None, Preset, Random, Bvh, Repeat;
     }
 
     [System.Serializable]
     public struct Buttons
     {
-        public string Quit, Open, Back, Next, TabButtonModel, TabButtonMotion, TabButtonConfig;
+        public string Quit, Open, Back, Next;
+        public string TabButtonModel, TabButtonMotion, TabButtonConfig;
     }
 
     [System.Serializable]

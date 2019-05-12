@@ -8,7 +8,9 @@
     "Language": "Language",
     "ZoomMode": "Zoom mode",
     "None": "None",
+    "Preset": "Preset",
     "Random": "Random",
+    "Bvh": "BVH",
     "Repeat": "Repeat"
   },
   "buttons": {

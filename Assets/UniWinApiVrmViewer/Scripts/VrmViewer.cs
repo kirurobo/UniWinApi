@@ -26,7 +26,6 @@ public class VrmViewer : MonoBehaviour
     private VRMMetaObject meta;
 
     public VrmUiController uiController;
-    public Canvas canvas;
     public CameraController cameraController;
     public Transform cameraTransform;
 
@@ -54,12 +53,6 @@ public class VrmViewer : MonoBehaviour
         if (uiController.faceToggleRandom)
         {
             uiController.faceToggleRandom.onValueChanged.AddListener(val => SetRandomEmotion(val));
-        }
-
-        // 指定がなければ自動で探す
-        if (!canvas)
-        {
-            canvas = FindObjectOfType<Canvas>();
         }
 
         // 指定がなければ自動で探す

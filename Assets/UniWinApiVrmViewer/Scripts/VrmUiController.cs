@@ -6,6 +6,10 @@ using Kirurobo;
 
 public class VrmUiController : MonoBehaviour
 {
+    /// <summary>
+    /// セーブ情報のバージョン番号
+    /// </summary>
+    const float prefsVersion = 0.01f;
 
     public WindowController windowController;
 
@@ -19,24 +23,39 @@ public class VrmUiController : MonoBehaviour
     public Button openButton;
     public Button quitButton;
     public Text titleText;
-
-    public CameraController.ZoomMode zoomMode { get; set; }
+    
     public Dropdown zoomModeDropdown;
     public Dropdown languageDropdown;
 
+    public Toggle motionTogglePreset;
     public Toggle motionToggleRandom;
+    public Toggle motionToggleBvh;
     public Toggle faceToggleRandom;
 
     public Button tabButtonModel;
     public Button tabButtonControl;
     public RectTransform modelPanel;
     public RectTransform controlPanel;
+    public CameraController.ZoomMode zoomMode { get; set; }
+    public int language
+    {
+        get
+        {
+            if (languageDropdown)　return languageDropdown.value;
+            return 0;
+        }
+        set
+        {
+            SetLanguage(value);
+        }
+    }
 
     private float mouseMoveSS = 0f;             // Sum of mouse trajectory squares. [px^2]
     private float mouseMoveSSThreshold = 16f;   // Threshold to be regarded as not moving. [px^2]
     private Vector3 lastMousePosition;
 
-    private bool isDebugMode = false;   // Show debug Info.
+    private Vector2 originalAnchoredPosition;
+    private Canvas canvas;
 
     private VRMLoader.VRMPreviewLocale vrmLoaderLocale;
     private VRMLoader.VRMPreviewUI vrmLoaderUI;
@@ -76,11 +95,40 @@ public class VrmUiController : MonoBehaviour
         }
     }
 
+    public int motionMode
+    {
+        get
+        {
+            if (motionToggleRandom && motionToggleRandom.isOn) return 1;
+            if (motionToggleBvh && motionToggleBvh.isOn) return 2;
+            return 0;
+        }
+        set
+        {
+            if (value == 1)
+            {
+                motionToggleRandom.isOn = true;
+            }
+            else if (value == 2)
+            {
+                motionToggleBvh.isOn = true;
+            }
+            else
+            {
+                motionTogglePreset.isOn = true;
+            }
+        }
+    }
+
     /// <summary>
     /// Use this for initialization
     /// </summary>
     void Start()
     {
+        if (!canvas)
+        {
+            canvas = GetComponent<Canvas>();
+        }
 
         windowController = FindObjectOfType<WindowController>();
         windowController.OnStateChanged += windowController_OnStateChanged;
@@ -91,6 +139,10 @@ public class VrmUiController : MonoBehaviour
         vrmLoaderUI = this.GetComponentInChildren<VRMLoader.VRMPreviewUI>();
         uiLocale = this.GetComponentInChildren<VrmUiLocale>();
         tabPanelManager = this.GetComponentInChildren<TabPanelManager>();
+
+        // 中央基準にする
+        panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 0.5f);
+        originalAnchoredPosition = panel.anchoredPosition;
 
         // Initialize toggles.
         UpdateUI();
@@ -112,8 +164,48 @@ public class VrmUiController : MonoBehaviour
             languageDropdown.value = 1;
         }
 
+        Load();
+
         // Show menu on startup.
         Show(null);
+    }
+
+    public void Save()
+    {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.SetFloat("Version", prefsVersion);
+        PlayerPrefs.SetInt("Transparent", windowController.isTransparent ? 1 : 0);
+        PlayerPrefs.SetInt("Maximized", windowController.isMaximized? 1 : 0);
+        PlayerPrefs.SetInt("Topmost", windowController.isTopmost? 1 : 0);
+
+        PlayerPrefs.SetInt("ZoomMode", (int)zoomMode);
+        PlayerPrefs.SetInt("Language", language);
+
+        PlayerPrefs.SetInt("MotionMode", motionMode);
+        PlayerPrefs.SetInt("EmotionMode", enableRandomEmotion ? 1 : 0);
+    }
+
+    public void Load()
+    {
+        //// セーブされた情報のバージョンが異なれば読み出さない
+        //if (PlayerPrefs.GetFloat("Version") != prefsVersion) return;
+
+        windowController.isTransparent = LoadPrefsBool("Transparent", windowController.isTransparent);
+        windowController.isMaximized = LoadPrefsBool("Maximized", windowController.isMaximized);
+        windowController.isTopmost = LoadPrefsBool("Topmost", windowController.isTopmost);
+
+        SetZoomMode(PlayerPrefs.GetInt("ZoomMode", 0));
+        SetLanguage(PlayerPrefs.GetInt("Language", 0));
+
+        motionMode = PlayerPrefs.GetInt("MotionMode", motionMode);
+        enableRandomEmotion = LoadPrefsBool("EmotionMode", enableRandomEmotion);
+    }
+
+    private bool LoadPrefsBool(string name, bool currentVal)
+    {
+        int pref = PlayerPrefs.GetInt(name, -1);
+        if (pref < 0) return currentVal;    // データがないか-1なら元の値のまま
+        return (pref > 0);    // そうでなければ 0:false , 1以上:true を返す
     }
 
     /// <summary>
@@ -196,6 +288,10 @@ public class VrmUiController : MonoBehaviour
 #endif
     }
 
+    void OnApplicationQuit()
+    {
+        Save();
+    }
 
     /// <summary>
     /// Update is called once per frame
@@ -215,7 +311,7 @@ public class VrmUiController : MonoBehaviour
         {
             if (mouseMoveSS < mouseMoveSSThreshold)
             {
-                Show();
+                Show(lastMousePosition);
             }
             mouseMoveSS = 0f;
         }
@@ -224,14 +320,6 @@ public class VrmUiController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Close();
-        }
-
-        // 裏機能
-        // メニューのタイトルがマウスカーソル直下の色になる
-        if (isDebugMode && windowController && titleText)
-        {
-            titleText.color = windowController.pickedColor;
-            //Debug.Log(windowController.pickedColor);
         }
     }
 
@@ -249,24 +337,40 @@ public class VrmUiController : MonoBehaviour
     }
 
     /// <summary>
+    /// 座標を指定してメニューを表示する
+    /// </summary>
+    /// <param name="mousePosition"></param>
+    public void Show(Vector2 mousePosition)
+    {
+        if (panel)
+        {
+            Vector2 pos = mousePosition;
+            float w = panel.rect.width;
+            float h = panel.rect.height;
+
+            pos.x += Mathf.Max(w * 0.5f - pos.x, 0f);   // 左にはみ出していれば右に寄せる
+            pos.y += Mathf.Max(h * 0.5f - pos.y, 0f);   // 下にはみ出していれば上に寄せる
+            pos.x -= Mathf.Max(pos.x - Screen.width + w * 0.5f, 0f);    // 右にはみ出していれば左に寄せる
+            pos.y -= Mathf.Max(pos.y - Screen.height + h * 0.5f, 0f);   // 上にはみ出していれば下に寄せる
+
+            panel.anchorMin = Vector2.zero;
+            panel.anchorMax = Vector2.zero;
+            panel.anchoredPosition = pos;
+            panel.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
     /// メニューを表示する
     /// </summary>
     public void Show()
     {
         if (panel)
         {
+            // 中央基準にして表示
+            panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
+            panel.anchoredPosition = originalAnchoredPosition;
             panel.gameObject.SetActive(true);
-        }
-
-        // 裏機能
-        // メニューが表示されるとき、[Shift]が押されていればデバッグ表示を有効にする
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-        {
-            isDebugMode = true;
-        }
-        else
-        {
-            isDebugMode = false;
         }
     }
 
