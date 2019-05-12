@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using VRM;
 
-public class CharacterHeadBehaviour : MonoBehaviour
+public class VrmCharacterBehaviour : MonoBehaviour
 {
 
     public float LookAtSpeed = 10.0f;   // 頭の追従速度係数 [1/s]
@@ -37,13 +37,20 @@ public class CharacterHeadBehaviour : MonoBehaviour
     private GameObject targetObject;    // 視線目標オブジェクト
     private Transform headTransform;    // Head transform
     private bool hasNewTargetObject = false;	// 新規に目標オブジェクトを作成したらtrue
+    private Transform leftHandTransform;    // Head transform
+    private Transform rightHandTransform;   // Head transform
 
     private Animator animator;
     private AnimatorStateInfo currentState;     // 現在のステート状態を保存する参照
     private AnimatorStateInfo previousState;    // ひとつ前のステート状態を保存する参照
     public bool randomMotion = true;                // ランダム判定スタートスイッチ
     private float randomMotionThreshold = 0.5f;             // ランダム判定の閾値
-    private float randomMotionInterval = 5f;				// ランダム判定のインターバル
+    private float randomMotionInterval = 5f;                // ランダム判定のインターバル
+
+    //private float cursorGrabingSqrMagnitude = 0.81f;    // 手の届く距離の2乗（これ以上離れると手を伸ばすことをやめる）
+    private float cursorGrabingSqrMagnitude = 10000f;    // 手の届く距離の2乗（これ以上離れると手を伸ばすことをやめる）
+    private float lastRightHandWait = 0f;
+    private float lastLeftHandWait = 0f;
 
     public bool randomEmotion = true;
 
@@ -79,7 +86,8 @@ public class CharacterHeadBehaviour : MonoBehaviour
             currentCamera = Camera.main;
         }
 
-        animator = GetComponent<Animator>();
+        SetAnimator(GetComponent<Animator>());
+
         currentState = animator.GetCurrentAnimatorStateInfo(0);
         previousState = currentState;
         // ランダム判定用関数をスタートする
@@ -95,6 +103,21 @@ public class CharacterHeadBehaviour : MonoBehaviour
         {
             GameObject.Destroy(targetObject);
         }
+    }
+
+    public void SetAnimator(Animator anim)
+    {
+        if (!anim)
+        {
+            rightHandTransform = null;
+            leftHandTransform = null;
+        }
+        else if (anim != animator)
+        {
+            rightHandTransform = anim.GetBoneTransform(HumanBodyBones.RightHand);
+            leftHandTransform = anim.GetBoneTransform(HumanBodyBones.LeftHand);
+        }
+        animator = anim;
     }
 
     /// <summary>
@@ -324,4 +347,102 @@ public class CharacterHeadBehaviour : MonoBehaviour
 
     }
 
+    void OnAnimatorIK()
+    {
+        UpdateHand();
+    }
+
+    /// <summary>
+    /// マウスカーソルの方を見る動作
+    /// </summary>
+    private void UpdateHand()
+    {
+        if (!animator || !rightHandTransform || !leftHandTransform) return;
+
+        bool isRightHandMoved = false;
+        bool isLeftHandMoved = false;
+
+        //const float cursorOffsetZ = 0.5f;   // モデルから画面方向Z座標オフセット値 [Unit]
+
+        //// モデルからのオフセット距離
+        //float cursorZ = (currentCamera.transform.position - this.transform.position).magnitude - cursorOffsetZ;
+
+        //// カーソル座標をUnityのワールド座標に変換
+        //Vector3 cursorPosition = currentCamera.ScreenToWorldPoint(
+        //    new Vector3(Input.mousePosition.x, Input.mousePosition.y, cursorZ)
+        //);
+
+        Vector3 cursorPosition = targetObject.transform.position;
+
+        float sqrDistanceRight = (cursorPosition - rightHandTransform.position).sqrMagnitude;
+        float sqrDistanceLeft = (cursorPosition - leftHandTransform.position).sqrMagnitude;
+
+        if (sqrDistanceRight < sqrDistanceLeft)
+        {  // カーソルが右手側にある場合
+           // 右手とカーソルの距離の2乗
+            float sqrDistance = sqrDistanceRight;
+
+            // モデルやアニメーションの状態によるが、位置調整
+            //cursorPosition.y -= 0.05f;
+
+            // 右手からの距離が近ければ追従させる
+            if ((sqrDistance < cursorGrabingSqrMagnitude))
+            {
+                lastRightHandWait = Mathf.Lerp(lastRightHandWait, 0.7f, 0.1f);
+
+                Quaternion handRotation = Quaternion.Euler(-90f, 180f, 0f);
+
+                animator.SetIKPosition(AvatarIKGoal.RightHand, cursorPosition);
+                animator.SetIKPositionWeight(AvatarIKGoal.RightHand, lastRightHandWait);
+
+                animator.SetIKRotation(AvatarIKGoal.RightHand, handRotation);
+                animator.SetIKRotationWeight(AvatarIKGoal.RightHand, lastRightHandWait);
+
+                isRightHandMoved = true;
+            }
+        }
+        else
+        {   // カーソルが左手側にある場合
+            // 左とカーソルの距離の2乗
+            float sqrDistance = sqrDistanceLeft;
+
+            // モデルやアニメーションの状態によるが、位置調整
+            //cursorPosition.x += 0.05f;
+
+            // 左手からの距離が近ければ追従させる
+            if ((sqrDistance < cursorGrabingSqrMagnitude))
+            {
+                lastLeftHandWait = Mathf.Lerp(lastLeftHandWait, 0.7f, 0.1f);
+
+                Quaternion handRotation = Quaternion.Euler(-90f, 180f, 0f);
+
+                animator.SetIKPosition(AvatarIKGoal.LeftHand, cursorPosition);
+                animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
+
+                animator.SetIKRotation(AvatarIKGoal.LeftHand, handRotation);
+                animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
+
+                isLeftHandMoved = true;
+            }
+        }
+
+        if (!isRightHandMoved)
+        {
+            // 右手を戻す
+            lastRightHandWait = Mathf.Lerp(lastRightHandWait, 0.0f, 0.1f);
+            animator.SetIKPosition(AvatarIKGoal.RightHand, cursorPosition);
+            animator.SetIKPositionWeight(AvatarIKGoal.RightHand, lastRightHandWait);
+            animator.SetIKRotationWeight(AvatarIKGoal.RightHand, lastRightHandWait);
+        }
+
+        if (!isLeftHandMoved)
+        {
+            // 左手を戻す
+            lastLeftHandWait = Mathf.Lerp(lastLeftHandWait, 0.0f, 0.1f);
+            animator.SetIKPosition(AvatarIKGoal.LeftHand, cursorPosition);
+            animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
+            animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
+
+        }
+    }
 }

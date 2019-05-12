@@ -230,7 +230,7 @@ public class VrmViewer : MonoBehaviour
     {
         if (!model || !meta) return;
 
-        var characterController = model.GetComponent<CharacterHeadBehaviour>();
+        var characterController = model.GetComponent<VrmCharacterBehaviour>();
 
         // Apply the motion if AllowedUser is equal to "Everyone".
         if (meta.AllowedUser == AllowedUser.Everyone)
@@ -242,6 +242,7 @@ public class VrmViewer : MonoBehaviour
                 {
                     anim.runtimeAnimatorController = this.animator.runtimeAnimatorController;
                 }
+                characterController.SetAnimator(anim);
                 characterController.randomMotion = true;
             }
             else
@@ -251,6 +252,7 @@ public class VrmViewer : MonoBehaviour
                 {
                     anim.runtimeAnimatorController = null;
                 }
+                characterController.SetAnimator(anim);
                 characterController.randomMotion = false;
 
                 if (motion)
@@ -376,7 +378,7 @@ public class VrmViewer : MonoBehaviour
             }
 
             model = newModelObject.AddComponent<HumanPoseTransfer>();
-            var characterController = model.gameObject.AddComponent<CharacterHeadBehaviour>();
+            var characterController = model.gameObject.AddComponent<VrmCharacterBehaviour>();
 
             SetMotion(motion, model, meta);
 
