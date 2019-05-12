@@ -8,9 +8,11 @@
 using System;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour {
+public class CameraController : MonoBehaviour
+{
     [Flags]
-    public enum RotationAxes {
+    public enum RotationAxes
+    {
         None = 0,
         Pitch = 1,
         Yaw = 2,
@@ -33,7 +35,7 @@ public class CameraController : MonoBehaviour {
     public float wheelSensitivity = 0.5f;
 
     public Vector2 minimumAngles = new Vector2(-90f, -360f);
-    public Vector2 maximumAngles = new Vector2( 90f,  360f);
+    public Vector2 maximumAngles = new Vector2(90f, 360f);
 
     [Tooltip("None means to set the parent transform")]
     public Transform centerTransform;   // 回転中心

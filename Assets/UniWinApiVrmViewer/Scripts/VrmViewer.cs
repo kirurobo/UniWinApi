@@ -35,6 +35,26 @@ public class VrmViewer : MonoBehaviour
 
     public Animator animator;
 
+    public enum MotionMode
+    {
+        Default = 0,
+        Random = 1,
+        Bvh = 2
+    }
+
+    public MotionMode motionMode
+    {
+        get
+        {
+            return _motionMode;
+        }
+        set
+        {
+            _motionMode = value;
+        }
+    }
+    private MotionMode _motionMode = MotionMode.Default;
+
 
     // Use this for initialization
     void Start()
@@ -98,7 +118,7 @@ public class VrmViewer : MonoBehaviour
             {
                 uiController.openButton.onClick.AddListener(() =>
                 {
-                    string path = windowController.ShowOpenFileDialog("VRM file|*.vrm|Motion file|*.bvh|Audio file|*.wav;*.ogg|All file|*.*");
+                    string path = windowController.ShowOpenFileDialog("All supported files|*.vrm;*.bvh;*.wav;*.ogg|VRM file|*.vrm|Motion file|*.bvh|Audio file|*.wav;*.ogg|All file|*.*");
                     LoadFile(path);
                 });
             }
@@ -162,17 +182,11 @@ public class VrmViewer : MonoBehaviour
     private void SetRandomMotion(bool enabled)
     {
         SetMotion(motion, model, meta);
-        //if (!model) return;
-        //var characterController = model.GetComponent<CharacterBehaviour>();
-        //characterController.randomMotion = enabled;
     }
 
     private void SetRandomEmotion(bool enabled)
     {
         SetMotion(motion, model, meta);
-        //if (!model) return;
-        //var characterController = model.GetComponent<CharacterBehaviour>();
-        //characterController.randomEmotion = enabled;
     }
 
     /// <summary>
@@ -264,6 +278,8 @@ public class VrmViewer : MonoBehaviour
         {
             characterController.randomMotion = false;
             characterController.randomEmotion = false;
+
+            _motionMode = MotionMode.Default;
         }
     }
 
@@ -296,11 +312,6 @@ public class VrmViewer : MonoBehaviour
             {
                 renderer.enabled = false;
             }
-
-            if (uiController)
-            {
-                uiController.enableRandomMotion = false;    // ランダムモーションは強制的にオフにする
-            }
         }
         catch (Exception ex)
         {
@@ -318,7 +329,15 @@ public class VrmViewer : MonoBehaviour
             }
 
             motion = newMotionObject.GetComponent<HumanPoseTransfer>();
+
+            // 読み込みが成功したら、モーションの選択肢はBVHとする
+            _motionMode = MotionMode.Bvh;
             SetMotion(motion, model, meta);
+
+            if (uiController)
+            {
+                uiController.enableRandomMotion = false;
+            }
 
             // Play loaded audio if available
             if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)

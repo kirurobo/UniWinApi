@@ -56,6 +56,8 @@ namespace VRMLoader
             [SerializeField]
             List<Texture2D> m_textureCommercialUssage;
 
+            private Texture m_originalThumbnailTexture;
+
             public void Start()
             {
                 m_textModelTitle.text = "";
@@ -72,6 +74,8 @@ namespace VRMLoader
 
                 m_textDistributionLicense.text = "";
                 m_textDistributionOther.text = "";
+
+                m_originalThumbnailTexture = m_thumbnail.texture;
             }
 
             public void UpdateMeta(VRMMetaObject meta)
@@ -96,7 +100,13 @@ namespace VRMLoader
                 m_textDistributionOther.text = meta.OtherLicenseUrl;
 
                 if(meta.Thumbnail)
+                {
                     m_thumbnail.texture = meta.Thumbnail;
+                }
+                else
+                {
+                    m_thumbnail.texture = m_originalThumbnailTexture;
+                }
             }
         }
         [SerializeField]
@@ -119,6 +129,11 @@ namespace VRMLoader
         };
         
         public Button m_ok, m_cancel;
+
+        void Start()
+        {
+            m_texts.Start();
+        }
 
         public void SetSelectionText(VRMPreviewLocale.Selections selections)
         {
