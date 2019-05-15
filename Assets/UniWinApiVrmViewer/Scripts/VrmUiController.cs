@@ -95,27 +95,33 @@ public class VrmUiController : MonoBehaviour
         }
     }
 
-    public int motionMode
+    public VrmCharacterBehaviour.MotionMode motionMode
     {
         get
         {
-            if (motionToggleRandom && motionToggleRandom.isOn) return 1;
-            if (motionToggleBvh && motionToggleBvh.isOn) return 2;
+            if (motionToggleRandom && motionToggleRandom.isOn) return VrmCharacterBehaviour.MotionMode.Random;
+            if (motionToggleBvh && motionToggleBvh.isOn) return VrmCharacterBehaviour.MotionMode.Bvh;
             return 0;
         }
         set
         {
-            if (value == 1)
+            if (value == VrmCharacterBehaviour.MotionMode.Random)
             {
+                motionTogglePreset.isOn = false;
                 motionToggleRandom.isOn = true;
+                motionToggleBvh.isOn = false;
             }
-            else if (value == 2)
+            else if (value == VrmCharacterBehaviour.MotionMode.Bvh)
             {
+                motionTogglePreset.isOn = false;
+                motionToggleRandom.isOn = false;
                 motionToggleBvh.isOn = true;
             }
             else
             {
                 motionTogglePreset.isOn = true;
+                motionToggleRandom.isOn = false;
+                motionToggleBvh.isOn = false;
             }
         }
     }
@@ -181,7 +187,7 @@ public class VrmUiController : MonoBehaviour
         PlayerPrefs.SetInt("ZoomMode", (int)zoomMode);
         PlayerPrefs.SetInt("Language", language);
 
-        PlayerPrefs.SetInt("MotionMode", motionMode);
+        PlayerPrefs.SetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
         PlayerPrefs.SetInt("EmotionMode", enableRandomEmotion ? 1 : 0);
     }
 
@@ -197,7 +203,7 @@ public class VrmUiController : MonoBehaviour
         SetZoomMode(PlayerPrefs.GetInt("ZoomMode", 0));
         SetLanguage(PlayerPrefs.GetInt("Language", 0));
 
-        motionMode = PlayerPrefs.GetInt("MotionMode", motionMode);
+        motionMode = (VrmCharacterBehaviour.MotionMode)PlayerPrefs.GetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
         enableRandomEmotion = LoadPrefsBool("EmotionMode", enableRandomEmotion);
     }
 

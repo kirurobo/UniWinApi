@@ -35,14 +35,7 @@ public class VrmViewer : MonoBehaviour
 
     public Animator animator;
 
-    public enum MotionMode
-    {
-        Default = 0,
-        Random = 1,
-        Bvh = 2
-    }
-
-    public MotionMode motionMode
+    public VrmCharacterBehaviour.MotionMode motionMode
     {
         get
         {
@@ -53,7 +46,7 @@ public class VrmViewer : MonoBehaviour
             _motionMode = value;
         }
     }
-    private MotionMode _motionMode = MotionMode.Default;
+    private VrmCharacterBehaviour.MotionMode _motionMode = VrmCharacterBehaviour.MotionMode.Default;
 
 
     // Use this for initialization
@@ -242,7 +235,14 @@ public class VrmViewer : MonoBehaviour
         // Apply the motion if AllowedUser is equal to "Everyone".
         if (meta.AllowedUser == AllowedUser.Everyone)
         {
-            if (uiController && uiController.enableRandomMotion)
+            _motionMode = VrmCharacterBehaviour.MotionMode.Default;
+            if (uiController)
+            {
+                _motionMode = uiController.motionMode;
+                characterController.randomEmotion = uiController.enableRandomEmotion;
+            }
+
+            if (_motionMode != VrmCharacterBehaviour.MotionMode.Bvh)
             {
                 var anim = model.GetComponent<Animator>();
                 if (anim && this.animator)
@@ -250,7 +250,6 @@ public class VrmViewer : MonoBehaviour
                     anim.runtimeAnimatorController = this.animator.runtimeAnimatorController;
                 }
                 characterController.SetAnimator(anim);
-                characterController.randomMotion = true;
             }
             else
             {
@@ -260,7 +259,6 @@ public class VrmViewer : MonoBehaviour
                     anim.runtimeAnimatorController = null;
                 }
                 characterController.SetAnimator(anim);
-                characterController.randomMotion = false;
 
                 if (motion)
                 {
@@ -268,18 +266,14 @@ public class VrmViewer : MonoBehaviour
                     model.SourceType = HumanPoseTransfer.HumanPoseTransferSourceType.HumanPoseTransfer;
                 }
             }
-
-            if (uiController)
-            {
-                characterController.randomEmotion = uiController.enableRandomEmotion;
-            }
+            characterController.SetMotionMode(_motionMode);
         }
         else
         {
-            characterController.randomMotion = false;
+            characterController.SetMotionMode(VrmCharacterBehaviour.MotionMode.Default);
             characterController.randomEmotion = false;
 
-            _motionMode = MotionMode.Default;
+            _motionMode = VrmCharacterBehaviour.MotionMode.Default;
         }
     }
 
@@ -295,6 +289,7 @@ public class VrmViewer : MonoBehaviour
             return;
         }
 
+        var characterController = model.GetComponent<VrmCharacterBehaviour>();
         GameObject newMotionObject = null;
 
         try
@@ -315,7 +310,11 @@ public class VrmViewer : MonoBehaviour
         }
         catch (Exception ex)
         {
-            if (uiController) uiController.SetWarning("Motion load failed.");
+            if (uiController)
+            {
+                uiController.motionMode = VrmCharacterBehaviour.MotionMode.Default;
+                uiController.SetWarning("Motion load failed.");
+            }
             Debug.LogError("Failed loading " + path);
             Debug.LogError(ex);
             return;
@@ -331,12 +330,17 @@ public class VrmViewer : MonoBehaviour
             motion = newMotionObject.GetComponent<HumanPoseTransfer>();
 
             // 読み込みが成功したら、モーションの選択肢はBVHとする
-            _motionMode = MotionMode.Bvh;
+            _motionMode = VrmCharacterBehaviour.MotionMode.Bvh;
             SetMotion(motion, model, meta);
 
             if (uiController)
             {
-                uiController.enableRandomMotion = false;
+                uiController.motionMode = VrmCharacterBehaviour.MotionMode.Bvh;
+                //uiController.enableRandomMotion = false;
+            }
+
+            if (characterController)
+            {
             }
 
             // Play loaded audio if available
