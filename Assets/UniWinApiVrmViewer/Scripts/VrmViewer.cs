@@ -97,8 +97,8 @@ public class VrmViewer : MonoBehaviour
         //	LoadModel(Application.streamingAssetsPath + "/default_vrm.vrm");
         //}
 
-        // Load the initial motion.
-        LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
+        //// Load the default motion.
+        //LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
 
         // Initialize window manager
         windowController = FindObjectOfType<WindowController>();

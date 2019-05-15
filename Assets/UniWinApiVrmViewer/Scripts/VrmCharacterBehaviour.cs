@@ -335,7 +335,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
             // "Next"フラグがtrueの時の処理
             if (animator.GetBool("Next"))
             {
-                // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
+                // 状態が遷移されたことが確認できれば、フラグをfalseに戻す
                 currentState = animator.GetCurrentAnimatorStateInfo(0);
                 if (previousState.fullPathHash != currentState.fullPathHash)
                 {
@@ -347,12 +347,21 @@ public class VrmCharacterBehaviour : MonoBehaviour
             // "Back"フラグがtrueの時の処理
             if (animator.GetBool("Back"))
             {
-                // 現在のステートをチェックし、ステート名が違っていたらブーリアンをfalseに戻す
+                // 状態が遷移されたことが確認できれば、フラグをfalseに戻す
                 currentState = animator.GetCurrentAnimatorStateInfo(0);
                 if (previousState.fullPathHash != currentState.fullPathHash)
                 {
                     animator.SetBool("Back", false);
                     previousState = currentState;
+                }
+            }
+
+            // ランダムの場合、現在のモーションが終了していれば次に移る
+            if (motionMode == MotionMode.Random)
+            {
+                if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f)
+                {
+                    animator.SetBool("Next", true);
                 }
             }
         }
@@ -402,16 +411,6 @@ public class VrmCharacterBehaviour : MonoBehaviour
         bool isRightHandMoved = false;
         bool isLeftHandMoved = false;
 
-        //const float cursorOffsetZ = 0.5f;   // モデルから画面方向Z座標オフセット値 [Unit]
-
-        //// モデルからのオフセット距離
-        //float cursorZ = (currentCamera.transform.position - this.transform.position).magnitude - cursorOffsetZ;
-
-        //// カーソル座標をUnityのワールド座標に変換
-        //Vector3 cursorPosition = currentCamera.ScreenToWorldPoint(
-        //    new Vector3(Input.mousePosition.x, Input.mousePosition.y, cursorZ)
-        //);
-
         Vector3 cursorPosition = targetObject.transform.position;
 
         AnimatorStateInfo animState = animator.GetCurrentAnimatorStateInfo(0);
@@ -439,8 +438,8 @@ public class VrmCharacterBehaviour : MonoBehaviour
                     animator.SetIKPosition(AvatarIKGoal.RightHand, cursorPosition);
                     animator.SetIKPositionWeight(AvatarIKGoal.RightHand, lastRightHandWait);
 
-                    animator.SetIKRotation(AvatarIKGoal.RightHand, handRotation);
-                    animator.SetIKRotationWeight(AvatarIKGoal.RightHand, lastRightHandWait);
+                    //animator.SetIKRotation(AvatarIKGoal.RightHand, handRotation);
+                    //animator.SetIKRotationWeight(AvatarIKGoal.RightHand, lastRightHandWait);
 
                     isRightHandMoved = true;
                 }
@@ -458,13 +457,13 @@ public class VrmCharacterBehaviour : MonoBehaviour
                 {
                     lastLeftHandWait = Mathf.Lerp(lastLeftHandWait, 0.7f, 0.1f);
 
-                    Quaternion handRotation = Quaternion.Euler(-90f, 180f, 0f);
+                    //Quaternion handRotation = Quaternion.Euler(-90f, 180f, 0f);
 
                     animator.SetIKPosition(AvatarIKGoal.LeftHand, cursorPosition);
                     animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
 
-                    animator.SetIKRotation(AvatarIKGoal.LeftHand, handRotation);
-                    animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
+                    //animator.SetIKRotation(AvatarIKGoal.LeftHand, handRotation);
+                    //animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
 
                     isLeftHandMoved = true;
                 }
@@ -478,7 +477,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
             lastRightHandWait = Mathf.Lerp(lastRightHandWait, 0.0f, 0.1f);
             animator.SetIKPosition(AvatarIKGoal.RightHand, cursorPosition);
             animator.SetIKPositionWeight(AvatarIKGoal.RightHand, lastRightHandWait);
-            animator.SetIKRotationWeight(AvatarIKGoal.RightHand, lastRightHandWait);
+            //animator.SetIKRotationWeight(AvatarIKGoal.RightHand, lastRightHandWait);
         }
 
         if (!isLeftHandMoved)
@@ -487,7 +486,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
             lastLeftHandWait = Mathf.Lerp(lastLeftHandWait, 0.0f, 0.1f);
             animator.SetIKPosition(AvatarIKGoal.LeftHand, cursorPosition);
             animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
-            animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
+            //animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, lastLeftHandWait);
 
         }
     }
