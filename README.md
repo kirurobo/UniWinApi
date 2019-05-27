@@ -46,11 +46,11 @@
 * MIT License
     * DWANGO Co., Ltd. [UniVRM](https://github.com/dwango/UniVRM/)
     * [えむにわ @m2wasabi](https://twitter.com/m2wasabi) [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
-    * [@setch](https://twitter.com/setchi) [uGUI-Hypertext](https://github.com/setchi/uGUI-Hypertext)
 
 ## System requirements (動作環境)
 
-* Unity 5.6 or newer
+* Unity 5.6 - 2018.4
+  * Unity 2019 では背景透過不可
 * Windows 7 or newer
 
 
