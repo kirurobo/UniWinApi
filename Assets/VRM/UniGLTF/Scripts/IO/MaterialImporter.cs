@@ -38,7 +38,7 @@ namespace UniGLTF
         }
 
         /// StandardShader vaiables
-        /// 
+        ///
         /// _Color
         /// _MainTex
         /// _Cutoff
@@ -89,10 +89,13 @@ namespace UniGLTF
             if (x.extensions != null && x.extensions.KHR_materials_unlit != null)
             {
                 // texture
-                var texture = m_context.GetTexture(x.pbrMetallicRoughness.baseColorTexture.index);
-                if (texture != null)
+                if (x.pbrMetallicRoughness.baseColorTexture != null)
                 {
-                    material.mainTexture = texture.Texture;
+                    var texture = m_context.GetTexture(x.pbrMetallicRoughness.baseColorTexture.index);
+                    if (texture != null)
+                    {
+                        material.mainTexture = texture.Texture;
+                    }
                 }
 
                 // color
@@ -161,11 +164,13 @@ namespace UniGLTF
                     if (texture != null)
                     {
                         var prop = "_MetallicGlossMap";
-                        material.SetTexture(prop, texture.ConvertTexture(prop));
+                        // Bake roughnessFactor values into a texture.
+                        material.SetTexture(prop, texture.ConvertTexture(prop, x.pbrMetallicRoughness.roughnessFactor));
                     }
-                    
+
                     material.SetFloat("_Metallic", 1.0f);
-                    material.SetFloat("_GlossMapScale", 1.0f - x.pbrMetallicRoughness.roughnessFactor);
+                    // Set 1.0f as hard-coded. See: https://github.com/dwango/UniVRM/issues/212.
+                    material.SetFloat("_GlossMapScale", 1.0f);
                 }
                 else
                 {
@@ -208,7 +213,7 @@ namespace UniGLTF
                     material.SetColor("_EmissionColor", new Color(x.emissiveFactor[0], x.emissiveFactor[1], x.emissiveFactor[2]));
                 }
 
-                if (x.emissiveTexture.index != -1)
+                if (x.emissiveTexture != null && x.emissiveTexture.index != -1)
                 {
                     var texture = Context.GetTexture(x.emissiveTexture.index);
                     if (texture != null)
@@ -240,11 +245,12 @@ namespace UniGLTF
                     material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                     material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                     material.SetInt("_ZWrite", 1);
+                    material.SetFloat("_Cutoff", x.alphaCutoff);
                     material.EnableKeyword("_ALPHATEST_ON");
                     material.DisableKeyword("_ALPHABLEND_ON");
                     material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                     material.renderQueue = 2450;
-                        
+
                     break;
 
                 default: // OPAQUE

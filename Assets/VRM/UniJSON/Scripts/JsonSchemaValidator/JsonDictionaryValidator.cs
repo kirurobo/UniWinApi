@@ -276,7 +276,7 @@ namespace UniJSON
         public void Deserialize<U, V>(ListTreeNode<U> src, ref V dst)
             where U : IListTreeItem, IValue<U>
         {
-            throw new NotImplementedException();
+            src.Deserialize(ref dst);
         }
     }
 
@@ -286,5 +286,22 @@ namespace UniJSON
         {
             return new JsonDictionaryValidator<T>();
         }
+
+        #region AOT
+        public static JsonDictionaryValidator<Single> CreateSingle()
+        {
+            return Create<Single>();
+        }
+
+        public static JsonDictionaryValidator<Int32> CreateInt32()
+        {
+            return Create<Int32>();
+        }
+
+        public static JsonDictionaryValidator<Boolean> CreateBoolean()
+        {
+            return Create<Boolean>();
+        }
+        #endregion
     }
 }

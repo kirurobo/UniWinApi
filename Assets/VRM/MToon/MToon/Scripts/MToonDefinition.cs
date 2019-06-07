@@ -8,13 +8,16 @@ namespace MToon
         public RenderingDefinition Rendering;
         public ColorDefinition Color;
         public LightingDefinition Lighting;
+        public EmissionDefinition Emission;
+        public MatCapDefinition MatCap;
+        public RimDefinition Rim;
         public OutlineDefinition Outline;
         public TextureUvCoordsDefinition TextureOption;
-        public RenderQueueDefinition RenderQueue;
     }
 
     public class MetaDefinition
     {
+        public string Implementation;
         public int VersionNumber;
     }
 
@@ -22,6 +25,7 @@ namespace MToon
     {
         public RenderMode RenderMode;
         public CullMode CullMode;
+        public int RenderQueueOffsetNumber;
     }
 
     public class ColorDefinition
@@ -37,8 +41,6 @@ namespace MToon
     {
         public LitAndShadeMixingDefinition LitAndShadeMixing;
         public LightingInfluenceDefinition LightingInfluence;
-        public EmissionDefinition Emission;
-        public MatCapDefinition MatCap;
         public NormalDefinition Normal;
     }
     
@@ -69,6 +71,15 @@ namespace MToon
         public Texture2D AdditiveTexture;
     }
 
+    public class RimDefinition
+    {
+        public Color RimColor;
+        public Texture2D RimMultiplyTexture;
+        public float RimLightingMixValue;
+        public float RimFresnelPowerValue;
+        public float RimLiftValue;
+    }
+
     public class NormalDefinition
     {
         public Texture2D NormalTexture;
@@ -90,11 +101,9 @@ namespace MToon
     {
         public Vector2 MainTextureLeftBottomOriginScale;
         public Vector2 MainTextureLeftBottomOriginOffset;
-    }
-
-    public class RenderQueueDefinition
-    {
-        public RenderMode RenderQueueOriginMode;
-        public int RenderQueueOffsetNumber;
+        public Texture2D UvAnimationMaskTexture;
+        public float UvAnimationScrollXSpeedValue;
+        public float UvAnimationScrollYSpeedValue;
+        public float UvAnimationRotationSpeedValue;
     }
 }

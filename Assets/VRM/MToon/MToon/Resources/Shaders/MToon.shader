@@ -17,15 +17,25 @@ Shader "VRM/MToon"
         _ShadeToony ("Shade Toony", Range(0, 1)) = 0.9
         _LightColorAttenuation ("Light Color Attenuation", Range(0, 1)) = 0
         _IndirectLightIntensity ("Indirect Light Intensity", Range(0, 1)) = 0.1
+        [HDR] _RimColor ("Rim Color", Color) = (0,0,0)
+        [NoScaleOffset] _RimTexture ("Rim Texture", 2D) = "white" {}
+        _RimLightingMix ("Rim Lighting Mix", Range(0, 1)) = 0
+        [PowerSlider(4.0)] _RimFresnelPower ("Rim Fresnel Power", Range(0, 100)) = 1
+        _RimLift ("Rim Lift", Range(0, 1)) = 0
         [NoScaleOffset] _SphereAdd ("Sphere Texture(Add)", 2D) = "black" {}
-        _EmissionColor ("Color", Color) = (0,0,0)
+        [HDR] _EmissionColor ("Color", Color) = (0,0,0)
         [NoScaleOffset] _EmissionMap ("Emission", 2D) = "white" {}
         [NoScaleOffset] _OutlineWidthTexture ("Outline Width Tex", 2D) = "white" {}
         _OutlineWidth ("Outline Width", Range(0.01, 1)) = 0.5
         _OutlineScaledMaxDistance ("Outline Scaled Max Distance", Range(1, 10)) = 1
         _OutlineColor ("Outline Color", Color) = (0,0,0,1)
         _OutlineLightingMix ("Outline Lighting Mix", Range(0, 1)) = 1
+        [NoScaleOffset] _UvAnimMaskTexture ("UV Animation Mask", 2D) = "white" {}
+        _UvAnimScrollX ("UV Animation Scroll X", Float) = 0
+        _UvAnimScrollY ("UV Animation Scroll Y", Float) = 0
+        _UvAnimRotation ("UV Animation Rotation", Float) = 0
 
+        [HideInInspector] _MToonVersion ("_MToonVersion", Float) = 32
         [HideInInspector] _DebugMode ("_DebugMode", Float) = 0.0
         [HideInInspector] _BlendMode ("_BlendMode", Float) = 0.0
         [HideInInspector] _OutlineWidthMode ("_OutlineWidthMode", Float) = 0.0
@@ -79,6 +89,7 @@ Shader "VRM/MToon"
             Blend [_SrcBlend] [_DstBlend]
             ZWrite [_ZWrite]
             ZTest LEqual
+            Offset 1, 1
             BlendOp Add, Max
 
             CGPROGRAM
@@ -125,8 +136,25 @@ Shader "VRM/MToon"
             ENDCG
         }
         
-        // Cast transparent shadow
-        UsePass "Standard/SHADOWCASTER"
+        //  Shadow rendering pass
+        Pass
+        {
+            Name "ShadowCaster"
+            Tags { "LightMode" = "ShadowCaster" }
+
+            Cull [_CullMode]
+            ZWrite On
+            ZTest LEqual
+
+            CGPROGRAM
+            #pragma target 3.0
+            #pragma multi_compile _ _ALPHATEST_ON _ALPHABLEND_ON
+            #pragma multi_compile_shadowcaster
+            #pragma vertex vertShadowCaster
+            #pragma fragment fragShadowCaster
+            #include "UnityStandardShadow.cginc"
+            ENDCG
+        }
     }
     
     Fallback "Unlit/Texture"

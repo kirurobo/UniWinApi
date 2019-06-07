@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Collections;
 using DepthFirstScheduler;
+using UniJSON;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -259,12 +260,21 @@ namespace UniGLTF
                 new SimpleStorage(chunks[1].Bytes));
         }
 
+        public bool UseUniJSONParser;
         public virtual void ParseJson(string json, IStorage storage)
         {
             Json = json;
             Storage = storage;
 
-            GLTF = JsonUtility.FromJson<glTF>(Json);
+            if (UseUniJSONParser)
+            {
+                Json.ParseAsJson().Deserialize(ref GLTF);
+            }
+            else
+            {
+                GLTF = JsonUtility.FromJson<glTF>(Json);
+            }
+
             if (GLTF.asset.version != "2.0")
             {
                 throw new UniGLTFException("unknown gltf version {0}", GLTF.asset.version);
@@ -470,7 +480,7 @@ namespace UniGLTF
                 );
         }
 
-#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER && !UNITY_WEBGL)
         public async Task<GameObject> LoadAsyncTask()
         {
             await LoadAsync().ToTask();

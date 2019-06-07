@@ -42,13 +42,13 @@ namespace VRM
         }
 
         #region LoadVrmAsync
-        [Obsolete("use VVRMImporterContext.LoadAsync")]
+        [Obsolete("use VRMImporterContext.LoadAsync")]
         public static void LoadVrmAsync(string path, Action<GameObject> onLoaded, Action<Exception> onError = null, bool show = true)
         {
             LoadVrmAsync(File.ReadAllBytes(path), onLoaded, onError, show);
         }
 
-        [Obsolete("use VVRMImporterContext.LoadAsync")]
+        [Obsolete("use VRMImporterContext.LoadAsync")]
         public static void LoadVrmAsync(Byte[] bytes, Action<GameObject> onLoaded, Action<Exception> onError = null, bool show = true)
         {
             var context = new VRMImporterContext();
@@ -67,7 +67,7 @@ namespace VRM
             onError);
         }
 
-        [Obsolete("use VVRMImporterContext.LoadAsync")]
+        [Obsolete("use VRMImporterContext.LoadAsync")]
         public static void LoadVrmAsync(VRMImporterContext context, Action<GameObject> onLoaded, Action<Exception> onError = null, bool show = true)
         {
             context.LoadAsync(_ =>
@@ -82,7 +82,7 @@ namespace VRM
         }
         #endregion
 
-#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER && !UNITY_WEBGL)
 
         [Obsolete("use VRMImporterContext.LoadAsync()")]
         public static Task<GameObject> LoadVrmAsync(string path, bool show = true)

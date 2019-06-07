@@ -30,7 +30,13 @@ namespace UniGLTF
             get { return m_converts; }
         }
 
-        public Texture2D ConvertTexture(string prop)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="prop"></param>
+        /// <param name="smoothness">used only when converting MetallicRoughness maps</param>
+        /// <returns></returns>
+        public Texture2D ConvertTexture(string prop, float smoothnessOrRoughness = 1.0f)
         {
             var convertedTexture = Converts.FirstOrDefault(x => x.Key == prop);
             if (convertedTexture.Value != null)
@@ -63,7 +69,7 @@ namespace UniGLTF
 
             if (prop == "_MetallicGlossMap")
             {
-                var converted = new MetallicRoughnessConverter().GetImportTexture(Texture);
+                var converted = new MetallicRoughnessConverter(smoothnessOrRoughness).GetImportTexture(Texture);
                 m_converts.Add(prop, converted);
                 return converted;
             }
@@ -283,6 +289,15 @@ namespace UniGLTF
             dst = new Texture2D(src.width, src.height, TextureFormat.ARGB32, false, colorSpace == RenderTextureReadWrite.Linear);
             dst.ReadPixels(new Rect(0, 0, src.width, src.height), 0, 0);
             dst.name = src.name;
+            dst.anisoLevel = src.anisoLevel;
+            dst.filterMode = src.filterMode;
+            dst.mipMapBias = src.mipMapBias;
+            dst.wrapMode = src.wrapMode;
+#if UNITY_2017_1_OR_NEWER
+            dst.wrapModeU = src.wrapModeU;
+            dst.wrapModeV = src.wrapModeV;
+            dst.wrapModeW = src.wrapModeW;
+#endif
             dst.Apply();
 
             RenderTexture.active = null;

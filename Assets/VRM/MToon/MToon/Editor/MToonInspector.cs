@@ -8,6 +8,9 @@ namespace MToon
 {
     public class MToonInspector : ShaderGUI
     {
+        private static bool isAdvancedLightingPanelFoldout = false;
+
+        private MaterialProperty _version;
         private MaterialProperty _blendMode;
         private MaterialProperty _bumpMap;
         private MaterialProperty _bumpScale;
@@ -38,9 +41,19 @@ namespace MToon
         private MaterialProperty _shadeTexture;
         private MaterialProperty _shadeToony;
         private MaterialProperty _sphereAdd;
+        private MaterialProperty _rimColor;
+        private MaterialProperty _rimTexture;
+        private MaterialProperty _rimLightingMix;
+        private MaterialProperty _rimFresnelPower;
+        private MaterialProperty _rimLift;
+        private MaterialProperty _uvAnimMaskTexture;
+        private MaterialProperty _uvAnimScrollX;
+        private MaterialProperty _uvAnimScrollY;
+        private MaterialProperty _uvAnimRotation;
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
         {
+            _version = FindProperty(Utils.PropVersion, properties);
             _debugMode = FindProperty(Utils.PropDebugMode, properties);
             _outlineWidthMode = FindProperty(Utils.PropOutlineWidthMode, properties);
             _outlineColorMode = FindProperty(Utils.PropOutlineColorMode, properties);
@@ -62,6 +75,11 @@ namespace MToon
             _shadeToony = FindProperty(Utils.PropShadeToony, properties);
             _lightColorAttenuation = FindProperty(Utils.PropLightColorAttenuation, properties);
             _indirectLightIntensity = FindProperty(Utils.PropIndirectLightIntensity, properties);
+            _rimColor = FindProperty(Utils.PropRimColor, properties);
+            _rimTexture = FindProperty(Utils.PropRimTexture, properties);
+            _rimLightingMix = FindProperty(Utils.PropRimLightingMix, properties);
+            _rimFresnelPower = FindProperty(Utils.PropRimFresnelPower, properties);
+            _rimLift = FindProperty(Utils.PropRimLift, properties);
             _sphereAdd = FindProperty(Utils.PropSphereAdd, properties);
             _emissionColor = FindProperty(Utils.PropEmissionColor, properties);
             _emissionMap = FindProperty(Utils.PropEmissionMap, properties);
@@ -70,6 +88,10 @@ namespace MToon
             _outlineScaledMaxDistance = FindProperty(Utils.PropOutlineScaledMaxDistance, properties);
             _outlineColor = FindProperty(Utils.PropOutlineColor, properties);
             _outlineLightingMix = FindProperty(Utils.PropOutlineLightingMix, properties);
+            _uvAnimMaskTexture = FindProperty(Utils.PropUvAnimMaskTexture, properties);
+            _uvAnimScrollX = FindProperty(Utils.PropUvAnimScrollX, properties);
+            _uvAnimScrollY = FindProperty(Utils.PropUvAnimScrollY, properties);
+            _uvAnimRotation = FindProperty(Utils.PropUvAnimRotation, properties);
 
             var materials = materialEditor.targets.Select(x => x as Material).ToArray();
             Draw(materialEditor, materials);
@@ -79,6 +101,8 @@ namespace MToon
         {
             EditorGUI.BeginChangeCheck();
             {
+                _version.floatValue = Utils.VersionNumber;
+                
                 EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
                 EditorGUILayout.BeginVertical(GUI.skin.box);
                 {
@@ -86,6 +110,11 @@ namespace MToon
                     if (PopupEnum<RenderMode>("Rendering Type", _blendMode, materialEditor))
                     {
                         ModeChanged(materials, isBlendModeChangedByUser: true);
+                    }
+
+                    if ((RenderMode) _blendMode.floatValue == RenderMode.TransparentWithZWrite)
+                    {
+                        EditorGUILayout.HelpBox("TransparentWithZWrite mode can cause problems with rendering.", MessageType.Warning);
                     }
 
                     if (PopupEnum<CullMode>("Cull Mode", _cullMode, materialEditor))
@@ -123,56 +152,14 @@ namespace MToon
                 EditorGUILayout.LabelField("Lighting", EditorStyles.boldLabel);
                 EditorGUILayout.BeginVertical(GUI.skin.box);
                 {
-                    EditorGUILayout.LabelField("Lit & Shade Mixing", EditorStyles.boldLabel);
                     {
-                        materialEditor.ShaderProperty(_shadeShift,
-                            new GUIContent("Shading Shift",
-                                "Zero is Default. Negative value increase lit area. Positive value increase shade area."));
                         materialEditor.ShaderProperty(_shadeToony,
                             new GUIContent("Shading Toony",
                                 "0.0 is Lambert. Higher value get toony shading."));
-                        materialEditor.TexturePropertySingleLine(
-                            new GUIContent("Shadow Receive Multiplier",
-                                "Texture (A) * Rate. White is Default. Black attenuates shadows."),
-                            _receiveShadowTexture,
-                            _receiveShadowRate);
-                        materialEditor.TexturePropertySingleLine(
-                            new GUIContent("Lit & Shade Mixing Multiplier",
-                                "Texture (R) * Rate. Compatible with UTS2 ShadingGradeMap. White is Default. Black amplifies shade."),
-                            _shadingGradeTexture,
-                            _shadingGradeRate);
-                    }
-                    EditorGUILayout.Space();
 
-                    EditorGUILayout.LabelField("Light Color", EditorStyles.boldLabel);
-                    {
-                        materialEditor.ShaderProperty(_lightColorAttenuation, "LightColor Attenuation");
-                        materialEditor.ShaderProperty(_indirectLightIntensity, "GI Intensity");
-                    }
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.LabelField("Emission", EditorStyles.boldLabel);
-                    {
-                        materialEditor.TexturePropertyWithHDRColor(new GUIContent("Emission", "Emission (RGB)"),
-                            _emissionMap,
-                            _emissionColor,
-#if UNITY_2018_1_OR_NEWER
-#else
-                            new ColorPickerHDRConfig(minBrightness: 0, maxBrightness: 10, minExposureValue: -10,
-                                maxExposureValue: 10),
-#endif
-                            showAlpha: false);
-                        
-                        materialEditor.TexturePropertySingleLine(new GUIContent("MatCap", "MatCap Texture (RGB)"),
-                            _sphereAdd);
-                    }
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.LabelField("Normal", EditorStyles.boldLabel);
-                    {
                         // Normal
                         EditorGUI.BeginChangeCheck();
-                        materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map", "Normal Map (RGB)"),
+                        materialEditor.TexturePropertySingleLine(new GUIContent("Normal Map [Normal]", "Normal Map (RGB)"),
                             _bumpMap,
                             _bumpScale);
                         if (EditorGUI.EndChangeCheck())
@@ -181,9 +168,83 @@ namespace MToon
                             ModeChanged(materials);
                         }
                     }
+                    EditorGUILayout.Space();
+
+                    EditorGUI.indentLevel++;
+                    {
+                        isAdvancedLightingPanelFoldout = EditorGUILayout.Foldout(isAdvancedLightingPanelFoldout, "Advanced Settings", EditorStyles.boldFont);
+
+                        if (isAdvancedLightingPanelFoldout)
+                        {
+                            EditorGUILayout.BeginHorizontal();
+                            EditorGUILayout.HelpBox(
+                                "The default settings are suitable for Advanced Settings if you want to toony result.",
+                                MessageType.Info);
+                            if (GUILayout.Button("Use Default"))
+                            {
+                                _shadeShift.floatValue = 0;
+                                _receiveShadowTexture.textureValue = null;
+                                _receiveShadowRate.floatValue = 1;
+                                _shadingGradeTexture.textureValue = null;
+                                _shadingGradeRate.floatValue = 1;
+                                _lightColorAttenuation.floatValue = 0;
+                                _indirectLightIntensity.floatValue = 0.1f;
+                            }
+                            EditorGUILayout.EndHorizontal();
+                            
+                            materialEditor.ShaderProperty(_shadeShift,
+                                new GUIContent("Shading Shift",
+                                    "Zero is Default. Negative value increase lit area. Positive value increase shade area."));
+                            materialEditor.TexturePropertySingleLine(
+                                new GUIContent("Shadow Receive Multiplier",
+                                    "Texture (R) * Rate. White is Default. Black attenuates shadows."),
+                                _receiveShadowTexture,
+                                _receiveShadowRate);
+                            materialEditor.TexturePropertySingleLine(
+                                new GUIContent("Lit & Shade Mixing Multiplier",
+                                    "Texture (R) * Rate. Compatible with UTS2 ShadingGradeMap. White is Default. Black amplifies shade."),
+                                _shadingGradeTexture,
+                                _shadingGradeRate);
+                            materialEditor.ShaderProperty(_lightColorAttenuation, "LightColor Attenuation");
+                            materialEditor.ShaderProperty(_indirectLightIntensity, "GI Intensity");
+                        }
+                    }
+                    EditorGUI.indentLevel--;
                 }
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.Space();
+                
+                EditorGUILayout.LabelField("Emission", EditorStyles.boldLabel);
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+                {
+                    TextureWithHdrColor(materialEditor, "Emission", "Emission (RGB)",
+                        _emissionMap, _emissionColor);
+                    
+                    materialEditor.TexturePropertySingleLine(new GUIContent("MatCap", "MatCap Texture (RGB)"),
+                        _sphereAdd);
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+                    
+                EditorGUILayout.LabelField("Rim", EditorStyles.boldLabel);
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+                {
+                    TextureWithHdrColor(materialEditor, "Color", "Rim Color (RGB)",
+                        _rimTexture, _rimColor);
+                    
+                    materialEditor.DefaultShaderProperty(_rimLightingMix, "Lighting Mix");
+
+                    materialEditor.ShaderProperty(_rimFresnelPower,
+                        new GUIContent("Fresnel Power",
+                            "If you increase this value, you get sharpness rim light."));
+
+                    materialEditor.ShaderProperty(_rimLift,
+                        new GUIContent("Lift",
+                            "If you increase this value, you can lift rim light."));
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+
 
                 EditorGUILayout.LabelField("Outline", EditorStyles.boldLabel);
                 EditorGUILayout.BeginVertical(GUI.skin.box);
@@ -194,6 +255,12 @@ namespace MToon
                         if (PopupEnum<OutlineWidthMode>("Mode", _outlineWidthMode, materialEditor))
                         {
                             ModeChanged(materials);
+                        }
+                        
+                        if ((RenderMode) _blendMode.floatValue == RenderMode.Transparent &&
+                            (OutlineWidthMode) _outlineWidthMode.floatValue != OutlineWidthMode.None)
+                        {
+                            EditorGUILayout.HelpBox("Outline with Transparent material cause problem with rendering.", MessageType.Warning);
                         }
 
                         var widthMode = (OutlineWidthMode) _outlineWidthMode.floatValue;
@@ -234,15 +301,32 @@ namespace MToon
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.Space();
 
-                EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
+                
+                EditorGUILayout.LabelField("UV Coordinates", EditorStyles.boldLabel);
                 EditorGUILayout.BeginVertical(GUI.skin.box);
                 {
-                    EditorGUILayout.LabelField("Texture Options", EditorStyles.boldLabel);
+                    // UV
+                    EditorGUILayout.LabelField("Scale & Offset", EditorStyles.boldLabel);
                     {
                         materialEditor.TextureScaleOffsetProperty(_mainTex);
                     }
                     EditorGUILayout.Space();
 
+                    EditorGUILayout.LabelField("Auto Animation", EditorStyles.boldLabel);
+                    {
+                        materialEditor.TexturePropertySingleLine(new GUIContent("Mask", "Auto Animation Mask Texture (R)"), _uvAnimMaskTexture);
+                        materialEditor.ShaderProperty(_uvAnimScrollX, "Scroll X (per second)");
+                        materialEditor.ShaderProperty(_uvAnimScrollY, "Scroll Y (per second)");
+                        materialEditor.ShaderProperty(_uvAnimRotation, "Rotation (per second)");
+                    }
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+                
+                
+                EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+                {
                     EditorGUILayout.LabelField("Debugging Options", EditorStyles.boldLabel);
                     {
                         if (PopupEnum<DebugMode>("Visualize", _debugMode, materialEditor))
@@ -303,5 +387,19 @@ namespace MToon
             return changed;
         }
 
+        private static void TextureWithHdrColor(MaterialEditor materialEditor, string label, string description,
+            MaterialProperty texProp, MaterialProperty colorProp)
+        {
+            materialEditor.TexturePropertyWithHDRColor(new GUIContent(label, description),
+                texProp,
+                colorProp,
+#if UNITY_2018_1_OR_NEWER
+#else
+                new ColorPickerHDRConfig(minBrightness: 0, maxBrightness: 10, minExposureValue: -10,
+                    maxExposureValue: 10),
+#endif
+                showAlpha: false);
+            
+        }
     }
 }

@@ -16,11 +16,13 @@ namespace VRM
         public VRMExporter(glTF gltf) : base(gltf)
         {
             gltf.extensionsUsed.Add(glTF_VRM_extensions.ExtensionName);
+            gltf.extensions.VRM = new glTF_VRM_extensions();
         }
 
         public new static glTF Export(GameObject go)
         {
             var gltf = new glTF();
+
             using (var exporter = new VRMExporter(gltf)
             {
 #if VRM_EXPORTER_USE_SPARSE
@@ -202,7 +204,7 @@ namespace VRM
             // materials
             foreach (var m in exporter.Materials)
             {
-                gltf.extensions.VRM.materialProperties.Add(glTF_VRM_Material.CreateFromMaterial(m, exporter.TextureManager.Textures));
+                gltf.extensions.VRM.materialProperties.Add(VRMMaterialExporter.CreateFromMaterial(m, exporter.TextureManager.Textures));
             }
         }
     }
