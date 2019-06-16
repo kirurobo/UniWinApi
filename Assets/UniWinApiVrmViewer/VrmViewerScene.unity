@@ -12110,6 +12110,11 @@ Prefab:
       propertyPath: enableDragMove
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114356007855815214, guid: 1a68be57637a61842b1d8ea2ccb106b5,
+        type: 2}
+      propertyPath: transparentType
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1a68be57637a61842b1d8ea2ccb106b5, type: 2}
   m_IsPrefabParent: 0
