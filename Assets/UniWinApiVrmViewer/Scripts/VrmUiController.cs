@@ -137,7 +137,10 @@ public class VrmUiController : MonoBehaviour
         }
 
         windowController = FindObjectOfType<WindowController>();
-        windowController.OnStateChanged += windowController_OnStateChanged;
+        if (windowController)
+        {
+            windowController.OnStateChanged += windowController_OnStateChanged;
+        }
 
         zoomMode = CameraController.ZoomMode.Zoom;
 
@@ -156,9 +159,13 @@ public class VrmUiController : MonoBehaviour
         // Set event listeners.
         if (closeButton) { closeButton.onClick.AddListener(Close); }
         if (quitButton) { quitButton.onClick.AddListener(Quit); }
-        if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
-        if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
-        if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
+
+        if (windowController)
+        {
+            if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
+            if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
+            if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
+        }
         if (zoomModeDropdown)
         {
             zoomModeDropdown.onValueChanged.AddListener(val => SetZoomMode(val));
@@ -180,9 +187,13 @@ public class VrmUiController : MonoBehaviour
     {
         PlayerPrefs.DeleteAll();
         PlayerPrefs.SetFloat("Version", prefsVersion);
-        PlayerPrefs.SetInt("Transparent", windowController.isTransparent ? 1 : 0);
-        PlayerPrefs.SetInt("Maximized", windowController.isMaximized? 1 : 0);
-        PlayerPrefs.SetInt("Topmost", windowController.isTopmost? 1 : 0);
+
+        if (windowController)
+        {
+            PlayerPrefs.SetInt("Transparent", windowController.isTransparent ? 1 : 0);
+            PlayerPrefs.SetInt("Maximized", windowController.isMaximized ? 1 : 0);
+            PlayerPrefs.SetInt("Topmost", windowController.isTopmost ? 1 : 0);
+        }
 
         PlayerPrefs.SetInt("ZoomMode", (int)zoomMode);
         PlayerPrefs.SetInt("Language", language);
@@ -196,9 +207,12 @@ public class VrmUiController : MonoBehaviour
         //// セーブされた情報のバージョンが異なれば読み出さない
         //if (PlayerPrefs.GetFloat("Version") != prefsVersion) return;
 
-        windowController.isTransparent = LoadPrefsBool("Transparent", windowController.isTransparent);
-        windowController.isMaximized = LoadPrefsBool("Maximized", windowController.isMaximized);
-        windowController.isTopmost = LoadPrefsBool("Topmost", windowController.isTopmost);
+        if (windowController)
+        {
+            windowController.isTransparent = LoadPrefsBool("Transparent", windowController.isTransparent);
+            windowController.isMaximized = LoadPrefsBool("Maximized", windowController.isMaximized);
+            windowController.isTopmost = LoadPrefsBool("Topmost", windowController.isTopmost);
+        }
 
         SetZoomMode(PlayerPrefs.GetInt("ZoomMode", 0));
         SetLanguage(PlayerPrefs.GetInt("Language", 0));
