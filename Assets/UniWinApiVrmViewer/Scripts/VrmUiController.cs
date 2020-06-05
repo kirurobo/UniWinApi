@@ -9,7 +9,7 @@ public class VrmUiController : MonoBehaviour
     /// <summary>
     /// セーブ情報のバージョン番号
     /// </summary>
-    const float prefsVersion = 0.01f;
+    const float prefsVersion = 0.02f;
 
     public WindowController windowController;
 
@@ -25,6 +25,7 @@ public class VrmUiController : MonoBehaviour
     public Text titleText;
     
     public Dropdown zoomModeDropdown;
+    public Dropdown transparentMethodDropdown;
     public Dropdown languageDropdown;
 
     public Toggle motionTogglePreset;
@@ -37,6 +38,7 @@ public class VrmUiController : MonoBehaviour
     public RectTransform modelPanel;
     public RectTransform controlPanel;
     public CameraController.ZoomMode zoomMode { get; set; }
+    public UniWinApi.TransparentType transparentMethod { get; set; }
     public int language
     {
         get
@@ -136,13 +138,16 @@ public class VrmUiController : MonoBehaviour
             canvas = GetComponent<Canvas>();
         }
 
+        zoomMode = CameraController.ZoomMode.Zoom;
+        transparentMethod = UniWinApi.TransparentType.DWM;
+
         windowController = FindObjectOfType<WindowController>();
         if (windowController)
         {
             windowController.OnStateChanged += windowController_OnStateChanged;
-        }
 
-        zoomMode = CameraController.ZoomMode.Zoom;
+            transparentMethod = windowController.transparentMethod;
+        }
 
         vrmLoaderLocale = this.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
         vrmLoaderUI = this.GetComponentInChildren<VRMLoader.VRMPreviewUI>();
@@ -156,28 +161,37 @@ public class VrmUiController : MonoBehaviour
         // Initialize toggles.
         UpdateUI();
 
+        // Load settings.
+        Load();
+
         // Set event listeners.
         if (closeButton) { closeButton.onClick.AddListener(Close); }
         if (quitButton) { quitButton.onClick.AddListener(Quit); }
 
         if (windowController)
         {
+            // プロパティをバインド
             if (transparentToggle) { transparentToggle.onValueChanged.AddListener(windowController.SetTransparent); }
             if (maximizeToggle) { maximizeToggle.onValueChanged.AddListener(windowController.SetMaximized); }
             if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
         }
+
+        // 直接バインドしない分
         if (zoomModeDropdown)
         {
+            zoomModeDropdown.value = (int)zoomMode;
             zoomModeDropdown.onValueChanged.AddListener(val => SetZoomMode(val));
-            zoomModeDropdown.value = 0;
+        }
+        if (transparentMethodDropdown)
+        {
+            transparentMethodDropdown.value = (int)transparentMethod;
+            transparentMethodDropdown.onValueChanged.AddListener(val => SetTransparentMethod(val));
         }
         if (languageDropdown)
         {
+            languageDropdown.value = language;
             languageDropdown.onValueChanged.AddListener(val => SetLanguage(val));
-            languageDropdown.value = 1;
         }
-
-        Load();
 
         // Show menu on startup.
         Show(null);
@@ -196,10 +210,13 @@ public class VrmUiController : MonoBehaviour
         }
 
         PlayerPrefs.SetInt("ZoomMode", (int)zoomMode);
+        PlayerPrefs.SetInt("TransparentMethod", (int)transparentMethod);
         PlayerPrefs.SetInt("Language", language);
 
         PlayerPrefs.SetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
         PlayerPrefs.SetInt("EmotionMode", enableRandomEmotion ? 1 : 0);
+
+        Debug.Log("Saved.");
     }
 
     public void Load()
@@ -207,15 +224,28 @@ public class VrmUiController : MonoBehaviour
         //// セーブされた情報のバージョンが異なれば読み出さない
         //if (PlayerPrefs.GetFloat("Version") != prefsVersion) return;
 
+        int defaultTransparentMethodNo = 1;
+        int defaultZoomModeNo = 0;
+        int defaultLanguageNo = 0;
+
+        // UIで設定されている値を最初にデフォルトとする
+        if (zoomModeDropdown) defaultZoomModeNo = zoomModeDropdown.value;
+        if (transparentMethodDropdown) defaultTransparentMethodNo = transparentMethodDropdown.value;
+        if (languageDropdown) defaultLanguageNo = languageDropdown.value;
+
         if (windowController)
         {
             windowController.isTransparent = LoadPrefsBool("Transparent", windowController.isTransparent);
             windowController.isMaximized = LoadPrefsBool("Maximized", windowController.isMaximized);
             windowController.isTopmost = LoadPrefsBool("Topmost", windowController.isTopmost);
+
+            // WindowControllerの値をデフォルトとする
+            defaultTransparentMethodNo = (int)windowController.transparentMethod;
         }
 
-        SetZoomMode(PlayerPrefs.GetInt("ZoomMode", 0));
-        SetLanguage(PlayerPrefs.GetInt("Language", 0));
+        SetZoomMode(PlayerPrefs.GetInt("ZoomMode", defaultZoomModeNo));
+        SetTransparentMethod(PlayerPrefs.GetInt("TransparentMethod", defaultTransparentMethodNo));
+        SetLanguage(PlayerPrefs.GetInt("Language", defaultLanguageNo));
 
         motionMode = (VrmCharacterBehaviour.MotionMode)PlayerPrefs.GetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
         enableRandomEmotion = LoadPrefsBool("EmotionMode", enableRandomEmotion);
@@ -241,6 +271,26 @@ public class VrmUiController : MonoBehaviour
         else
         {
             zoomMode = CameraController.ZoomMode.Zoom;
+        }
+    }
+
+    /// <summary>
+    /// ウィンドウ透過方式を選択
+    /// </summary>
+    /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
+    private void SetTransparentMethod(int no)
+    {
+        if (no == 1)
+        {
+            transparentMethod = UniWinApi.TransparentType.DWM;
+        }
+        else if (no == 2)
+        {
+            transparentMethod = UniWinApi.TransparentType.LayereredWindows;
+        }
+        else
+        {
+            transparentMethod = UniWinApi.TransparentType.None;
         }
     }
 

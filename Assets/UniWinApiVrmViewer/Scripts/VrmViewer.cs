@@ -136,6 +136,15 @@ public class VrmViewer : MonoBehaviour
             }
         }
 
+        // 透明化方式の選択
+        if (uiController && windowController)
+        {
+            if (uiController.transparentMethod != windowController.transparentMethod)
+            {
+                windowController.SetTransparentMethod(uiController.transparentMethod);
+            }
+        }
+
         // End を押すとウィンドウ透過切替
         if (Input.GetKeyDown(KeyCode.End))
         {
@@ -426,7 +435,7 @@ public class VrmViewer : MonoBehaviour
     {
         if (!File.Exists(path)) yield break;
 
-        using (WWW www = new WWW("file://" + path))
+        using (var www = new WWW("file://" + path))
         {
             while (!www.isDone)
             {
