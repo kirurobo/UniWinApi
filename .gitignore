@@ -43,6 +43,7 @@ sysinfo.txt
 
 # Additional
 /Assets/UnityChan*
+/Assets/csc.rsp
 .idea/
 JetBrains
 JetBrains.meta
