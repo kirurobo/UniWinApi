@@ -4995,9 +4995,9 @@ MonoBehaviour:
     m_Options:
     - m_Text: None
       m_Image: {fileID: 0}
-    - m_Text: DWM
+    - m_Text: Alpha
       m_Image: {fileID: 0}
-    - m_Text: LayeredWindow
+    - m_Text: Mask
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7919,7 +7919,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: DWM
+  m_Text: Alpha
 --- !u!222 &1227113426
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -11804,7 +11804,7 @@ MonoBehaviour:
   quitButton: {fileID: 1511164576}
   titleText: {fileID: 73029309}
   zoomModeDropdown: {fileID: 1756576026}
-  transparentMethodDropdown: {fileID: 0}
+  transparentMethodDropdown: {fileID: 858950657}
   languageDropdown: {fileID: 1247809434}
   motionTogglePreset: {fileID: 235421695}
   motionToggleRandom: {fileID: 314904125}

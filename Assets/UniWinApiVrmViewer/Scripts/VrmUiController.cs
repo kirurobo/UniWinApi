@@ -39,18 +39,7 @@ public class VrmUiController : MonoBehaviour
     public RectTransform controlPanel;
     public CameraController.ZoomMode zoomMode { get; set; }
     public UniWinApi.TransparentType transparentMethod { get; set; }
-    public int language
-    {
-        get
-        {
-            if (languageDropdown)　return languageDropdown.value;
-            return 0;
-        }
-        set
-        {
-            SetLanguage(value);
-        }
-    }
+    int language { get; set; }
 
     private float mouseMoveSS = 0f;             // Sum of mouse trajectory squares. [px^2]
     private float mouseMoveSSThreshold = 16f;   // Threshold to be regarded as not moving. [px^2]
@@ -158,11 +147,11 @@ public class VrmUiController : MonoBehaviour
         panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 0.5f);
         originalAnchoredPosition = panel.anchoredPosition;
 
-        // Initialize toggles.
-        UpdateUI();
-
         // Load settings.
         Load();
+
+        // Initialize toggles.
+        UpdateUI();
 
         // Set event listeners.
         if (closeButton) { closeButton.onClick.AddListener(Close); }
@@ -176,7 +165,7 @@ public class VrmUiController : MonoBehaviour
             if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
         }
 
-        // 直接バインドしない分
+        // 直接バインドしない項目の初期値とイベントリスナーを設定
         if (zoomModeDropdown)
         {
             zoomModeDropdown.value = (int)zoomMode;
@@ -215,8 +204,6 @@ public class VrmUiController : MonoBehaviour
 
         PlayerPrefs.SetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
         PlayerPrefs.SetInt("EmotionMode", enableRandomEmotion ? 1 : 0);
-
-        Debug.Log("Saved.");
     }
 
     public void Load()
@@ -242,7 +229,6 @@ public class VrmUiController : MonoBehaviour
             // WindowControllerの値をデフォルトとする
             defaultTransparentMethodNo = (int)windowController.transparentMethod;
         }
-
         SetZoomMode(PlayerPrefs.GetInt("ZoomMode", defaultZoomModeNo));
         SetTransparentMethod(PlayerPrefs.GetInt("TransparentMethod", defaultTransparentMethodNo));
         SetLanguage(PlayerPrefs.GetInt("Language", defaultLanguageNo));
@@ -305,12 +291,15 @@ public class VrmUiController : MonoBehaviour
         {
             case 0:
                 lang = "en";
+                language = 0;
                 break;
             case 1:
                 lang = "ja";
+                language = 1;
                 break;
             default:
                 lang = "en";
+                language = 0;
                 break;
         }
 
@@ -342,6 +331,7 @@ public class VrmUiController : MonoBehaviour
     private void Close()
     {
         panel.gameObject.SetActive(false);
+        //Debug.Log("Close. Zoom:" + zoomMode + ", Trans.:" + transparentMethod + ", Lang.:" + language);
     }
 
     /// <summary>
@@ -360,7 +350,9 @@ public class VrmUiController : MonoBehaviour
 
     void OnApplicationQuit()
     {
+        // 終了時には設定を保存する
         Save();
+        //Debug.Log("Saved. Zoom:" + zoomMode + ", Trans.:" + transparentMethod + ", Lang.:" + language);
     }
 
     /// <summary>

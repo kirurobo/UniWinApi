@@ -64,6 +64,7 @@ public class VrmUiLocale : MonoBehaviour
         SetText(ref transforms, "TopmostToggle", localeText.labels.Topmost);
         SetText(ref transforms, "MaximizeToggle", localeText.labels.Maximize);
         SetText(ref transforms, "ZoomModeDropdown", localeText.labels.ZoomMode);
+        SetText(ref transforms, "TransparentMethodDropdown", localeText.labels.TransparentMethod);
         SetText(ref transforms, "LanguageDropdown", localeText.labels.Language);
         SetText(ref transforms, "MotionDropdown", localeText.labels.Motion);
         SetText(ref transforms, "MotionModeText", localeText.labels.Motion);
@@ -123,7 +124,7 @@ public class VrmUiLocale : MonoBehaviour
     {
         public string Motion, Face;
         public string Transparent, Topmost, Maximize;
-        public string Language, ZoomMode, None, Preset, Random, Bvh, Repeat;
+        public string Language, ZoomMode, TransparentMethod, None, Preset, Random, Bvh, Repeat;
     }
 
     [System.Serializable]
