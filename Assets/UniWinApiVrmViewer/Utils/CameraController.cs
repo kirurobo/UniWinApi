@@ -7,6 +7,7 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CameraController : MonoBehaviour
 {
@@ -20,7 +21,7 @@ public class CameraController : MonoBehaviour
     }
 
     [Flags]
-    public enum ZoomMode
+    public enum ZoomType
     {
         None = 0,
         Dolly = 1,	// Dolly in/out
@@ -28,7 +29,7 @@ public class CameraController : MonoBehaviour
     }
 
     public RotationAxes axes = RotationAxes.PitchAndYaw;
-    public ZoomMode zoomMode = ZoomMode.Dolly;
+    [FormerlySerializedAs("zoomMode")] public ZoomType zoomType = ZoomType.Dolly;
     public float sensitivityX = 15f;
     public float sensitivityY = 15f;
     public float dragSensitivity = 0.1f;
@@ -179,24 +180,24 @@ public class CameraController : MonoBehaviour
             // ホイールで接近・離脱
             float wheelDelta = Input.GetAxis("Mouse ScrollWheel") * wheelSensitivity;
 
-            ZoomMode mode = zoomMode;
+            ZoomType type = zoomType;
 
             // Shiftキーが押されていて、かつZoomModeがZoomかDollyならば、モードを入れ替える
             if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
-                if (mode == ZoomMode.Dolly)
+                if (type == ZoomType.Dolly)
                 {
-                    mode = ZoomMode.Zoom;
+                    type = ZoomType.Zoom;
                 }
-                else if (mode == ZoomMode.Zoom)
+                else if (type == ZoomType.Zoom)
                 {
-                    mode = ZoomMode.Dolly;
+                    type = ZoomType.Dolly;
                 }
             }
 
             if (wheelDelta != 0f)
             {
-                if ((mode & ZoomMode.Dolly) != ZoomMode.None)
+                if ((type & ZoomType.Dolly) != ZoomType.None)
                 {
                     // ドリーの場合。カメラを近づけたり遠ざけたり。
                     dolly += wheelDelta;
@@ -206,7 +207,7 @@ public class CameraController : MonoBehaviour
 
                     UpdateTransform();
                 }
-                else if ((mode & ZoomMode.Zoom) != ZoomMode.None)
+                else if ((type & ZoomType.Zoom) != ZoomType.None)
                 {
                     // ズームの場合。カメラのFOVを変更
                     zoom -= wheelDelta;

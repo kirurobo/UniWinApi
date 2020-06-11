@@ -4919,7 +4919,7 @@ GameObject:
   - component: {fileID: 858950658}
   - component: {fileID: 858950657}
   m_Layer: 5
-  m_Name: TransparentMethodDropdown
+  m_Name: TransparentTypeDropdown
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10777,7 +10777,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   axes: 3
-  zoomMode: 2
+  zoomType: 2
   sensitivityX: 15
   sensitivityY: 15
   dragSensitivity: 0.1
@@ -11561,7 +11561,7 @@ GameObject:
   - component: {fileID: 1756576027}
   - component: {fileID: 1756576026}
   m_Layer: 5
-  m_Name: ZoomModeDropdown
+  m_Name: ZoomTypeDropdown
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11803,8 +11803,8 @@ MonoBehaviour:
   openButton: {fileID: 1029807923}
   quitButton: {fileID: 1511164576}
   titleText: {fileID: 73029309}
-  zoomModeDropdown: {fileID: 1756576026}
-  transparentMethodDropdown: {fileID: 858950657}
+  zoomTypeDropdown: {fileID: 1756576026}
+  transparentTypeDropdown: {fileID: 858950657}
   languageDropdown: {fileID: 1247809434}
   motionTogglePreset: {fileID: 235421695}
   motionToggleRandom: {fileID: 314904125}
@@ -13738,6 +13738,11 @@ PrefabInstance:
       propertyPath: transparentType
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 114356007855815214, guid: 1a68be57637a61842b1d8ea2ccb106b5,
+        type: 3}
+      propertyPath: _isMaximized
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a68be57637a61842b1d8ea2ccb106b5, type: 3}
 --- !u!1 &2141451816
@@ -13823,7 +13828,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   axes: 3
-  zoomMode: 1
+  zoomType: 1
   sensitivityX: 15
   sensitivityY: 15
   dragSensitivity: 1

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Kirurobo;
+using UnityEngine.Serialization;
 
 public class VrmUiController : MonoBehaviour
 {
@@ -24,8 +25,8 @@ public class VrmUiController : MonoBehaviour
     public Button quitButton;
     public Text titleText;
     
-    public Dropdown zoomModeDropdown;
-    public Dropdown transparentMethodDropdown;
+    [FormerlySerializedAs("zoomModeDropdown")] public Dropdown zoomTypeDropdown;
+    [FormerlySerializedAs("transparentMethodDropdown")] public Dropdown transparentTypeDropdown;
     public Dropdown languageDropdown;
 
     public Toggle motionTogglePreset;
@@ -37,8 +38,8 @@ public class VrmUiController : MonoBehaviour
     public Button tabButtonControl;
     public RectTransform modelPanel;
     public RectTransform controlPanel;
-    public CameraController.ZoomMode zoomMode { get; set; }
-    public UniWinApi.TransparentType transparentMethod { get; set; }
+    public CameraController.ZoomType zoomType { get; set; }
+    public UniWinApi.TransparentType transparentType { get; set; }
     int language { get; set; }
 
     private float mouseMoveSS = 0f;             // Sum of mouse trajectory squares. [px^2]
@@ -127,15 +128,15 @@ public class VrmUiController : MonoBehaviour
             canvas = GetComponent<Canvas>();
         }
 
-        zoomMode = CameraController.ZoomMode.Zoom;
-        transparentMethod = UniWinApi.TransparentType.DWM;
+        zoomType = CameraController.ZoomType.Zoom;
+        transparentType = UniWinApi.TransparentType.Alpha;
 
         windowController = FindObjectOfType<WindowController>();
         if (windowController)
         {
             windowController.OnStateChanged += windowController_OnStateChanged;
 
-            transparentMethod = windowController.transparentMethod;
+            transparentType = windowController.transparentType;
         }
 
         vrmLoaderLocale = this.GetComponentInChildren<VRMLoader.VRMPreviewLocale>();
@@ -166,15 +167,15 @@ public class VrmUiController : MonoBehaviour
         }
 
         // 直接バインドしない項目の初期値とイベントリスナーを設定
-        if (zoomModeDropdown)
+        if (zoomTypeDropdown)
         {
-            zoomModeDropdown.value = (int)zoomMode;
-            zoomModeDropdown.onValueChanged.AddListener(val => SetZoomMode(val));
+            zoomTypeDropdown.value = (int)zoomType;
+            zoomTypeDropdown.onValueChanged.AddListener(val => SetZoomType(val));
         }
-        if (transparentMethodDropdown)
+        if (transparentTypeDropdown)
         {
-            transparentMethodDropdown.value = (int)transparentMethod;
-            transparentMethodDropdown.onValueChanged.AddListener(val => SetTransparentMethod(val));
+            transparentTypeDropdown.value = (int)transparentType;
+            transparentTypeDropdown.onValueChanged.AddListener(val => SetTransparentType(val));
         }
         if (languageDropdown)
         {
@@ -198,8 +199,8 @@ public class VrmUiController : MonoBehaviour
             PlayerPrefs.SetInt("Topmost", windowController.isTopmost ? 1 : 0);
         }
 
-        PlayerPrefs.SetInt("ZoomMode", (int)zoomMode);
-        PlayerPrefs.SetInt("TransparentMethod", (int)transparentMethod);
+        PlayerPrefs.SetInt("ZoomType", (int)zoomType);
+        PlayerPrefs.SetInt("TransparentType", (int)transparentType);
         PlayerPrefs.SetInt("Language", language);
 
         PlayerPrefs.SetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
@@ -211,13 +212,13 @@ public class VrmUiController : MonoBehaviour
         //// セーブされた情報のバージョンが異なれば読み出さない
         //if (PlayerPrefs.GetFloat("Version") != prefsVersion) return;
 
-        int defaultTransparentMethodNo = 1;
-        int defaultZoomModeNo = 0;
+        int defaultTransparentTypeNo = 1;
+        int defaultZoomTypeNo = 0;
         int defaultLanguageNo = 0;
 
         // UIで設定されている値を最初にデフォルトとする
-        if (zoomModeDropdown) defaultZoomModeNo = zoomModeDropdown.value;
-        if (transparentMethodDropdown) defaultTransparentMethodNo = transparentMethodDropdown.value;
+        if (zoomTypeDropdown) defaultZoomTypeNo = zoomTypeDropdown.value;
+        if (transparentTypeDropdown) defaultTransparentTypeNo = transparentTypeDropdown.value;
         if (languageDropdown) defaultLanguageNo = languageDropdown.value;
 
         if (windowController)
@@ -227,10 +228,10 @@ public class VrmUiController : MonoBehaviour
             windowController.isTopmost = LoadPrefsBool("Topmost", windowController.isTopmost);
 
             // WindowControllerの値をデフォルトとする
-            defaultTransparentMethodNo = (int)windowController.transparentMethod;
+            defaultTransparentTypeNo = (int)windowController.transparentType;
         }
-        SetZoomMode(PlayerPrefs.GetInt("ZoomMode", defaultZoomModeNo));
-        SetTransparentMethod(PlayerPrefs.GetInt("TransparentMethod", defaultTransparentMethodNo));
+        SetZoomType(PlayerPrefs.GetInt("ZoomType", defaultZoomTypeNo));
+        SetTransparentType(PlayerPrefs.GetInt("TransparentType", defaultTransparentTypeNo));
         SetLanguage(PlayerPrefs.GetInt("Language", defaultLanguageNo));
 
         motionMode = (VrmCharacterBehaviour.MotionMode)PlayerPrefs.GetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
@@ -248,15 +249,15 @@ public class VrmUiController : MonoBehaviour
     /// マウスホイールでのズーム方法を選択
     /// </summary>
     /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
-    private void SetZoomMode(int no)
+    private void SetZoomType(int no)
     {
         if (no == 1)
         {
-            zoomMode = CameraController.ZoomMode.Dolly;
+            zoomType = CameraController.ZoomType.Dolly;
         }
         else
         {
-            zoomMode = CameraController.ZoomMode.Zoom;
+            zoomType = CameraController.ZoomType.Zoom;
         }
     }
 
@@ -264,19 +265,19 @@ public class VrmUiController : MonoBehaviour
     /// ウィンドウ透過方式を選択
     /// </summary>
     /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
-    private void SetTransparentMethod(int no)
+    private void SetTransparentType(int no)
     {
         if (no == 1)
         {
-            transparentMethod = UniWinApi.TransparentType.DWM;
+            transparentType = UniWinApi.TransparentType.Alpha;
         }
         else if (no == 2)
         {
-            transparentMethod = UniWinApi.TransparentType.LayereredWindows;
+            transparentType = UniWinApi.TransparentType.ColorKey;
         }
         else
         {
-            transparentMethod = UniWinApi.TransparentType.None;
+            transparentType = UniWinApi.TransparentType.None;
         }
     }
 

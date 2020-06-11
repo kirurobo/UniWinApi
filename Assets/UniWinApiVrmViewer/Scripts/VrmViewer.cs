@@ -29,7 +29,7 @@ public class VrmViewer : MonoBehaviour
     public CameraController cameraController;
     public Transform cameraTransform;
 
-    private CameraController.ZoomMode originalWheelMode;
+    private CameraController.ZoomType _originalZoomType;
 
     public AudioSource audioSource;
 
@@ -74,7 +74,7 @@ public class VrmViewer : MonoBehaviour
             cameraController = FindObjectOfType<CameraController>();
             if (cameraController)
             {
-                originalWheelMode = cameraController.zoomMode;
+                _originalZoomType = cameraController.zoomType;
             }
         }
 
@@ -127,21 +127,21 @@ public class VrmViewer : MonoBehaviour
             bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
             if (!windowController.isClickThrough && inScreen)
             {
-                if (uiController) originalWheelMode = uiController.zoomMode;
-                cameraController.zoomMode = originalWheelMode;
+                if (uiController) _originalZoomType = uiController.zoomType;
+                cameraController.zoomType = _originalZoomType;
             }
             else
             {
-                cameraController.zoomMode = CameraController.ZoomMode.None;
+                cameraController.zoomType = CameraController.ZoomType.None;
             }
         }
 
         // 透明化方式の選択
         if (uiController && windowController)
         {
-            if (uiController.transparentMethod != windowController.transparentMethod)
+            if (uiController.transparentType != windowController.transparentType)
             {
-                windowController.SetTransparentMethod(uiController.transparentMethod);
+                windowController.SetTransparentMethod(uiController.transparentType);
             }
         }
 
