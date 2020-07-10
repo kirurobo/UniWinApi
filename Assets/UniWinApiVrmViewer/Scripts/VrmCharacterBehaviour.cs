@@ -199,11 +199,13 @@ public class VrmCharacterBehaviour : MonoBehaviour
         float now = Time.timeSinceLevelLoad;
         float span;
 
+        BlendShapeKey blinkShapeKey = BlendShapeKey.CreateFromPreset(BlendShapePreset.Blink);
+
         // 表情が笑顔の時は目が閉じられるため、まばたきは無効とする
         if (emotionPresets[emotionIndex] == BlendShapePreset.Joy)
         {
             blinkState = BlinkState.None;
-            blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, 0f);
+            blendShapeProxy.ImmediatelySetValue(blinkShapeKey, 0f);
         }
 
         // まばたきの状態遷移
@@ -214,11 +216,11 @@ public class VrmCharacterBehaviour : MonoBehaviour
                 if (span > BlinkTime)
                 {
                     blinkState = BlinkState.Opening;
-                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, 1f);
+                    blendShapeProxy.ImmediatelySetValue(blinkShapeKey, 1f);
                 }
                 else
                 {
-                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, (span / BlinkTime));
+                    blendShapeProxy.ImmediatelySetValue(blinkShapeKey, (span / BlinkTime));
                 }
                 break;
             case BlinkState.Opening:
@@ -226,11 +228,11 @@ public class VrmCharacterBehaviour : MonoBehaviour
                 if (span > BlinkTime)
                 {
                     blinkState = BlinkState.None;
-                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, 0f);
+                    blendShapeProxy.ImmediatelySetValue(blinkShapeKey, 0f);
                 }
                 else
                 {
-                    blendShapeProxy.ImmediatelySetValue(BlendShapePreset.Blink, (1f - span) / BlinkTime);
+                    blendShapeProxy.ImmediatelySetValue(blinkShapeKey, (1f - span) / BlinkTime);
                 }
                 break;
             default:
@@ -298,7 +300,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
             float val = 0f;
             // 現在選ばれている表情のみ値を入れ、他はゼロとする
             if (index == emotionIndex) val = emotionRate;
-            blendShapes.Add(new KeyValuePair<BlendShapeKey, float>(new BlendShapeKey(shape), val));
+            blendShapes.Add(new KeyValuePair<BlendShapeKey, float>(BlendShapeKey.CreateFromPreset(shape), val));
             index++;
         }
         blendShapeProxy.SetValues(blendShapes);

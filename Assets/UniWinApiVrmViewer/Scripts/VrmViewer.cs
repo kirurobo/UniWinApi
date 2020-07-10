@@ -9,6 +9,7 @@ using System;
 using System.IO;
 using UniHumanoid;
 using UnityEngine;
+using UnityEngine.Networking;
 using VRM;
 using Kirurobo;
 
@@ -222,9 +223,14 @@ public class VrmViewer : MonoBehaviour
         // mp3はライセンスの関係でWindowsスタンドアローンでは読み込めないよう。
         // 参考 https://docs.unity3d.com/jp/460/ScriptReference/WWW.GetAudioClip.html
         // 参考 https://answers.unity.com/questions/433428/load-mp3-from-harddrive-on-pc-again.html
-        if (ext == ".ogg" || ext == ".wav")
+        if (ext == ".ogg")
         {
-            LoadAudio(path);
+            LoadAudio(path, AudioType.OGGVORBIS);
+            return;
+        }
+        else if (ext == ".wav")
+        {
+            LoadAudio(path, AudioType.WAV);
             return;
         }
     }
@@ -426,23 +432,23 @@ public class VrmViewer : MonoBehaviour
     /// Reference: http://fantom1x.blog130.fc2.com/blog-entry-299.html
     /// </summary>
     /// <param name="path"></param>
-    private void LoadAudio(string path)
+    private void LoadAudio(string path, AudioType audioType)
     {
-        StartCoroutine(LoadAudioCoroutine(path));
+        StartCoroutine(LoadAudioCoroutine(path, audioType));
     }
 
-    private System.Collections.IEnumerator LoadAudioCoroutine(string path)
+    private System.Collections.IEnumerator LoadAudioCoroutine(string path, AudioType audioType)
     {
         if (!File.Exists(path)) yield break;
 
-        using (var www = new WWW("file://" + path))
+        using (var www = UnityWebRequestMultimedia.GetAudioClip("file://" + path, audioType))
         {
             while (!www.isDone)
             {
                 yield return null;
             }
 
-            AudioClip audioClip = www.GetAudioClip(false, false);
+            var audioClip = DownloadHandlerAudioClip.GetContent(www);
             if (audioClip.loadState != AudioDataLoadState.Loaded)
             {
                 Debug.Log("Failed to load audio: " + path);
