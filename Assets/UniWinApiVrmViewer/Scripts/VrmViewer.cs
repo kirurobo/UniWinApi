@@ -142,7 +142,7 @@ public class VrmViewer : MonoBehaviour
         {
             if (uiController.transparentType != windowController.transparentType)
             {
-                windowController.SetTransparentMethod(uiController.transparentType);
+                windowController.SetTransparentType(uiController.transparentType);
             }
         }
 

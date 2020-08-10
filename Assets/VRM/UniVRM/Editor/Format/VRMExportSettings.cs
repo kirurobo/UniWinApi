@@ -66,7 +66,7 @@ namespace VRM
         /// BlendShapeのシリアライズにSparseAccessorを使う
         /// </summary>
         [Tooltip("Use sparse accessor for blendshape. This may reduce vrm size")]
-        public bool UseSparseAccessor = true;
+        public bool UseSparseAccessor = false;
 
         /// <summary>
         /// BlendShapeのPositionのみをエクスポートする
@@ -156,8 +156,8 @@ namespace VRM
                 Source.transform.rotation != Quaternion.identity ||
                 Source.transform.localScale != Vector3.one)
             {
-                EditorUtility.DisplayDialog("Error", "The Root transform should have Default translation, rotation and scale.", "ok");
-                yield return Validation.Error("The Root transform should have Default translation, rotation and scale.");
+                // EditorUtility.DisplayDialog("Error", "The Root transform should have Default translation, rotation and scale.", "ok");
+                yield return Validation.Warning("The Root translation, rotation and scale will be dropped.");
             }
 
             var animator = Source.GetComponent<Animator>();
@@ -186,7 +186,7 @@ namespace VRM
 
             if (DuplicateBoneNameExists())
             {
-                yield return Validation.Error("Find duplicate Bone names. Please check model's bone names. ");
+                yield return Validation.Warning("There is a bone with the same name in the hierarchy. If exported, these bones will be automatically renamed.");
             }
 
             if (string.IsNullOrEmpty(Title))
@@ -206,7 +206,7 @@ namespace VRM
             {
                 yield return Validation.Error("ReduceBlendshapeSize needs VRMBlendShapeProxy. You need to convert to VRM once.");
             }
-            
+
             var vertexColor = Source.GetComponentsInChildren<SkinnedMeshRenderer>().Any(x => x.sharedMesh.colors.Length > 0);
             if (vertexColor)
             {
@@ -228,7 +228,7 @@ namespace VRM
                     continue;
                 }
 
-                if (MaterialExporter.UseUnlit(material.shader.name))
+                if (VRMMaterialExporter.UseUnlit(material.shader.name))
                 {
                     // unlit
                     continue;
@@ -240,7 +240,9 @@ namespace VRM
                     continue;
                 }
 
-                yield return Validation.Warning(string.Format("unknown material '{0}' is used. this will export as `Standard` fallback", material.shader.name));
+                yield return Validation.Warning(string.Format("{0}: unknown shader '{1}' is used. this will export as `Standard` fallback",
+                    material.name,
+                    material.shader.name));
             }
 
             foreach (var material in materials)

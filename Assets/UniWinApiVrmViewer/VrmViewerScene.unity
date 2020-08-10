@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.45140105, g: 0.5008942, b: 0.57231283, a: 1}
+  m_IndirectSpecularColor: {r: 0.18386838, g: 0.22901553, b: 0.30311254, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1307,7 +1307,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &223459111
 GameObject:
@@ -1492,7 +1492,7 @@ Transform:
   m_Children:
   - {fileID: 1629460662}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &256695652
 GameObject:
@@ -4997,7 +4997,7 @@ MonoBehaviour:
       m_Image: {fileID: 0}
     - m_Text: Alpha
       m_Image: {fileID: 0}
-    - m_Text: Mask
+    - m_Text: ColorKey
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -5462,7 +5462,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &977400099
 GameObject:
@@ -11773,7 +11773,7 @@ RectTransform:
   m_Children:
   - {fileID: 1052724203}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -13721,7 +13721,7 @@ PrefabInstance:
     - target: {fileID: 114356007855815214, guid: 1a68be57637a61842b1d8ea2ccb106b5,
         type: 3}
       propertyPath: _isTopmost
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114356007855815214, guid: 1a68be57637a61842b1d8ea2ccb106b5,
         type: 3}
@@ -13736,12 +13736,12 @@ PrefabInstance:
     - target: {fileID: 114356007855815214, guid: 1a68be57637a61842b1d8ea2ccb106b5,
         type: 3}
       propertyPath: transparentType
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114356007855815214, guid: 1a68be57637a61842b1d8ea2ccb106b5,
         type: 3}
       propertyPath: _isMaximized
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a68be57637a61842b1d8ea2ccb106b5, type: 3}

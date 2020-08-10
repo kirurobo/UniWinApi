@@ -39,7 +39,7 @@ public class VrmUiController : MonoBehaviour
     public RectTransform modelPanel;
     public RectTransform controlPanel;
     public CameraController.ZoomType zoomType { get; set; }
-    public UniWinApi.TransparentType transparentType { get; set; }
+    public UniWinApi.TransparentTypes transparentType { get; set; }
     int language { get; set; }
 
     private float mouseMoveSS = 0f;             // Sum of mouse trajectory squares. [px^2]
@@ -129,7 +129,7 @@ public class VrmUiController : MonoBehaviour
         }
 
         zoomType = CameraController.ZoomType.Zoom;
-        transparentType = UniWinApi.TransparentType.Alpha;
+        transparentType = UniWinApi.TransparentTypes.Alpha;
 
         windowController = FindObjectOfType<WindowController>();
         if (windowController)
@@ -269,15 +269,15 @@ public class VrmUiController : MonoBehaviour
     {
         if (no == 1)
         {
-            transparentType = UniWinApi.TransparentType.Alpha;
+            transparentType = UniWinApi.TransparentTypes.Alpha;
         }
         else if (no == 2)
         {
-            transparentType = UniWinApi.TransparentType.ColorKey;
+            transparentType = UniWinApi.TransparentTypes.ColorKey;
         }
         else
         {
-            transparentType = UniWinApi.TransparentType.None;
+            transparentType = UniWinApi.TransparentTypes.None;
         }
     }
 
