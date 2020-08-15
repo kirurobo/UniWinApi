@@ -6,6 +6,7 @@
     "Topmost": "Topmost",
     "Maximize": "Maximize",
     "TransparentType": "Transparent type",
+    "HitTestType": "Hit test type",
     "ZoomType": "Zoom type",
     "Language": "Language",
     "None": "None",
@@ -21,6 +22,7 @@
     "Next": "Next",
     "TabButtonModel": "Model",
     "TabButtonMotion": "Motion",
-    "TabButtonConfig": "Config"
+    "TabButtonConfig": "Config",
+    "TabButtonAbout": "About"
   }
 }

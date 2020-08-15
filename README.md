@@ -15,15 +15,16 @@
 主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
 
 このリポジトリではそれらの機能を利用した応用例として、デスクトップマスコット風VRMビューアーのプロジェクトを置いてあります。  
-[![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.4.0 beta")
+[![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.57.1")
 
 ## Download (ダウンロード)
 
-ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版と32ビット版(x86)があります。
-* [Ver.0.4.0 UniWinApi本体もリリース](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0)
+ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版(x64)と32ビット版(x86)があります。
+* [VRMビューアでない Ver.0.5.0 UniWinApi本体はこちら](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
 <details>
   <summary>過去のバージョン</summary>
   
+* [Ver.0.5.0 レイヤードウィンドウも選択可に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
 * [Ver.0.4.0-beta 色々改造](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0beta)
 * [Ver.0.3.3 UniVRM 0.44に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.3)
 * [Ver.0.3.2 マウスを追う](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.2)
@@ -38,19 +39,23 @@
 
 ## License (ライセンス)
 
+UniWinApi本体はCC0ですが、VRMビューアではいくつか他のプロジェクトを利用させていただいています。
+
 * CC0
-   * [UniWinApi本体](http://github.com/kirurobo/UniWinApiAsset)
-      * VRMビューア以外の、.unitypackageの中身は CC0 です。
-      * そちらのソースは別リポジトリにて管理しています。
+  * [UniWinApi本体](http://github.com/kirurobo/UniWinApiAsset)
+    * VRMビューア以外の、.unitypackageの中身は CC0 です。
+    * そちらのソースは別リポジトリにて管理しています。
 
 * MIT License
-    * DWANGO Co., Ltd. [UniVRM](https://github.com/dwango/UniVRM/)
-    * [えむにわ @m2wasabi](https://twitter.com/m2wasabi) [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
+  * [VRMコンソーシアム](https://vrm-consortium.org/) の [UniVRM](https://github.com/dwango/UniVRM/)
+  * [えむにわ @m2wasabi](https://twitter.com/m2wasabi)さんの [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
+
+* その他（フリー）
+  * [ゆず @Yuzu_Unity](https://twitter.com/Yuzu_Unity)さんの [HumanoidCollider](https://github.com/yuzu-unity/HumanoidCollider) [Qiita記事](https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9)
 
 ## System requirements (動作環境)
 
-* Unity 5.6 - 2018.4
-  * Unity 2019 では背景透過不可
+* 2018.4.20 - 
 * Windows 7 or newer
 
 

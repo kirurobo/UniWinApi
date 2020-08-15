@@ -64,7 +64,8 @@ public class VrmUiLocale : MonoBehaviour
         SetText(ref transforms, "TopmostToggle", localeText.labels.Topmost);
         SetText(ref transforms, "MaximizeToggle", localeText.labels.Maximize);
         SetText(ref transforms, "ZoomModeDropdown", localeText.labels.ZoomMode);
-        SetText(ref transforms, "TransparentMethodDropdown", localeText.labels.TransparentMethod);
+        SetText(ref transforms, "TransparentTypeDropdown", localeText.labels.TransparentType);
+        SetText(ref transforms, "HitTestTypeDropdown", localeText.labels.HitTestType);
         SetText(ref transforms, "LanguageDropdown", localeText.labels.Language);
         SetText(ref transforms, "MotionDropdown", localeText.labels.Motion);
         SetText(ref transforms, "MotionModeText", localeText.labels.Motion);
@@ -83,6 +84,7 @@ public class VrmUiLocale : MonoBehaviour
         SetText(ref transforms, "TabButtonModel", localeText.buttons.TabButtonModel);
         SetText(ref transforms, "TabButtonMotion", localeText.buttons.TabButtonMotion);
         SetText(ref transforms, "TabButtonConfig", localeText.buttons.TabButtonConfig);
+        SetText(ref transforms, "TabButtonAbout", localeText.buttons.TabButtonAbout);
     }
 
     /// <summary>
@@ -124,14 +126,14 @@ public class VrmUiLocale : MonoBehaviour
     {
         public string Motion, Face;
         public string Transparent, Topmost, Maximize;
-        public string Language, ZoomMode, TransparentMethod, None, Preset, Random, Bvh, Repeat;
+        public string Language, ZoomMode, TransparentType, HitTestType, None, Preset, Random, Bvh, Repeat;
     }
 
     [System.Serializable]
     public struct Buttons
     {
         public string Quit, Open, Back, Next;
-        public string TabButtonModel, TabButtonMotion, TabButtonConfig;
+        public string TabButtonModel, TabButtonMotion, TabButtonConfig, TabButtonAbout;
     }
 
     [System.Serializable]

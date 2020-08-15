@@ -6,6 +6,7 @@
     "Topmost": "最前面",
     "Maximize": "最大化",
     "TransparentType": "透明化方式",
+    "HitTestType": "ヒットテスト方式",
     "ZoomType":  "ズーム方法",
     "Language": "言語",
     "None": "なし",
@@ -21,6 +22,7 @@
     "Next": "次",
     "TabButtonModel": "モデル",
     "TabButtonMotion": "動き",
-    "TabButtonConfig": "設定"
+    "TabButtonConfig": "設定",
+    "TabButtonAbout": "情報"
   }
 }

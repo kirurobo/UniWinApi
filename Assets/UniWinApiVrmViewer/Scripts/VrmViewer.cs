@@ -137,12 +137,19 @@ public class VrmViewer : MonoBehaviour
             }
         }
 
-        // 透明化方式の選択
+        // UIで変化があったら反映させる
         if (uiController && windowController)
         {
+            // 透明化方式がUIで変更されていれば反映
             if (uiController.transparentType != windowController.transparentType)
             {
                 windowController.SetTransparentType(uiController.transparentType);
+            }
+
+            // ヒットテスト方式がUIで変更されていれば反映
+            if (uiController.hitTestType != windowController.hitTestType)
+            {
+                windowController.hitTestType = uiController.hitTestType;
             }
         }
 
@@ -409,6 +416,9 @@ public class VrmViewer : MonoBehaviour
             }
 
             model = newModelObject.AddComponent<HumanPoseTransfer>();
+
+            CreateColliders(model.gameObject);
+
             var characterController = model.gameObject.AddComponent<VrmCharacterBehaviour>();
 
             SetMotion(motion, model, meta);
@@ -425,6 +435,23 @@ public class VrmViewer : MonoBehaviour
 
             }
         }
+    }
+
+    /// <summary>
+    /// Add colliders
+    /// </summary>
+    /// <see cref="https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9"/>
+    /// <param name="humanoidObject"></param>
+    private void CreateColliders(GameObject humanoidObject)
+    {
+        var colliderBuilder = model.gameObject.AddComponent<HumanoidColliderBuilder>();
+        colliderBuilder.colliderPrm.arm = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderPrm.body = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderPrm.head = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderPrm.leg = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderObj = new System.Collections.Generic.List<GameObject>();
+        colliderBuilder.anim = model.GetComponent<Animator>();
+        colliderBuilder.SetCollider();
     }
 
     /// <summary>

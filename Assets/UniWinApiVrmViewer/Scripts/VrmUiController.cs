@@ -27,6 +27,7 @@ public class VrmUiController : MonoBehaviour
     
     [FormerlySerializedAs("zoomModeDropdown")] public Dropdown zoomTypeDropdown;
     [FormerlySerializedAs("transparentMethodDropdown")] public Dropdown transparentTypeDropdown;
+    public Dropdown hitTestTypeDropdown;
     public Dropdown languageDropdown;
 
     public Toggle motionTogglePreset;
@@ -40,6 +41,7 @@ public class VrmUiController : MonoBehaviour
     public RectTransform controlPanel;
     public CameraController.ZoomType zoomType { get; set; }
     public UniWinApi.TransparentTypes transparentType { get; set; }
+    public WindowController.HitTestType hitTestType { get; set; }
     int language { get; set; }
 
     private float mouseMoveSS = 0f;             // Sum of mouse trajectory squares. [px^2]
@@ -177,6 +179,11 @@ public class VrmUiController : MonoBehaviour
             transparentTypeDropdown.value = (int)transparentType;
             transparentTypeDropdown.onValueChanged.AddListener(val => SetTransparentType(val));
         }
+        if (hitTestTypeDropdown)
+        {
+            hitTestTypeDropdown.value = (int)hitTestType;
+            hitTestTypeDropdown.onValueChanged.AddListener(val => SetHitTestType(val));
+        }
         if (languageDropdown)
         {
             languageDropdown.value = language;
@@ -201,6 +208,7 @@ public class VrmUiController : MonoBehaviour
 
         PlayerPrefs.SetInt("ZoomType", (int)zoomType);
         PlayerPrefs.SetInt("TransparentType", (int)transparentType);
+        PlayerPrefs.SetInt("HitTestType", (int)hitTestType);
         PlayerPrefs.SetInt("Language", language);
 
         PlayerPrefs.SetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
@@ -212,14 +220,15 @@ public class VrmUiController : MonoBehaviour
         //// セーブされた情報のバージョンが異なれば読み出さない
         //if (PlayerPrefs.GetFloat("Version") != prefsVersion) return;
 
-        int defaultTransparentTypeNo = 1;
-        int defaultZoomTypeNo = 0;
-        int defaultLanguageNo = 0;
+        int defaultTransparentTypeIndex = 1;
+        int defaultHitTestTypeIndex = 1;
+        int defaultZoomTypeIndex = 0;
+        int defaultLanguageIndex = 0;
 
         // UIで設定されている値を最初にデフォルトとする
-        if (zoomTypeDropdown) defaultZoomTypeNo = zoomTypeDropdown.value;
-        if (transparentTypeDropdown) defaultTransparentTypeNo = transparentTypeDropdown.value;
-        if (languageDropdown) defaultLanguageNo = languageDropdown.value;
+        if (zoomTypeDropdown) defaultZoomTypeIndex = zoomTypeDropdown.value;
+        if (transparentTypeDropdown) defaultTransparentTypeIndex = transparentTypeDropdown.value;
+        if (languageDropdown) defaultLanguageIndex = languageDropdown.value;
 
         if (windowController)
         {
@@ -228,11 +237,13 @@ public class VrmUiController : MonoBehaviour
             windowController.isTopmost = LoadPrefsBool("Topmost", windowController.isTopmost);
 
             // WindowControllerの値をデフォルトとする
-            defaultTransparentTypeNo = (int)windowController.transparentType;
+            defaultTransparentTypeIndex = (int)windowController.transparentType;
+            defaultHitTestTypeIndex = (int)windowController.hitTestType;
         }
-        SetZoomType(PlayerPrefs.GetInt("ZoomType", defaultZoomTypeNo));
-        SetTransparentType(PlayerPrefs.GetInt("TransparentType", defaultTransparentTypeNo));
-        SetLanguage(PlayerPrefs.GetInt("Language", defaultLanguageNo));
+        SetZoomType(PlayerPrefs.GetInt("ZoomType", defaultZoomTypeIndex));
+        SetTransparentType(PlayerPrefs.GetInt("TransparentType", defaultTransparentTypeIndex));
+        SetHitTestType(PlayerPrefs.GetInt("HitTestType", defaultHitTestTypeIndex));
+        SetLanguage(PlayerPrefs.GetInt("Language", defaultLanguageIndex));
 
         motionMode = (VrmCharacterBehaviour.MotionMode)PlayerPrefs.GetInt("VrmCharacterBehaviour.MotionMode", (int)motionMode);
         enableRandomEmotion = LoadPrefsBool("EmotionMode", enableRandomEmotion);
@@ -264,14 +275,14 @@ public class VrmUiController : MonoBehaviour
     /// <summary>
     /// ウィンドウ透過方式を選択
     /// </summary>
-    /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
-    private void SetTransparentType(int no)
+    /// <param name="index">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
+    private void SetTransparentType(int index)
     {
-        if (no == 1)
+        if (index == 1)
         {
             transparentType = UniWinApi.TransparentTypes.Alpha;
         }
-        else if (no == 2)
+        else if (index == 2)
         {
             transparentType = UniWinApi.TransparentTypes.ColorKey;
         }
@@ -279,6 +290,32 @@ public class VrmUiController : MonoBehaviour
         {
             transparentType = UniWinApi.TransparentTypes.None;
         }
+    }
+
+    /// <summary>
+    /// ヒットテスト方式を選択
+    /// </summary>
+    /// <param name="index">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
+    private void SetHitTestType(int index)
+    {
+        if (index == 1)
+        {
+            hitTestType= WindowController.HitTestType.Opacity;
+        }
+        else if (index == 2)
+        {
+            hitTestType = WindowController.HitTestType.Raycast;
+        }
+        else
+        {
+            hitTestType = WindowController.HitTestType.None;
+        }
+
+        //// 選択を反映
+        //if (windowController)
+        //{
+        //    windowController.hitTestType = hitTestType;
+        //}
     }
 
     /// <summary>
@@ -332,7 +369,7 @@ public class VrmUiController : MonoBehaviour
     private void Close()
     {
         panel.gameObject.SetActive(false);
-        //Debug.Log("Close. Zoom:" + zoomMode + ", Trans.:" + transparentMethod + ", Lang.:" + language);
+        //Debug.Log("Close. Zoom:" + zoomMode + ", Trans.:" + transparentType + ", Lang.:" + language);
     }
 
     /// <summary>
@@ -353,7 +390,7 @@ public class VrmUiController : MonoBehaviour
     {
         // 終了時には設定を保存する
         Save();
-        //Debug.Log("Saved. Zoom:" + zoomMode + ", Trans.:" + transparentMethod + ", Lang.:" + language);
+        //Debug.Log("Saved. Zoom:" + zoomMode + ", Trans.:" + transparentType + ", Lang.:" + language);
     }
 
     /// <summary>

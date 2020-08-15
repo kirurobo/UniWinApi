@@ -1,3 +1,12 @@
+/**
+ * TabPanelManager
+ * 
+ * ボタンによってパネルを表示／非表示にします
+ * 
+ * Author: Kirurobo http://twitter.com/kirurobo
+ * License: CC0 https://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
