@@ -1,7 +1,7 @@
 ﻿{
   "labels": {
     "Motion": "Motion",
-    "Face": "Emotion",
+    "Emotion": "Emotion",
     "Transparent": "Transparent",
     "Topmost": "Topmost",
     "Maximize": "Maximize",
@@ -12,7 +12,7 @@
     "None": "None",
     "Preset": "Preset",
     "Random": "Random",
-    "Bvh": "BVH",
+    "Bvh": "Dropped BVH",
     "Repeat": "Repeat"
   },
   "buttons": {

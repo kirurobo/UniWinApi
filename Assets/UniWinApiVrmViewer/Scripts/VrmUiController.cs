@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Kirurobo;
 using UnityEngine.Serialization;
+using VRM;
 
 public class VrmUiController : MonoBehaviour
 {
@@ -33,7 +34,9 @@ public class VrmUiController : MonoBehaviour
     public Toggle motionTogglePreset;
     public Toggle motionToggleRandom;
     public Toggle motionToggleBvh;
-    public Toggle faceToggleRandom;
+    public Toggle emotionToggleRandom;
+    public Dropdown blendShapeDropdown;
+    public Slider blendShapeSlider;
 
     public Button tabButtonModel;
     public Button tabButtonControl;
@@ -80,12 +83,14 @@ public class VrmUiController : MonoBehaviour
     {
         get
         {
-            if (faceToggleRandom) return faceToggleRandom.isOn;
+            if (emotionToggleRandom) return emotionToggleRandom.isOn;
             return false;
         }
         set
         {
-            if (faceToggleRandom) faceToggleRandom.isOn = value;
+            if (emotionToggleRandom) emotionToggleRandom.isOn = value;
+            if (blendShapeDropdown) blendShapeDropdown.interactable = !value;
+            if (blendShapeSlider) blendShapeSlider.interactable = !value;
         }
     }
 
@@ -95,27 +100,27 @@ public class VrmUiController : MonoBehaviour
         {
             if (motionToggleRandom && motionToggleRandom.isOn) return VrmCharacterBehaviour.MotionMode.Random;
             if (motionToggleBvh && motionToggleBvh.isOn) return VrmCharacterBehaviour.MotionMode.Bvh;
-            return 0;
+            return VrmCharacterBehaviour.MotionMode.Default;
         }
         set
         {
             if (value == VrmCharacterBehaviour.MotionMode.Random)
             {
-                motionTogglePreset.isOn = false;
-                motionToggleRandom.isOn = true;
-                motionToggleBvh.isOn = false;
+                if (motionTogglePreset) motionTogglePreset.isOn = false;
+                if (motionToggleRandom) motionToggleRandom.isOn = true;
+                if (motionToggleBvh) motionToggleBvh.isOn = false;
             }
             else if (value == VrmCharacterBehaviour.MotionMode.Bvh)
             {
-                motionTogglePreset.isOn = false;
-                motionToggleRandom.isOn = false;
-                motionToggleBvh.isOn = true;
+                if (motionTogglePreset) motionTogglePreset.isOn = false;
+                if (motionToggleRandom) motionToggleRandom.isOn = false;
+                if (motionToggleBvh) motionToggleBvh.isOn = true;
             }
             else
             {
-                motionTogglePreset.isOn = true;
-                motionToggleRandom.isOn = false;
-                motionToggleBvh.isOn = false;
+                if (motionTogglePreset) motionTogglePreset.isOn = true;
+                if (motionToggleRandom) motionToggleRandom.isOn = false;
+                if (motionToggleBvh) motionToggleBvh.isOn = false;
             }
         }
     }
@@ -133,6 +138,7 @@ public class VrmUiController : MonoBehaviour
         zoomType = CameraController.ZoomType.Zoom;
         transparentType = UniWinApi.TransparentTypes.Alpha;
 
+        // WindowControllerが指定されていなければ自動取得
         windowController = FindObjectOfType<WindowController>();
         if (windowController)
         {
@@ -149,6 +155,9 @@ public class VrmUiController : MonoBehaviour
         // 中央基準にする
         panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 0.5f);
         originalAnchoredPosition = panel.anchoredPosition;
+
+        // 表情の選択肢を準備
+        SetupBlendShapeDropdown();
 
         // Load settings.
         Load();
@@ -168,6 +177,11 @@ public class VrmUiController : MonoBehaviour
             if (topmostToggle) { topmostToggle.onValueChanged.AddListener(windowController.SetTopmost); }
         }
 
+        //if (emotionToggleRandom) { emotionToggleRandom.onValueChanged.AddListener(val => enableRandomEmotion = val); }
+        //if (motionTogglePreset) { motionTogglePreset.onValueChanged.AddListener(val => motionMode = VrmCharacterBehaviour.MotionMode.Default); }
+        //if (motionToggleRandom) { motionToggleRandom.onValueChanged.AddListener(val => motionMode = VrmCharacterBehaviour.MotionMode.Random); }
+        //if (motionToggleBvh) { motionToggleBvh.onValueChanged.AddListener(val => motionMode = VrmCharacterBehaviour.MotionMode.Bvh); }
+        
         // 直接バインドしない項目の初期値とイベントリスナーを設定
         if (zoomTypeDropdown)
         {
@@ -310,27 +324,17 @@ public class VrmUiController : MonoBehaviour
         {
             hitTestType = WindowController.HitTestType.None;
         }
-
-        //// 選択を反映
-        //if (windowController)
-        //{
-        //    windowController.hitTestType = hitTestType;
-        //}
     }
 
     /// <summary>
     /// UI言語選択
     /// </summary>
-    /// <param name="no">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
-    private void SetLanguage(int no)
+    /// <param name="index">選択肢の番号（Dropdownを編集したら下記も要編集）</param>
+    private void SetLanguage(int index)
     {
         string lang;
-        switch (no)
+        switch (index)
         {
-            case 0:
-                lang = "en";
-                language = 0;
-                break;
             case 1:
                 lang = "ja";
                 language = 1;
@@ -345,6 +349,46 @@ public class VrmUiController : MonoBehaviour
         if (uiLocale) uiLocale.SetLocale(lang);
     }
 
+    /// <summary>
+    /// 表情の選択肢を初期化
+    /// </summary>
+    private void SetupBlendShapeDropdown()
+    {
+        if (!blendShapeDropdown) return;
+
+        blendShapeDropdown.options.Clear();
+        foreach (var preset in VrmCharacterBehaviour.EmotionPresets)
+        {
+            blendShapeDropdown.options.Add(new Dropdown.OptionData(preset.ToString()));
+        }
+        blendShapeDropdown.RefreshShownValue();
+    }
+
+    /// <summary>
+    /// Apply the dropdown index
+    /// </summary>
+    /// <param name="index"></param>
+    internal void SetBlendShape(int index)
+    {
+        if (blendShapeDropdown)
+        {
+            blendShapeDropdown.value = index;
+            blendShapeDropdown.RefreshShownValue();
+        }
+    }
+
+    /// <summary>
+    /// Apply the slide value
+    /// </summary>
+    /// <param name="value"></param>
+    internal void SetBlendShapeValue(float value)
+    {
+        if (blendShapeSlider)
+        {
+            blendShapeSlider.value = value;
+        }
+    }
+
     private void windowController_OnStateChanged()
     {
         UpdateUI();
@@ -355,11 +399,13 @@ public class VrmUiController : MonoBehaviour
     /// </summary>
     public void UpdateUI()
     {
-        if (!windowController) return;
+        if (!windowController)
+        {
+            if (transparentToggle) { transparentToggle.isOn = windowController.isTransparent; }
+            if (maximizeToggle) { maximizeToggle.isOn = windowController.isMaximized; }
+            if (topmostToggle) { topmostToggle.isOn = windowController.isTopmost; }
+        }
 
-        if (transparentToggle) { transparentToggle.isOn = windowController.isTransparent; }
-        if (maximizeToggle) { maximizeToggle.isOn = windowController.isMaximized; }
-        if (topmostToggle) { topmostToggle.isOn = windowController.isTopmost; }
     }
 
 
@@ -493,7 +539,7 @@ public class VrmUiController : MonoBehaviour
     /// Set the warning text
     /// </summary>
     /// <param name="message"></param>
-    public void SetWarning(string message)
+    public void ShowWarning(string message)
     {
         if (warningText)
         {

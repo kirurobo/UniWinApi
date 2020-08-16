@@ -63,7 +63,7 @@ public class VrmUiLocale : MonoBehaviour
         SetText(ref transforms, "TransparentToggle", localeText.labels.Transparent);
         SetText(ref transforms, "TopmostToggle", localeText.labels.Topmost);
         SetText(ref transforms, "MaximizeToggle", localeText.labels.Maximize);
-        SetText(ref transforms, "ZoomModeDropdown", localeText.labels.ZoomMode);
+        SetText(ref transforms, "ZoomTypeDropdown", localeText.labels.ZoomType);
         SetText(ref transforms, "TransparentTypeDropdown", localeText.labels.TransparentType);
         SetText(ref transforms, "HitTestTypeDropdown", localeText.labels.HitTestType);
         SetText(ref transforms, "LanguageDropdown", localeText.labels.Language);
@@ -72,9 +72,9 @@ public class VrmUiLocale : MonoBehaviour
         SetText(ref transforms, "MotionTogglePreset", localeText.labels.Preset);
         SetText(ref transforms, "MotionToggleRandom", localeText.labels.Random);
         SetText(ref transforms, "MotionToggleBvh", localeText.labels.Bvh);
-        SetText(ref transforms, "FaceDropdown", localeText.labels.Face);
-        SetText(ref transforms, "FaceModeText", localeText.labels.Face);
-        SetText(ref transforms, "FaceToggleRandom", localeText.labels.Random);
+        SetText(ref transforms, "BlendShapeDropdown", localeText.labels.Emotion);
+        SetText(ref transforms, "EmotionModeText", localeText.labels.Emotion);
+        SetText(ref transforms, "EmotionToggleRandom", localeText.labels.Random);
 
         SetText(ref transforms, "OpenButton", localeText.buttons.Open);
         SetText(ref transforms, "QuitButton", localeText.buttons.Quit);
@@ -124,9 +124,9 @@ public class VrmUiLocale : MonoBehaviour
     [System.Serializable]
     public struct Labels
     {
-        public string Motion, Face;
+        public string Motion, Emotion;
         public string Transparent, Topmost, Maximize;
-        public string Language, ZoomMode, TransparentType, HitTestType, None, Preset, Random, Bvh, Repeat;
+        public string Language, ZoomType, TransparentType, HitTestType, None, Preset, Random, Bvh, Repeat;
     }
 
     [System.Serializable]

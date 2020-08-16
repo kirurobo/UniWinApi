@@ -15,11 +15,12 @@
 主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
 
 このリポジトリではそれらの機能を利用した応用例として、デスクトップマスコット風VRMビューアーのプロジェクトを置いてあります。  
-[![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.57.1")
+[![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.4.0 beta")  
+動作イメージ動画 [YouTube](https://youtu.be/cq2g-hIGlAs)
 
 ## Download (ダウンロード)
 
-ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版(x64)と32ビット版(x86)があります。
+* ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版(x64)と32ビット版(x86)があります。
 * [VRMビューアでない Ver.0.5.0 UniWinApi本体はこちら](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
 <details>
   <summary>過去のバージョン</summary>
@@ -55,7 +56,7 @@ UniWinApi本体はCC0ですが、VRMビューアではいくつか他のプロ�
 
 ## System requirements (動作環境)
 
-* 2018.4.20 - 
+* 2018.4.20 or newer
 * Windows 7 or newer
 
 
@@ -64,10 +65,8 @@ UniWinApi本体はCC0ですが、VRMビューアではいくつか他のプロ�
 VRMビューアを動かしてみるだけなら、ダウンロードしたビルド済み実行ファイルを展開し、その中の UniWinApiVrmViewer.exe を起動してください。  
 起動後にお手元の VRM ファイルをドロップするとそのモデルが表示されます。
 
-VRMビューアのプロジェクトではなく、.unitypackage の利用（こちらがUniWinApiの本体）については、
+VRMビューアのプロジェクトを含まない、UniWinApi-vXXXXX.unitypackage の利用（こちらがUniWinApiの本体）については、
 こちらの [チュートリアル](https://github.com/kirurobo/UniWinApi/blob/master/docs/index_jp.md) をご覧ください。
 
-このVRMビューアのUnityプロジェクトを利用する場合は、本リポジトリのソースコードの他に下記が必要です。
-
-* ["Unity-chan!" Model](https://assetstore.unity.com/packages/3d/characters/unity-chan-model-18705) をアセットストアからインポート
-    * 必要なのは Animations 以下です。
+VRMビューアをビルドする場合は、リポジトリのクローンを作成してUnityのエディタで開いてください。
+* 以前はユニティちゃんのアニメーションを利用していましたが、そちらは除外したため、他のアセットを別途用意せずとも開けます。

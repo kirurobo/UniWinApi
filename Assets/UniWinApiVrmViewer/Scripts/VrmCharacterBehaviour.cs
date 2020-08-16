@@ -1,3 +1,12 @@
+/**
+ * VrmCharacterBehaviour
+ * 
+ * キャラクターのまばたきや表情、動作を制御します
+ * 
+ * Author: Kirurobo http://twitter.com/kirurobo
+ * License: MIT
+ */
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,8 +36,10 @@ public class VrmCharacterBehaviour : MonoBehaviour
         Bvh = 2,
     }
 
-
-    private BlendShapePreset[] emotionPresets =
+    /// <summary>
+    /// 表情のプリセット
+    /// </summary>
+    public static BlendShapePreset[] EmotionPresets =
     {
         BlendShapePreset.Neutral,
         BlendShapePreset.Joy,
@@ -38,8 +49,8 @@ public class VrmCharacterBehaviour : MonoBehaviour
         BlendShapePreset.Unknown,
     };
 
-    private int emotionIndex = 0;  // 表情の状態
-    private float emotionRate = 0f; // その表情になっている程度 0～1
+    internal int emotionIndex = 0;  // 表情の状態
+    internal float emotionRate = 0f; // その表情になっている程度 0～1
     private float emotionSpeed = 0f;  // 表情を発生させる方向なら 1、戻す方向なら -1、維持なら 0
     private float nextEmotionTime = 0f;   // 次に表情を変化させる時刻
 
@@ -61,10 +72,6 @@ public class VrmCharacterBehaviour : MonoBehaviour
     private AnimatorStateInfo currentState;     // 現在のステート状態を保存する参照
     private AnimatorStateInfo previousState;    // ひとつ前のステート状態を保存する参照
 
-    public bool randomMotion = true;                // ランダム判定スタートスイッチ
-    private float randomMotionThreshold = 0.5f;             // ランダム判定の閾値
-    private float randomMotionInterval = 5f;                // ランダム判定のインターバル
-
     public MotionMode motionMode = MotionMode.Default;
 
     //private float cursorGrabingSqrMagnitude = 0.81f;    // 手の届く距離の2乗（これ以上離れると手を伸ばすことをやめる）
@@ -72,9 +79,12 @@ public class VrmCharacterBehaviour : MonoBehaviour
     private float lastRightHandWait = 0f;
     private float lastLeftHandWait = 0f;
 
+    public bool randomMotion = false;   // モーションをランダムにするか
     public bool randomEmotion = true;
 
     private Camera currentCamera;
+    private VrmUiController uiController;
+
 
     // Use this for initialization
     void Start()
@@ -106,12 +116,16 @@ public class VrmCharacterBehaviour : MonoBehaviour
             currentCamera = Camera.main;
         }
 
+        // UIコントローラーを取得
+        if (!uiController)
+        {
+            uiController = FindObjectOfType<VrmUiController>();
+        }
+
         SetAnimator(GetComponent<Animator>());
 
         currentState = animator.GetCurrentAnimatorStateInfo(0);
         previousState = currentState;
-        // ランダム判定用関数をスタートする
-        StartCoroutine("RandomChange");
     }
 
     /// <summary>
@@ -202,7 +216,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
         BlendShapeKey blinkShapeKey = BlendShapeKey.CreateFromPreset(BlendShapePreset.Blink);
 
         // 表情が笑顔の時は目が閉じられるため、まばたきは無効とする
-        if (emotionPresets[emotionIndex] == BlendShapePreset.Joy)
+        if (EmotionPresets[emotionIndex] == BlendShapePreset.Joy)
         {
             blinkState = BlinkState.None;
             blendShapeProxy.ImmediatelySetValue(blinkShapeKey, 0f);
@@ -269,7 +283,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
             // 表情を与えるなら、ランダムで次の表情を決定
             if (emotionSpeed > 0)
             {
-                emotionIndex = Random.Range(0, emotionPresets.Length - 1);
+                emotionIndex = Random.Range(0, EmotionPresets.Length - 1);
             }
         }
         else
@@ -295,7 +309,7 @@ public class VrmCharacterBehaviour : MonoBehaviour
         var blendShapes = new List<KeyValuePair<BlendShapeKey, float>>();
 
         int index = 0;
-        foreach (var shape in emotionPresets)
+        foreach (var shape in EmotionPresets)
         {
             float val = 0f;
             // 現在選ばれている表情のみ値を入れ、他はゼロとする
@@ -304,97 +318,34 @@ public class VrmCharacterBehaviour : MonoBehaviour
             index++;
         }
         blendShapeProxy.SetValues(blendShapes);
+
+        UpdateUI();
     }
 
-    public void ForwardMotion()
+    /// <summary>
+    /// UIのブレンドシェイプ表示を更新
+    /// </summary>
+    private void UpdateUI()
     {
-        // ブーリアンNextをtrueにする
-        animator.SetBool("Next", true);
+        if (!uiController) return;
+
+        if (uiController.enableRandomEmotion)
+        {
+            uiController.SetBlendShape(emotionIndex);
+            uiController.SetBlendShapeValue(emotionRate);
+        }
     }
 
-    public void BackwardMotion()
-    {
-        // ブーリアンBackをtrueにする
-        animator.SetBool("Back", true);
-    }
-
+    /// <summary>
+    /// モーション変更に関する処理をここに書く（現在はオミット）
+    /// </summary>
     private void UpdateMotion()
     {
-        if (motionMode != MotionMode.Bvh)
-        {
-            // ↑キー/スペースが押されたら、ステートを次に送る処理
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                ForwardMotion();
-            }
-
-            // ↓キーが押されたら、ステートを前に戻す処理
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                BackwardMotion();
-            }
-
-            // "Next"フラグがtrueの時の処理
-            if (animator.GetBool("Next"))
-            {
-                // 状態が遷移されたことが確認できれば、フラグをfalseに戻す
-                currentState = animator.GetCurrentAnimatorStateInfo(0);
-                if (previousState.fullPathHash != currentState.fullPathHash)
-                {
-                    animator.SetBool("Next", false);
-                    previousState = currentState;
-                }
-            }
-
-            // "Back"フラグがtrueの時の処理
-            if (animator.GetBool("Back"))
-            {
-                // 状態が遷移されたことが確認できれば、フラグをfalseに戻す
-                currentState = animator.GetCurrentAnimatorStateInfo(0);
-                if (previousState.fullPathHash != currentState.fullPathHash)
-                {
-                    animator.SetBool("Back", false);
-                    previousState = currentState;
-                }
-            }
-
-            // ランダムの場合、現在のモーションが終了していれば次に移る
-            if (motionMode == MotionMode.Random)
-            {
-                if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f)
-                {
-                    animator.SetBool("Next", true);
-                }
-            }
-        }
     }
 
-    // ランダム判定用関数
-    IEnumerator RandomChange()
-    {
-        // 無限ループ開始
-        while (true)
-        {
-            //ランダム判定スイッチオンの場合
-            if (motionMode == MotionMode.Random)
-            {
-                // ランダムシードを取り出し、その大きさによってフラグ設定をする
-                float _seed = Random.Range(0.0f, 1.0f);
-                if (_seed < randomMotionThreshold)
-                {
-                    animator.SetBool("Back", true);
-                }
-                else if (_seed >= randomMotionThreshold)
-                {
-                    animator.SetBool("Next", true);
-                }
-            }
-            // 次の判定までインターバルを置く
-            yield return new WaitForSeconds(randomMotionInterval);
-        }
-
-    }
-
+    /// <summary>
+    /// IK処理時に手をマウスカーソルに伸ばす
+    /// </summary>
     void OnAnimatorIK()
     {
         UpdateHand();
@@ -416,7 +367,9 @@ public class VrmCharacterBehaviour : MonoBehaviour
         Vector3 cursorPosition = targetObject.transform.position;
 
         AnimatorStateInfo animState = animator.GetCurrentAnimatorStateInfo(0);
-        if (animState.shortNameHash == Animator.StringToHash("IK_HAND"))
+
+        // IK_HANDというアニメーションのときのみ、手を伸ばす
+        if (animState.IsName("IK_HAND") || animState.IsName("IK_HAND_REVERSE"))
         {
 
             float sqrDistanceRight = (cursorPosition - rightHandTransform.position).sqrMagnitude;

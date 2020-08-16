@@ -64,9 +64,9 @@ public class VrmViewer : MonoBehaviour
         {
             uiController.motionToggleRandom.onValueChanged.AddListener(val => SetRandomMotion(val));
         }
-        if (uiController.faceToggleRandom)
+        if (uiController.emotionToggleRandom)
         {
-            uiController.faceToggleRandom.onValueChanged.AddListener(val => SetRandomEmotion(val));
+            uiController.emotionToggleRandom.onValueChanged.AddListener(val => SetRandomEmotion(val));
         }
 
         // 指定がなければ自動で探す
@@ -335,7 +335,7 @@ public class VrmViewer : MonoBehaviour
             if (uiController)
             {
                 uiController.motionMode = VrmCharacterBehaviour.MotionMode.Default;
-                uiController.SetWarning("Motion load failed.");
+                uiController.ShowWarning("Motion load failed.");
             }
             Debug.LogError("Failed loading " + path);
             Debug.LogError(ex);
@@ -358,11 +358,6 @@ public class VrmViewer : MonoBehaviour
             if (uiController)
             {
                 uiController.motionMode = VrmCharacterBehaviour.MotionMode.Bvh;
-                //uiController.enableRandomMotion = false;
-            }
-
-            if (characterController)
-            {
             }
 
             // Play loaded audio if available
@@ -402,7 +397,7 @@ public class VrmViewer : MonoBehaviour
         }
         catch (Exception ex)
         {
-            if (uiController) uiController.SetWarning("Model load failed.");
+            if (uiController) uiController.ShowWarning("Model load failed.");
             Debug.LogError("Failed loading " + path);
             Debug.LogError(ex);
             return;

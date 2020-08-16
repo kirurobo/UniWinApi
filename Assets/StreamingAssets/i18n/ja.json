@@ -1,7 +1,7 @@
 ﻿{
   "labels": {
     "Motion": "モーション",
-    "Face": "表情",
+    "Emotion": "表情",
     "Transparent": "透明化",
     "Topmost": "最前面",
     "Maximize": "最大化",
@@ -12,7 +12,7 @@
     "None": "なし",
     "Preset": "既定",
     "Random": "ランダム",
-    "Bvh": "BVH",
+    "Bvh": "読み込んだBVH",
     "Repeat": "繰り返し"
   },
   "buttons": {
