@@ -1,5 +1,12 @@
 # UniWinApi Example project
 
+> ***新リポジトリ [UniWindowController](https://github.com/kirurobo/uniwindowcontroller) もご覧ください。
+こちらは Mac でも Windows でも動作します。***  
+> ***See also my new repository [UniWindowController](https://github.com/kirurobo/uniwindowcontroller).
+It works on both Mac and Windows.***  
+---
+
+
 [UniWinApi](https://github.com/kirurobo/UniWinApiAsset) は Unityでは本来行えない操作を Windows API 経由で行うものです。  
 以下のようなことができます。  
 
