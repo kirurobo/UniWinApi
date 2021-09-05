@@ -1,0 +1,15 @@
+{
+    "name": "UniGLTF",
+    "references": [
+        "VRMShaders.GLTF.IO.Runtime",
+        "VRMShaders.GLTF.UniUnlit.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

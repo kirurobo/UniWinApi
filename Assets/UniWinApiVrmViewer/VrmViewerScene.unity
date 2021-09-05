@@ -6551,7 +6551,7 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1122307164}
   toggleTransition: 1
   graphic: {fileID: 1007404358}
@@ -9429,7 +9429,7 @@ MonoBehaviour:
     NONINFRINGEMENT. IN NO EVENT SHALL THE\r\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE
     FOR ANY CLAIM, DAMAGES OR OTHER\r\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT,
     TORT OR OTHERWISE, ARISING FROM,\r\nOUT OF OR IN CONNECTION WITH THE SOFTWARE
-    OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE.\n\n\n\n<size=20><b>HumanoidCollider</b></size>\n<i>https://github.com/yuzu-unity/HumanoidCollider/</i>\nFree\n\n\n<size=20><b>UniWinApi</b></size>\n<i>https://github.com/kirurobo/UniWinApiAsset/</i>\nCC0"
+    OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE.\n\n\n\n<size=20><b>HumanoidCollider</b></size>\n<i>https://github.com/yuzu-unity/HumanoidCollider/</i>\nFree\n\n\n<size=20><b>UniWinApi</b></size>\n<i>https://github.com/kirurobo/UniWinApiAsset/</i>\nCC0\n\n"
 --- !u!222 &1387013661
 CanvasRenderer:
   m_ObjectHideFlags: 0

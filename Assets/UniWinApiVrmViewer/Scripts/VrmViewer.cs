@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using VRM;
 using Kirurobo;
+using UniGLTF;
 
 /// <summary>
 /// VRMビューア
@@ -386,14 +387,19 @@ public class VrmViewer : MonoBehaviour
         try
         {
             // Load from a VRM file.
-            context = new VRMImporterContext();
+            var parser = new GlbFileParser(path);
+            var data = parser.Parse();
+            
+            context = new VRMImporterContext(data);
             //Debug.Log("Loading model : " + path);
 
-            context.Load(path);
-            newModelObject = context.Root;
+            RuntimeGltfInstance instance = context.Load();
+            instance.EnableUpdateWhenOffscreen();
+
+            newModelObject = instance.Root;
             meta = context.ReadMeta(true);
 
-            context.ShowMeshes();
+            instance.ShowMeshes();
         }
         catch (Exception ex)
         {

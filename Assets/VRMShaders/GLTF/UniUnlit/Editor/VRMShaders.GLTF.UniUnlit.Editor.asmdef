@@ -1,0 +1,16 @@
+{
+    "name": "VRMShaders.GLTF.UniUnlit.Editor",
+    "references": [
+        "VRMShaders.GLTF.UniUnlit.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": []
+}

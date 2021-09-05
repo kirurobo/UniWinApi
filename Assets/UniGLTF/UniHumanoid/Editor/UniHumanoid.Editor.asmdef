@@ -1,0 +1,17 @@
+{
+    "name": "UniHumanoid.Editor",
+    "references": [
+        "VRM",
+        "UniHumanoid"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": []
+}

@@ -1,0 +1,19 @@
+{
+    "name": "UniHumanoid.Editor.Tests",
+    "references": [
+        "VRM",
+        "UniHumanoid"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": []
+}
