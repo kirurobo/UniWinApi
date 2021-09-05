@@ -1,72 +1,80 @@
-# UniWinApi Example project
+# An Example project for UniWinApi
 
-[UniWinApi](https://github.com/kirurobo/UniWinApiAsset) は Unityでは本来行えない操作を Windows API 経由で行うものです。  
-以下のようなことができます。  
+## What's UniWinApi
 
-* ウィンドウの移動
-* ウィンドウサイズ変更
-* ウィンドウの最大化、最小化
-* **ウィンドウの透過** （枠なしで、四角形でないウィンドウにします） 
-* **ファイルのドロップを受け付ける**
-* **Windowsのダイアログでファイルを開く（試験実装で単一ファイルのみ）**
-* マウスポインタを移動させる
-* マウスのボタン操作を送出する
+[UniWinApi](https://github.com/kirurobo/UniWinApiAsset) is a library using Windows APIs. It allows us the following operations which are not available normary in Unity. 
 
-主にデスクトップマスコット的な用途で利用しそうな機能を取り込んでいます。
+* Move the window
+* Resize the window
+* Maximize the window
+* Minimize the window
+* **Make the window transparent** (Make the window non-rectangle and unframed)
+* **Accept file drop**
+* **Open file dialog** (Test implementation, single file only)
+* Move the cursor pointer
+* Send mouse button events
 
-このリポジトリではそれらの機能を利用した応用例として、デスクトップマスコット風VRMビューアーのプロジェクトを置いてあります。  
+
+## What's this repository
+
+This repository contains a project for a desktop mascot style VRM viewer as an application example of using UniWinApi.
 [![UniWinApi VRM viewer](http://i.ytimg.com/vi/cq2g-hIGlAs/mqdefault.jpg)](https://youtu.be/cq2g-hIGlAs "UniWinApi VRM viewer v0.4.0 beta")  
-動作イメージ動画 [YouTube](https://youtu.be/cq2g-hIGlAs)
+Image video [YouTube](https://youtu.be/cq2g-hIGlAs)
 
-## Download (ダウンロード)
 
-* ビルド済みのVRMビューア―例は [Releases](https://github.com/kirurobo/UniWinApi/releases) 中の UniWinApiVrmViewer です。64ビット版(x64)と32ビット版(x86)があります。
-* [VRMビューアでない Ver.0.5.0 UniWinApi本体はこちら](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
+## Download
+
+
+* There is a pre-built VRM viewer 'UniWinApiVrmViewer' in [Releases](https://github.com/kirurobo/UniWinApi/releases) 
+* [Latest UniWinApi core asset package](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
 <details>
-  <summary>過去のバージョン</summary>
+  <summary>Archives</summary>
   
-* [Ver.0.5.0 レイヤードウィンドウも選択可に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
-* [Ver.0.4.0-beta 色々改造](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0beta)
-* [Ver.0.3.3 UniVRM 0.44に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.3)
-* [Ver.0.3.2 マウスを追う](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.2)
-* [Ver.0.3.1 最初から透明化](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.1)
-* [Ver.0.3.0 照明の回転と並進移動も追加](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.0)
-* [Ver.0.2.3 UniVRM 0.42に。カメラFOVを10度に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.3)
-* [Ver.0.2.2 ライトを白色に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.2)
-* [Ver.0.2.1 シェーダー修正後](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.1/UniWinApiVrmViewer_x64_v0.2.1.zip)
-* [Ver.0.2.0 初版](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
+* [Ver.0.5.0 Added layered window mode](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
+* [Ver.0.4.0-beta](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0beta)
+* [Ver.0.3.3 Updated to UniVRM 0.44](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.3)
+* [Ver.0.3.2 Added Looking at cursor](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.2)
+* [Ver.0.3.1 Enable transparent on startup](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.1)
+* [Ver.0.3.0 Added rotation and translation for light](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.0)
+* [Ver.0.2.3 Imported UniVRM 0.42. Set FOV at 10deg.](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.3)
+* [Ver.0.2.2 Set the light color white](https://github.com/kirurobo/UniWinApi/releases/tag/v0.2.2)
+* [Ver.0.2.1 Updated the shader](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.1/UniWinApiVrmViewer_x64_v0.2.1.zip)
+* [Ver.0.2.0 Firtst release](https://github.com/kirurobo/UniWinApi/releases/download/v0.2.0/UniWinApiVrmViewer_x64.zip)
 
 </details>
 
-## License (ライセンス)
 
-UniWinApi本体はCC0ですが、VRMビューアではいくつか他のプロジェクトを利用させていただいています。
+
+## License
+
+UniWinApiAsset is CC0, but several other projects are used in this VRM viewer.
 
 * CC0
-  * [UniWinApi本体](http://github.com/kirurobo/UniWinApiAsset)
-    * VRMビューア以外の、.unitypackageの中身は CC0 です。
-    * そちらのソースは別リポジトリにて管理しています。
+  * [UniWinApiAsset](http://github.com/kirurobo/UniWinApiAsset)
+    * The asset in the .unitypackage except for the VRM viewer.
+    * The source code is maintained in another repository.
 
 * MIT License
-  * [VRMコンソーシアム](https://vrm-consortium.org/) の [UniVRM](https://github.com/dwango/UniVRM/)
-  * [えむにわ @m2wasabi](https://twitter.com/m2wasabi)さんの [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/)
+  * [UniVRM](https://github.com/vrm-c/UniVRM/) by [VRM consortium](https://vrm-consortium.org/)
+  * [VRMLoaderUI](https://github.com/m2wasabi/VRMLoaderUI/) by [えむにわ @m2wasabi](https://twitter.com/m2wasabi)
 
-* その他（フリー）
-  * [ゆず @Yuzu_Unity](https://twitter.com/Yuzu_Unity)さんの [HumanoidCollider](https://github.com/yuzu-unity/HumanoidCollider) [Qiita記事](https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9)
-
-## System requirements (動作環境)
-
-* 2018.4.20 or newer
-* Windows 7 or newer
+* Other
+  * [HumanoidCollider](https://github.com/yuzu-unity/HumanoidCollider) / [Article on Qiita](https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9)
+ by [ゆず @Yuzu_Unity](https://twitter.com/Yuzu_Unity)
 
 
-## Usage (利用方法)
+## System requirements
 
-VRMビューアを動かしてみるだけなら、ダウンロードしたビルド済み実行ファイルを展開し、その中の UniWinApiVrmViewer.exe を起動してください。  
-起動後にお手元の VRM ファイルをドロップするとそのモデルが表示されます。
+* 2019.4.30 or lator
+* Windows 10 or lator
 
-VRMビューアのプロジェクトを含まない、UniWinApi-vXXXXX.unitypackage の利用（こちらがUniWinApiの本体）については、
-こちらの [チュートリアル](https://github.com/kirurobo/UniWinApi/blob/master/docs/index_jp.md) をご覧ください。
 
-VRMビューアをビルドする場合は、リポジトリのクローンを作成してUnityのエディタで開いてください。
-* 以前はユニティちゃんのアニメーションを利用していましたが、そちらは除外したため、他のアセットを別途用意せずとも開けます。
+## Usage
+
+If you just want to try to run the VRM viewer, extract the downloaded zip file and run UniWinApiVrmViewer.exe.  
+After launching, drag and drop your VRM model and the model will be displayed.
+
+To use UniWinApi-vXXXXX.unitypackage without the VRM viewer project (which is the main part of UniWinApi), watch a [tutorial](https://github.com/kirurobo/UniWinApi/blob/master/docs/index.md).
+
+To build the VRM viewer, clone the repository and open it in Unity's editor.
+* I used to use Unity-chan's animation, but since we excluded that, you can open it without preparing other assets separately.
