@@ -1,5 +1,11 @@
 # An Example project for UniWinApi
 
+> UniWinApi is an old project.  
+> ***See my new repository [UniWindowController](https://github.com/kirurobo/uniwindowcontroller).***  
+> It works on both Mac and Windows.  
+---
+
+
 ## What's UniWinApi
 
 [UniWinApi](https://github.com/kirurobo/UniWinApiAsset) is a library using Windows APIs. It allows us the following operations which are not available normary in Unity. 
@@ -61,7 +67,7 @@ UniWinApiAsset is CC0, but several other projects are used in this VRM viewer.
 * Other
   * [HumanoidCollider](https://github.com/yuzu-unity/HumanoidCollider) / [Article on Qiita](https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9)
  by [ゆず @Yuzu_Unity](https://twitter.com/Yuzu_Unity)
-
+  * UI-Default-ZWrite in the CustomShaders folder
 
 ## System requirements
 

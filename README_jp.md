@@ -1,5 +1,11 @@
 # UniWinApiのためのサンプルプロジェクト
 
+> UniWinApi は古いプロジェクトとなっています。   
+> ***新プロジェクト [UniWindowController](https://github.com/kirurobo/uniwindowcontroller) もご覧ください。***  
+> そちらは Mac と Windows の両方で動作します。  
+---
+
+
 ## UniWinApiについて
 
 [UniWinApi](https://github.com/kirurobo/UniWinApiAsset) は Unityでは本来行えない操作を Windows API 経由で行うものです。  
@@ -57,6 +63,7 @@ UniWinApi本体はCC0ですが、VRMビューアではいくつか他のプロ�
 
 * その他（フリー）
   * [ゆず @Yuzu_Unity](https://twitter.com/Yuzu_Unity)さんの [HumanoidCollider](https://github.com/yuzu-unity/HumanoidCollider) [Qiita記事](https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9)
+  * CustomShaders フォルダ内の UI-Default-ZWrite
 
 
 ## System requirements (動作環境)
