@@ -399,7 +399,7 @@ public class VrmUiController : MonoBehaviour
     /// </summary>
     public void UpdateUI()
     {
-        if (!windowController)
+        if (windowController)
         {
             if (transparentToggle) { transparentToggle.isOn = windowController.isTransparent; }
             if (maximizeToggle) { maximizeToggle.isOn = windowController.isMaximized; }
