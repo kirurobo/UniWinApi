@@ -14348,6 +14348,11 @@ PrefabInstance:
       propertyPath: _isTransparent
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5359781937870936129, guid: 1a68be57637a61842b1d8ea2ccb106b5,
+        type: 3}
+      propertyPath: allowDropFromLowerPrivilege
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a68be57637a61842b1d8ea2ccb106b5, type: 3}
 --- !u!1 &2141451816
