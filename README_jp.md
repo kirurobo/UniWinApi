@@ -68,8 +68,8 @@ UniWinApi本体はCC0ですが、VRMビューアではいくつか他のプロ�
 
 ## System requirements (動作環境)
 
-* 2019.4.30 or lator
-* Windows 10 or lator
+* 2019.4.20 or lator
+* Windows 10
 
 
 ## Usage (利用方法)
