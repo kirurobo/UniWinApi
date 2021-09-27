@@ -1,14 +1,18 @@
 ﻿{
   "labels": {
     "Motion": "モーション",
-    "Face": "表情",
+    "Emotion": "表情",
     "Transparent": "透明化",
     "Topmost": "最前面",
     "Maximize": "最大化",
+    "TransparentType": "透明化方式",
+    "HitTestType": "ヒットテスト方式",
+    "ZoomType":  "ズーム方法",
     "Language": "言語",
-    "ZoomMode":  "ズーム方法",
     "None": "なし",
+    "Preset": "既定",
     "Random": "ランダム",
+    "Bvh": "読み込んだBVH",
     "Repeat": "繰り返し"
   },
   "buttons": {
@@ -18,6 +22,7 @@
     "Next": "次",
     "TabButtonModel": "モデル",
     "TabButtonMotion": "動き",
-    "TabButtonConfig": "設定"
+    "TabButtonConfig": "設定",
+    "TabButtonAbout": "情報"
   }
 }

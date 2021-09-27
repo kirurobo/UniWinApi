@@ -9,8 +9,10 @@ using System;
 using System.IO;
 using UniHumanoid;
 using UnityEngine;
+using UnityEngine.Networking;
 using VRM;
 using Kirurobo;
+using UniGLTF;
 
 /// <summary>
 /// VRMビューア
@@ -26,15 +28,27 @@ public class VrmViewer : MonoBehaviour
     private VRMMetaObject meta;
 
     public VrmUiController uiController;
-    public Canvas canvas;
     public CameraController cameraController;
     public Transform cameraTransform;
 
-    private CameraController.ZoomMode originalWheelMode;
+    private CameraController.ZoomType _originalZoomType;
 
     public AudioSource audioSource;
 
     public Animator animator;
+
+    public VrmCharacterBehaviour.MotionMode motionMode
+    {
+        get
+        {
+            return _motionMode;
+        }
+        set
+        {
+            _motionMode = value;
+        }
+    }
+    private VrmCharacterBehaviour.MotionMode _motionMode = VrmCharacterBehaviour.MotionMode.Default;
 
 
     // Use this for initialization
@@ -51,15 +65,9 @@ public class VrmViewer : MonoBehaviour
         {
             uiController.motionToggleRandom.onValueChanged.AddListener(val => SetRandomMotion(val));
         }
-        if (uiController.faceToggleRandom)
+        if (uiController.emotionToggleRandom)
         {
-            uiController.faceToggleRandom.onValueChanged.AddListener(val => SetRandomEmotion(val));
-        }
-
-        // 指定がなければ自動で探す
-        if (!canvas)
-        {
-            canvas = FindObjectOfType<Canvas>();
+            uiController.emotionToggleRandom.onValueChanged.AddListener(val => SetRandomEmotion(val));
         }
 
         // 指定がなければ自動で探す
@@ -68,7 +76,7 @@ public class VrmViewer : MonoBehaviour
             cameraController = FindObjectOfType<CameraController>();
             if (cameraController)
             {
-                originalWheelMode = cameraController.zoomMode;
+                _originalZoomType = cameraController.zoomType;
             }
         }
 
@@ -91,8 +99,8 @@ public class VrmViewer : MonoBehaviour
         //	LoadModel(Application.streamingAssetsPath + "/default_vrm.vrm");
         //}
 
-        // Load the initial motion.
-        LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
+        //// Load the default motion.
+        //LoadMotion(Application.streamingAssetsPath + "/default_bvh.txt");
 
         // Initialize window manager
         windowController = FindObjectOfType<WindowController>();
@@ -105,7 +113,7 @@ public class VrmViewer : MonoBehaviour
             {
                 uiController.openButton.onClick.AddListener(() =>
                 {
-                    string path = windowController.ShowOpenFileDialog("VRM file|*.vrm|Motion file|*.bvh|Audio file|*.wav;*.ogg|All file|*.*");
+                    string path = windowController.ShowOpenFileDialog("All supported files|*.vrm;*.bvh;*.wav;*.ogg|VRM file|*.vrm|Motion file|*.bvh|Audio file|*.wav;*.ogg|All file|*.*");
                     LoadFile(path);
                 });
             }
@@ -121,12 +129,28 @@ public class VrmViewer : MonoBehaviour
             bool inScreen = (pos.x >= 0 && pos.x < Screen.width && pos.y >= 0 && pos.y < Screen.height);
             if (!windowController.isClickThrough && inScreen)
             {
-                if (uiController) originalWheelMode = uiController.zoomMode;
-                cameraController.zoomMode = originalWheelMode;
+                if (uiController) _originalZoomType = uiController.zoomType;
+                cameraController.zoomType = _originalZoomType;
             }
             else
             {
-                cameraController.zoomMode = CameraController.ZoomMode.None;
+                cameraController.zoomType = CameraController.ZoomType.None;
+            }
+        }
+
+        // UIで変化があったら反映させる
+        if (uiController && windowController)
+        {
+            // 透明化方式がUIで変更されていれば反映
+            if (uiController.transparentType != windowController.transparentType)
+            {
+                windowController.SetTransparentType(uiController.transparentType);
+            }
+
+            // ヒットテスト方式がUIで変更されていれば反映
+            if (uiController.hitTestType != windowController.hitTestType)
+            {
+                windowController.hitTestType = uiController.hitTestType;
             }
         }
 
@@ -169,17 +193,11 @@ public class VrmViewer : MonoBehaviour
     private void SetRandomMotion(bool enabled)
     {
         SetMotion(motion, model, meta);
-        //if (!model) return;
-        //var characterController = model.GetComponent<CharacterBehaviour>();
-        //characterController.randomMotion = enabled;
     }
 
     private void SetRandomEmotion(bool enabled)
     {
         SetMotion(motion, model, meta);
-        //if (!model) return;
-        //var characterController = model.GetComponent<CharacterBehaviour>();
-        //characterController.randomEmotion = enabled;
     }
 
     /// <summary>
@@ -213,9 +231,14 @@ public class VrmViewer : MonoBehaviour
         // mp3はライセンスの関係でWindowsスタンドアローンでは読み込めないよう。
         // 参考 https://docs.unity3d.com/jp/460/ScriptReference/WWW.GetAudioClip.html
         // 参考 https://answers.unity.com/questions/433428/load-mp3-from-harddrive-on-pc-again.html
-        if (ext == ".ogg" || ext == ".wav")
+        if (ext == ".ogg")
         {
-            LoadAudio(path);
+            LoadAudio(path, AudioType.OGGVORBIS);
+            return;
+        }
+        else if (ext == ".wav")
+        {
+            LoadAudio(path, AudioType.WAV);
             return;
         }
     }
@@ -230,19 +253,26 @@ public class VrmViewer : MonoBehaviour
     {
         if (!model || !meta) return;
 
-        var characterController = model.GetComponent<CharacterBehaviour>();
+        var characterController = model.GetComponent<VrmCharacterBehaviour>();
 
         // Apply the motion if AllowedUser is equal to "Everyone".
         if (meta.AllowedUser == AllowedUser.Everyone)
         {
-            if (uiController && uiController.enableRandomMotion)
+            _motionMode = VrmCharacterBehaviour.MotionMode.Default;
+            if (uiController)
+            {
+                _motionMode = uiController.motionMode;
+                characterController.randomEmotion = uiController.enableRandomEmotion;
+            }
+
+            if (_motionMode != VrmCharacterBehaviour.MotionMode.Bvh)
             {
                 var anim = model.GetComponent<Animator>();
                 if (anim && this.animator)
                 {
                     anim.runtimeAnimatorController = this.animator.runtimeAnimatorController;
                 }
-                characterController.randomMotion = true;
+                characterController.SetAnimator(anim);
             }
             else
             {
@@ -251,7 +281,7 @@ public class VrmViewer : MonoBehaviour
                 {
                     anim.runtimeAnimatorController = null;
                 }
-                characterController.randomMotion = false;
+                characterController.SetAnimator(anim);
 
                 if (motion)
                 {
@@ -259,16 +289,14 @@ public class VrmViewer : MonoBehaviour
                     model.SourceType = HumanPoseTransfer.HumanPoseTransferSourceType.HumanPoseTransfer;
                 }
             }
-
-            if (uiController)
-            {
-                characterController.randomEmotion = uiController.enableRandomEmotion;
-            }
+            characterController.SetMotionMode(_motionMode);
         }
         else
         {
-            characterController.randomMotion = false;
+            characterController.SetMotionMode(VrmCharacterBehaviour.MotionMode.Default);
             characterController.randomEmotion = false;
+
+            _motionMode = VrmCharacterBehaviour.MotionMode.Default;
         }
     }
 
@@ -284,6 +312,7 @@ public class VrmViewer : MonoBehaviour
             return;
         }
 
+        var characterController = model.GetComponent<VrmCharacterBehaviour>();
         GameObject newMotionObject = null;
 
         try
@@ -301,15 +330,14 @@ public class VrmViewer : MonoBehaviour
             {
                 renderer.enabled = false;
             }
-
-            if (uiController)
-            {
-                uiController.enableRandomMotion = false;    // ランダムモーションは強制的にオフにする
-            }
         }
         catch (Exception ex)
         {
-            if (uiController) uiController.SetWarning("Motion load failed.");
+            if (uiController)
+            {
+                uiController.motionMode = VrmCharacterBehaviour.MotionMode.Default;
+                uiController.ShowWarning("Motion load failed.");
+            }
             Debug.LogError("Failed loading " + path);
             Debug.LogError(ex);
             return;
@@ -323,7 +351,15 @@ public class VrmViewer : MonoBehaviour
             }
 
             motion = newMotionObject.GetComponent<HumanPoseTransfer>();
+
+            // 読み込みが成功したら、モーションの選択肢はBVHとする
+            _motionMode = VrmCharacterBehaviour.MotionMode.Bvh;
             SetMotion(motion, model, meta);
+
+            if (uiController)
+            {
+                uiController.motionMode = VrmCharacterBehaviour.MotionMode.Bvh;
+            }
 
             // Play loaded audio if available
             if (audioSource && audioSource.clip && audioSource.clip.loadState == AudioDataLoadState.Loaded)
@@ -351,18 +387,23 @@ public class VrmViewer : MonoBehaviour
         try
         {
             // Load from a VRM file.
-            context = new VRMImporterContext();
+            var parser = new GlbFileParser(path);
+            var data = parser.Parse();
+            
+            context = new VRMImporterContext(data);
             //Debug.Log("Loading model : " + path);
 
-            context.Load(path);
-            newModelObject = context.Root;
+            RuntimeGltfInstance instance = context.Load();
+            instance.EnableUpdateWhenOffscreen();
+
+            newModelObject = instance.Root;
             meta = context.ReadMeta(true);
 
-            context.ShowMeshes();
+            instance.ShowMeshes();
         }
         catch (Exception ex)
         {
-            if (uiController) uiController.SetWarning("Model load failed.");
+            if (uiController) uiController.ShowWarning("Model load failed.");
             Debug.LogError("Failed loading " + path);
             Debug.LogError(ex);
             return;
@@ -376,7 +417,10 @@ public class VrmViewer : MonoBehaviour
             }
 
             model = newModelObject.AddComponent<HumanPoseTransfer>();
-            var characterController = model.gameObject.AddComponent<CharacterBehaviour>();
+
+            CreateColliders(model.gameObject);
+
+            var characterController = model.gameObject.AddComponent<VrmCharacterBehaviour>();
 
             SetMotion(motion, model, meta);
 
@@ -395,27 +439,44 @@ public class VrmViewer : MonoBehaviour
     }
 
     /// <summary>
+    /// Add colliders
+    /// </summary>
+    /// <see cref="https://qiita.com/Yuzu_Unity/items/b645ecb76816b4f44cf9"/>
+    /// <param name="humanoidObject"></param>
+    private void CreateColliders(GameObject humanoidObject)
+    {
+        var colliderBuilder = model.gameObject.AddComponent<HumanoidColliderBuilder>();
+        colliderBuilder.colliderPrm.arm = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderPrm.body = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderPrm.head = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderPrm.leg = new HumanoidColliderBuilder.TagLayer();
+        colliderBuilder.colliderObj = new System.Collections.Generic.List<GameObject>();
+        colliderBuilder.anim = model.GetComponent<Animator>();
+        colliderBuilder.SetCollider();
+    }
+
+    /// <summary>
     /// Load the audio clip
     /// Reference: http://fantom1x.blog130.fc2.com/blog-entry-299.html
     /// </summary>
     /// <param name="path"></param>
-    private void LoadAudio(string path)
+    private void LoadAudio(string path, AudioType audioType)
     {
-        StartCoroutine(LoadAudioCoroutine(path));
+        StartCoroutine(LoadAudioCoroutine(path, audioType));
     }
 
-    private System.Collections.IEnumerator LoadAudioCoroutine(string path)
+    private System.Collections.IEnumerator LoadAudioCoroutine(string path, AudioType audioType)
     {
         if (!File.Exists(path)) yield break;
 
-        using (WWW www = new WWW("file://" + path))
+        using (var www = UnityWebRequestMultimedia.GetAudioClip("file://" + path, audioType))
         {
             while (!www.isDone)
             {
                 yield return null;
             }
 
-            AudioClip audioClip = www.GetAudioClip(false, false);
+            var audioClip = DownloadHandlerAudioClip.GetContent(www);
             if (audioClip.loadState != AudioDataLoadState.Loaded)
             {
                 Debug.Log("Failed to load audio: " + path);

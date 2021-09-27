@@ -7,10 +7,13 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class CameraController : MonoBehaviour {
+public class CameraController : MonoBehaviour
+{
     [Flags]
-    public enum RotationAxes {
+    public enum RotationAxes
+    {
         None = 0,
         Pitch = 1,
         Yaw = 2,
@@ -18,7 +21,7 @@ public class CameraController : MonoBehaviour {
     }
 
     [Flags]
-    public enum ZoomMode
+    public enum ZoomType
     {
         None = 0,
         Dolly = 1,	// Dolly in/out
@@ -26,16 +29,19 @@ public class CameraController : MonoBehaviour {
     }
 
     public RotationAxes axes = RotationAxes.PitchAndYaw;
-    public ZoomMode zoomMode = ZoomMode.Dolly;
+    [FormerlySerializedAs("zoomMode")] public ZoomType zoomType = ZoomType.Dolly;
     public float sensitivityX = 15f;
     public float sensitivityY = 15f;
     public float dragSensitivity = 0.1f;
     public float wheelSensitivity = 0.5f;
 
     public Vector2 minimumAngles = new Vector2(-90f, -360f);
-    public Vector2 maximumAngles = new Vector2( 90f,  360f);
+    public Vector2 maximumAngles = new Vector2(90f, 360f);
 
+    [Tooltip("None means to set the parent transform")]
     public Transform centerTransform;   // 回転中心
+
+    private GameObject centerObject = null; // 回転中心Transformが指定されなかった場合に作成される
 
     internal Vector3 rotation;
     internal Vector3 translation;
@@ -55,6 +61,13 @@ public class CameraController : MonoBehaviour {
     void Start()
     {
         Initialize();
+        SetupTransform();
+    }
+
+    void OnDestroy()
+    {
+        // 回転中心を独自に作成していれば、削除
+        if (centerObject) GameObject.Destroy(centerObject);
     }
 
     void Update()
@@ -67,7 +80,7 @@ public class CameraController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Initialize
+    /// 必要なオブジェクトを取得・準備
     /// </summary>
     internal void Initialize()
     {
@@ -76,14 +89,11 @@ public class CameraController : MonoBehaviour {
             centerTransform = this.transform.parent;
             if (!centerTransform || centerTransform == this.transform)
             {
-                centerTransform = new GameObject().transform;
+                centerObject = new GameObject();
                 centerTransform.position = Vector3.zero;
+                centerTransform = centerObject.transform;
             }
         }
-
-        relativePosition = centerTransform.position - transform.position;	// カメラから中心座標へのベクトル
-        relativeRotation = Quaternion.LookRotation(relativePosition, Vector3.up);
-        originalDistance = relativePosition.magnitude;
 
         if (!currentCamera)
         {
@@ -93,6 +103,18 @@ public class CameraController : MonoBehaviour {
         {
             currentCamera = Camera.main;
         }
+    }
+
+    /// <summary>
+    /// 初期位置・姿勢の設定
+    /// 対象となるオブジェクトがそろった後で実行する
+    /// </summary>
+    internal void SetupTransform()
+    {
+        relativePosition = centerTransform.position - transform.position;	// カメラから中心座標へのベクトル
+        relativeRotation = Quaternion.LookRotation(relativePosition, Vector3.up);
+        originalDistance = relativePosition.magnitude;
+
         originalFieldOfView = currentCamera.fieldOfView;
 
         ResetTransform();
@@ -158,24 +180,24 @@ public class CameraController : MonoBehaviour {
             // ホイールで接近・離脱
             float wheelDelta = Input.GetAxis("Mouse ScrollWheel") * wheelSensitivity;
 
-            ZoomMode mode = zoomMode;
+            ZoomType type = zoomType;
 
             // Shiftキーが押されていて、かつZoomModeがZoomかDollyならば、モードを入れ替える
             if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
-                if (mode == ZoomMode.Dolly)
+                if (type == ZoomType.Dolly)
                 {
-                    mode = ZoomMode.Zoom;
+                    type = ZoomType.Zoom;
                 }
-                else if (mode == ZoomMode.Zoom)
+                else if (type == ZoomType.Zoom)
                 {
-                    mode = ZoomMode.Dolly;
+                    type = ZoomType.Dolly;
                 }
             }
 
             if (wheelDelta != 0f)
             {
-                if ((mode & ZoomMode.Dolly) != ZoomMode.None)
+                if ((type & ZoomType.Dolly) != ZoomType.None)
                 {
                     // ドリーの場合。カメラを近づけたり遠ざけたり。
                     dolly += wheelDelta;
@@ -185,7 +207,7 @@ public class CameraController : MonoBehaviour {
 
                     UpdateTransform();
                 }
-                else if ((mode & ZoomMode.Zoom) != ZoomMode.None)
+                else if ((type & ZoomType.Zoom) != ZoomType.None)
                 {
                     // ズームの場合。カメラのFOVを変更
                     zoom -= wheelDelta;

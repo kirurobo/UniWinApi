@@ -1,14 +1,18 @@
 ﻿{
   "labels": {
     "Motion": "Motion",
-    "Face": "Emotion",
+    "Emotion": "Emotion",
     "Transparent": "Transparent",
     "Topmost": "Topmost",
     "Maximize": "Maximize",
+    "TransparentType": "Transparent type",
+    "HitTestType": "Hit test type",
+    "ZoomType": "Zoom type",
     "Language": "Language",
-    "ZoomMode": "Zoom mode",
     "None": "None",
+    "Preset": "Preset",
     "Random": "Random",
+    "Bvh": "Dropped BVH",
     "Repeat": "Repeat"
   },
   "buttons": {
@@ -18,6 +22,7 @@
     "Next": "Next",
     "TabButtonModel": "Model",
     "TabButtonMotion": "Motion",
-    "TabButtonConfig": "Config"
+    "TabButtonConfig": "Config",
+    "TabButtonAbout": "About"
   }
 }

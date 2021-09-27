@@ -40,4 +40,10 @@ sysinfo.txt
 *.csproj.meta
 *.sln.meta
 
+
+# Additional
 /Assets/UnityChan*
+/Assets/unity-chan*
+.idea/
+JetBrains
+JetBrains.meta
