@@ -35,6 +35,7 @@
 <details>
   <summary>過去のバージョン</summary>
   
+* [Ver.0.6.0 管理者として実行時にもドロップ受付の設定を追加](https://github.com/kirurobo/UniWinApi/releases/tag/v0.6.0)
 * [Ver.0.5.0 レイヤードウィンドウも選択可に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
 * [Ver.0.4.0-beta 色々改造](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0beta)
 * [Ver.0.3.3 UniVRM 0.44に](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.3)
