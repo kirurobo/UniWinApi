@@ -36,6 +36,7 @@ Image video [YouTube](https://youtu.be/cq2g-hIGlAs)
 <details>
   <summary>Archives</summary>
   
+* [Ver.0.6.0 Added Allow Drop From Lower Privilege setting](https://github.com/kirurobo/UniWinApi/releases/tag/v0.6.0)
 * [Ver.0.5.0 Added layered window mode](https://github.com/kirurobo/UniWinApi/releases/tag/v0.5.0)
 * [Ver.0.4.0-beta](https://github.com/kirurobo/UniWinApi/releases/tag/v0.4.0beta)
 * [Ver.0.3.3 Updated to UniVRM 0.44](https://github.com/kirurobo/UniWinApi/releases/tag/v0.3.3)
@@ -71,8 +72,8 @@ UniWinApiAsset is CC0, but several other projects are used in this VRM viewer.
 
 ## System requirements
 
-* 2019.4.30 or lator
-* Windows 10 or lator
+* 2018.4.20 or lator
+* Windows 10
 
 
 ## Usage
