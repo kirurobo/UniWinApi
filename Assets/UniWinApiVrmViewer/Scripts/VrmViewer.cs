@@ -257,9 +257,9 @@ public class VrmViewer : MonoBehaviour
 
         var characterController = model.GetComponent<VrmCharacterBehaviour>();
 
-        // Apply the motion if AllowedUser is equal to "Everyone".
-        if (meta.AllowedUser == AllowedUser.Everyone)
-        {
+        //// Apply the motion if AllowedUser is equal to "Everyone".
+        //if (meta.AllowedUser == AllowedUser.Everyone)
+        //{
             _motionMode = VrmCharacterBehaviour.MotionMode.Default;
             if (uiController)
             {
@@ -292,14 +292,14 @@ public class VrmViewer : MonoBehaviour
                 }
             }
             characterController.SetMotionMode(_motionMode);
-        }
-        else
-        {
-            characterController.SetMotionMode(VrmCharacterBehaviour.MotionMode.Default);
-            characterController.randomEmotion = false;
+        //}
+        //else
+        //{
+        //    characterController.SetMotionMode(VrmCharacterBehaviour.MotionMode.Default);
+        //    characterController.randomEmotion = false;
 
-            _motionMode = VrmCharacterBehaviour.MotionMode.Default;
-        }
+        //    _motionMode = VrmCharacterBehaviour.MotionMode.Default;
+        //}
     }
 
     /// <summary>
