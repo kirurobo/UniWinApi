@@ -10,9 +10,10 @@ using System.IO;
 using UniHumanoid;
 using UnityEngine;
 using UnityEngine.Networking;
-using VRM;
 using Kirurobo;
+using VRM;
 using UniGLTF;
+using VRMShaders;
 
 /// <summary>
 /// VRMビューア
@@ -36,6 +37,7 @@ public class VrmViewer : MonoBehaviour
     public AudioSource audioSource;
 
     public Animator animator;
+    private RuntimeGltfInstance gltfInstance;
 
     public VrmCharacterBehaviour.MotionMode motionMode
     {
@@ -374,7 +376,7 @@ public class VrmViewer : MonoBehaviour
     /// Unload the old model and load the new model from VRM file.
     /// </summary>
     /// <param name="path"></param>
-    private void LoadModel(string path)
+    private async void LoadModel(string path)
     {
         if (!File.Exists(path))
         {
@@ -387,19 +389,12 @@ public class VrmViewer : MonoBehaviour
         try
         {
             // Load from a VRM file.
-            var parser = new GlbFileParser(path);
-            var data = parser.Parse();
-            
-            context = new VRMImporterContext(data);
-            //Debug.Log("Loading model : " + path);
+            gltfInstance = await VrmUtility.LoadAsync(path, new RuntimeOnlyAwaitCaller(), null, new VrmUtility.MetaCallback(val => this.meta = val));
+            gltfInstance.EnableUpdateWhenOffscreen();
 
-            RuntimeGltfInstance instance = context.Load();
-            instance.EnableUpdateWhenOffscreen();
+            newModelObject = gltfInstance.Root;
 
-            newModelObject = instance.Root;
-            meta = context.ReadMeta(true);
-
-            instance.ShowMeshes();
+            gltfInstance.ShowMeshes();
         }
         catch (Exception ex)
         {
@@ -435,6 +430,21 @@ public class VrmViewer : MonoBehaviour
                 }
 
             }
+        }
+    }
+
+    /// <summary>
+    /// Loader
+    /// </summary>
+    /// <param name="vrm"></param>
+    /// <returns></returns>
+    RuntimeGltfInstance LoadVrm(VRMData vrm)
+    {
+        using (var loader = new VRMImporterContext(vrm))
+        {
+            //var instance = await loader.LoadAsync();
+            var instance = loader.Load();
+            return instance;
         }
     }
 
