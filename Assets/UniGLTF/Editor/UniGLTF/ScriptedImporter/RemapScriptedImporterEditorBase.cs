@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Experimental.AssetImporters;
+
 using UnityEngine;
 using VRMShaders;
 
 namespace UniGLTF
 {
-    public abstract class RemapScriptedImporterEditorBase : ScriptedImporterEditor
+    public abstract class RemapScriptedImporterEditorBase : UnityEditor.AssetImporters.ScriptedImporterEditor
     {
         /// <summary>
         /// Apply されていない変更を保持する
@@ -38,7 +38,7 @@ namespace UniGLTF
             m_editMap.Clear();
         }
 
-        public void ApplyRemap(ScriptedImporter importer)
+        public void ApplyRemap(UnityEditor.AssetImporters.ScriptedImporter importer)
         {
             foreach (var kv in m_editMap)
             {
@@ -56,7 +56,7 @@ namespace UniGLTF
             AssetDatabase.ImportAsset(importer.assetPath, ImportAssetOptions.ForceUpdate);
         }
 
-        public void RevertApplyRemapGUI(ScriptedImporter importer)
+        public void RevertApplyRemapGUI(UnityEditor.AssetImporters.ScriptedImporter importer)
         {
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();

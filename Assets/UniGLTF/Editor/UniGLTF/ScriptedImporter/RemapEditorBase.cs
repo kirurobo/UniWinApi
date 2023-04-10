@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Experimental.AssetImporters;
+
 using UnityEngine;
 using VRMShaders;
 
@@ -37,7 +37,7 @@ namespace UniGLTF
             public String Name;
 
             public SubAssetKey Key => new SubAssetKey(TypeMap[Type], Name);
-            public ScriptedImporter.SourceAssetIdentifier ID => new AssetImporter.SourceAssetIdentifier(TypeMap[Type], Name);
+            public UnityEditor.AssetImporters.ScriptedImporter.SourceAssetIdentifier ID => new AssetImporter.SourceAssetIdentifier(TypeMap[Type], Name);
 
             [SerializeField]
             public UnityEngine.Object Object;
@@ -75,7 +75,7 @@ namespace UniGLTF
         /// </summary>
         /// <param name="importer"></param>
         /// <returns></returns>
-        protected bool CanExtract(ScriptedImporter importer)
+        protected bool CanExtract(UnityEditor.AssetImporters.ScriptedImporter importer)
         {
             foreach (var (k, v) in importer.GetExternalObjectMap())
             {
@@ -92,7 +92,7 @@ namespace UniGLTF
         }
 
         protected void DrawRemapGUI<T>(
-            Dictionary<ScriptedImporter.SourceAssetIdentifier, UnityEngine.Object> externalObjectMap
+            Dictionary<UnityEditor.AssetImporters.ScriptedImporter.SourceAssetIdentifier, UnityEngine.Object> externalObjectMap
         ) where T : UnityEngine.Object
         {
             EditorGUI.indentLevel++;
@@ -170,7 +170,7 @@ namespace UniGLTF
             return clone;
         }
 
-        public static void ClearExternalObjects(ScriptedImporter importer, params Type[] targetTypes)
+        public static void ClearExternalObjects(UnityEditor.AssetImporters.ScriptedImporter importer, params Type[] targetTypes)
         {
             foreach (var targetType in targetTypes)
             {

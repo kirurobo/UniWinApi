@@ -286,7 +286,7 @@ namespace VRM
 
             BilinearScale(0, newHeight);
 
-            tex.Resize(newWidth, newHeight);
+            tex.Reinitialize(newWidth, newHeight);
             tex.SetPixels(newColors);
             tex.Apply();
         }
