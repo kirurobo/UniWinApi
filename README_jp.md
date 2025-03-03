@@ -3,6 +3,9 @@
 > UniWinApi は古いプロジェクトとなっています。   
 > ***新プロジェクト [UniWindowController](https://github.com/kirurobo/uniwindowcontroller) もご覧ください。***  
 > そちらは Mac と Windows の両方で動作します。  
+> 
+> また、VRM 1.0 にも対応した VRM ビューアーの新しい Unity プロジェクトとして [UniWinC_VRM](https://github.com/kirurobo/UniWinc_VRM) を公開しました。
+> ![Image](https://github.com/user-attachments/assets/e181395c-0825-441c-8688-a948a1fdadee)
 ---
 
 
